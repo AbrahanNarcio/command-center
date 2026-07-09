@@ -52,8 +52,12 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
       </div>
 
       <div className="metric-grid">
-        {activeMetrics.kpis.map((kpi) => (
-          <article className="metric-card" key={kpi.label} style={{ ["--accent" as string]: kpi.color }}>
+        {activeMetrics.kpis.map((kpi, i) => (
+          <article
+            className="metric-card"
+            key={kpi.label}
+            style={{ ["--accent" as string]: kpi.color, ["--i" as string]: i }}
+          >
             <span>{kpi.label}</span>
             <strong>{kpi.value}</strong>
             <p>{kpi.detail}</p>
@@ -112,8 +116,8 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             </div>
           </div>
           <div className="bars-chart" style={{ ["--count" as string]: activeMetrics.reachByFormat.length }}>
-            {activeMetrics.reachByFormat.map((r) => (
-              <div className="bar-col" key={r.label} style={{ ["--accent" as string]: r.color }}>
+            {activeMetrics.reachByFormat.map((r, i) => (
+              <div className="bar-col" key={r.label} style={{ ["--accent" as string]: r.color, ["--i" as string]: i }}>
                 <div className="bar-stack">
                   <div className="bar-fill" style={{ height: `${r.pct}%` }} />
                 </div>
@@ -136,7 +140,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             </div>
             <div className="funnel-list">
               {activeMetrics.topPosts.map((p, i) => (
-                <div className="funnel-step" key={`${p.label}-${i}`}>
+                <div className="funnel-step" key={`${p.label}-${i}`} style={{ ["--i" as string]: i }}>
                   <div>
                     <span>{p.label}</span>
                     <b>{p.value}</b>
@@ -165,8 +169,8 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
               </div>
             </div>
             <div className="retention-list">
-              {activeMetrics.retention.map((r) => (
-                <div className="retention-row" key={r.label}>
+              {activeMetrics.retention.map((r, i) => (
+                <div className="retention-row" key={r.label} style={{ ["--i" as string]: i }}>
                   <span>{r.label}</span>
                   <div className="meter">
                     <span
@@ -194,8 +198,8 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             </div>
           </div>
           <div className="funnel-list">
-            {activeMetrics.funnel.map((f) => (
-              <div className="funnel-step" key={f.label}>
+            {activeMetrics.funnel.map((f, i) => (
+              <div className="funnel-step" key={f.label} style={{ ["--i" as string]: i }}>
                 <div>
                   <span>{f.label}</span>
                   <b>{f.value}</b>
@@ -225,7 +229,11 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
           </div>
           <div className="heatmap">
             {activeMetrics.heatmap.map((cell, i) => (
-              <div className="heat-cell" key={`${cell.day}-${cell.hour}-${i}`} style={{ ["--heat" as string]: cell.heat }}>
+              <div
+                className="heat-cell"
+                key={`${cell.day}-${cell.hour}-${i}`}
+                style={{ ["--heat" as string]: cell.heat, ["--i" as string]: i }}
+              >
                 {cell.day}
                 <span>{cell.hour}</span>
               </div>

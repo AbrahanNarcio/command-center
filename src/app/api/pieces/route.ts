@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { adminGate } from "@/lib/auth";
 import { insertPiece } from "@/lib/db";
 import { newId } from "@/lib/seed";
 import { Piece } from "@/lib/types";
 
 export async function POST(request: Request) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const gate = await adminGate();
+  if (gate.response) return gate.response;
 
   const body = await request.json();
   const piece: Piece = {

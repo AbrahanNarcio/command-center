@@ -1,5 +1,6 @@
 "use client";
 
+import { Pencil, Trash2 } from "lucide-react";
 import { Piece } from "@/lib/types";
 import { PALETTE, formatSlug, scoreColor } from "@/lib/utils";
 
@@ -55,10 +56,14 @@ export default function PostCard({
         </div>
         {(onEdit || onDelete) && (
           <div className="card-actions">
-            {onEdit && <button onClick={() => onEdit(piece)}>Editar</button>}
+            {onEdit && (
+              <button onClick={() => onEdit(piece)}>
+                <Pencil size={11} /> Editar
+              </button>
+            )}
             {onDelete && (
               <button className="warn" onClick={() => onDelete(piece)}>
-                Eliminar
+                <Trash2 size={11} /> Eliminar
               </button>
             )}
           </div>

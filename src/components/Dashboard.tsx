@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AtSign, RotateCcw, Search, Sparkles, SquareKanban } from "lucide-react";
 import { useStore } from "@/lib/store-context";
 import { FORMATS, PieceFormat } from "@/lib/types";
 import { ViewId } from "@/lib/views";
@@ -93,15 +94,15 @@ export default function Dashboard() {
               <div className="hero-actions">
                 {canEdit && (
                   <button className="button primary" onClick={() => setView("generator")}>
-                    Crear pieza
+                    <Sparkles size={15} /> Crear pieza
                   </button>
                 )}
                 <button className="button" onClick={() => setView("pipeline")}>
-                  Ver pipeline
+                  <SquareKanban size={15} /> Ver pipeline
                 </button>
                 {canEdit && (
                   <button className="button" onClick={() => setView("settings")}>
-                    IG Ready
+                    <AtSign size={15} /> IG Ready
                   </button>
                 )}
               </div>
@@ -155,13 +156,21 @@ export default function Dashboard() {
               ))}
             </div>
             <div className="toolbar">
-              <input
-                className="search"
-                type="search"
-                placeholder="Buscar hook, CTA, responsable…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              {(format !== "all" || search.trim() !== "") && (
+                <span className="filter-count">
+                  {filtered.length} de {accountPieces.length} piezas
+                </span>
+              )}
+              <div className="search-wrap">
+                <Search size={15} />
+                <input
+                  className="search"
+                  type="search"
+                  placeholder="Buscar hook, CTA, responsable…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
               <button
                 className="icon-button"
                 title="Limpiar filtros"
@@ -170,18 +179,20 @@ export default function Dashboard() {
                   setSearch("");
                 }}
               >
-                R
+                <RotateCcw size={15} />
               </button>
             </div>
           </div>
         )}
 
-        {view === "overview" && <OverviewView pieces={filtered} />}
-        {view === "pipeline" && <PipelineView pieces={filtered} />}
-        {view === "calendar" && <CalendarView pieces={filtered} />}
-        {view === "generator" && canEdit && <GeneratorView />}
-        {view === "sources" && canEdit && <SourcesView />}
-        {view === "settings" && canEdit && <SettingsView />}
+        <div className="view-anim" key={`${view}-${activeAccount?.id ?? ""}`}>
+          {view === "overview" && <OverviewView pieces={filtered} />}
+          {view === "pipeline" && <PipelineView pieces={filtered} />}
+          {view === "calendar" && <CalendarView pieces={filtered} />}
+          {view === "generator" && canEdit && <GeneratorView />}
+          {view === "sources" && canEdit && <SourcesView />}
+          {view === "settings" && canEdit && <SettingsView />}
+        </div>
       </main>
 
       {toast && <div className="toast">{toast.text}</div>}

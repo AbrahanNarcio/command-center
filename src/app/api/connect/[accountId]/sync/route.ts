@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { adminGate } from "@/lib/auth";
 import { isConfigured } from "@/lib/instagram";
 import { syncAccount } from "@/lib/sync";
 
@@ -8,8 +8,8 @@ export const dynamic = "force-dynamic";
 type Params = { params: Promise<{ accountId: string }> };
 
 export async function POST(request: Request, { params }: Params) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const gate = await adminGate();
+  if (gate.response) return gate.response;
 
   const { accountId } = await params;
   if (!isConfigured()) {

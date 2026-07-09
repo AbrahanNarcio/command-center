@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { RefreshCw, Unplug } from "lucide-react";
 import { useStore } from "@/lib/store-context";
 import { relativeTime } from "@/lib/utils";
 
@@ -31,6 +32,9 @@ function ClientAccessPanel() {
   const [busy, setBusy] = useState(false);
 
   const accountUsers = clientUsers.filter((u) => u.accountId === activeAccount?.id);
+  // Accesos que quedaron sin cuenta (p. ej. si se borró la cuenta antes de la cascada):
+  // mostrarlos siempre para poder quitarlos, si no quedan invisibles para siempre.
+  const orphanUsers = clientUsers.filter((u) => !u.accountId);
 
   return (
     <section className="panel" style={{ marginTop: 12 }}>
@@ -57,6 +61,21 @@ function ClientAccessPanel() {
                 </button>
               </span>
             </div>
+          ))}
+        </div>
+      )}
+
+      {orphanUsers.length > 0 && (
+        <div className="alert" style={{ ["--accent" as string]: "var(--amber)", marginBottom: 14 }}>
+          <strong>Accesos sin cuenta asignada</strong>
+          <p>Su cuenta fue eliminada. Quítalos o vuelve a crearlos en otra cuenta.</p>
+          {orphanUsers.map((u) => (
+            <p key={u.userId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+              {u.email}
+              <button className="button small danger" onClick={() => deleteClientUser(u.userId)}>
+                Quitar
+              </button>
+            </p>
           ))}
         </div>
       )}
@@ -181,14 +200,14 @@ export default function SettingsView() {
                   }
                 }}
               >
-                {busy ? "Sincronizando…" : "Sincronizar ahora"}
+                <RefreshCw size={15} /> {busy ? "Sincronizando…" : "Sincronizar ahora"}
               </button>
               <button
                 className="button danger"
                 disabled={busy}
                 onClick={() => disconnectConnection(activeConnection.accountId)}
               >
-                Desconectar
+                <Unplug size={15} /> Desconectar
               </button>
             </div>
           </>

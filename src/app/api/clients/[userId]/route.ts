@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { adminGate } from "@/lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 
 type Params = { params: Promise<{ userId: string }> };
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const gate = await adminGate();
+  if (gate.response) return gate.response;
 
   const { userId } = await params;
 

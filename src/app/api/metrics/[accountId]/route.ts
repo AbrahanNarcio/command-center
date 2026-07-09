@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { adminGate } from "@/lib/auth";
 import { getMetricsRow, upsertMetrics } from "@/lib/db";
 import { AccountMetrics } from "@/lib/types";
 
@@ -11,8 +11,8 @@ const EDITABLE: (keyof Omit<AccountMetrics, "accountId" | "updatedAt">)[] = [
 ];
 
 export async function PUT(request: Request, { params }: Params) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const gate = await adminGate();
+  if (gate.response) return gate.response;
 
   const { accountId } = await params;
   const body = await request.json();

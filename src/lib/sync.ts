@@ -21,6 +21,27 @@ const REFRESH_BEFORE_MS = 7 * 24 * 3600 * 1000;
 const GROWTH_POINTS = 30;
 // Publicaciones a las que se les pide reach individual (para alcance por formato).
 const MEDIA_REACH_LIMIT = 20;
+// Zona horaria para el heatmap de horarios de publicación (audiencia del usuario).
+const SYNC_TZ = process.env.SYNC_TIMEZONE ?? "America/Mexico_City";
+
+const TZ_FMT = new Intl.DateTimeFormat("en-US", {
+  timeZone: SYNC_TZ,
+  weekday: "short",
+  hour: "numeric",
+  hourCycle: "h23",
+});
+const WEEKDAY_ES: Record<string, string> = {
+  Sun: "Dom", Mon: "Lun", Tue: "Mar", Wed: "Mie", Thu: "Jue", Fri: "Vie", Sat: "Sab",
+};
+
+/** Día y franja AM/PM de una fecha, en la zona horaria del negocio (no UTC). */
+function localDaySlot(date: Date): { day: string; slot: "AM" | "PM" } | null {
+  const parts = TZ_FMT.formatToParts(date);
+  const weekday = parts.find((p) => p.type === "weekday")?.value;
+  const hour = Number(parts.find((p) => p.type === "hour")?.value);
+  if (!weekday || Number.isNaN(hour)) return null;
+  return { day: WEEKDAY_ES[weekday] ?? weekday, slot: hour < 12 ? "AM" : "PM" };
+}
 
 const C = {
   cyan: "#58e6ff",
@@ -221,14 +242,12 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
 
     // ── Heatmap real: interacción promedio por día/franja de publicación ──
     if (media.length >= 5) {
-      const DAY_NAMES = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
       const buckets = new Map<string, { sum: number; n: number }>();
       for (const m of media) {
         if (!m.timestamp) continue;
-        const d = new Date(m.timestamp);
-        const day = DAY_NAMES[d.getUTCDay()];
-        const slot = d.getUTCHours() < 15 ? "AM" : "PM";
-        const key = `${day}|${slot}`;
+        const local = localDaySlot(new Date(m.timestamp));
+        if (!local) continue;
+        const key = `${local.day}|${local.slot}`;
         const cur = buckets.get(key) ?? { sum: 0, n: 0 };
         cur.sum += (m.like_count ?? 0) + (m.comments_count ?? 0);
         cur.n += 1;

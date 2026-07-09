@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import { Piece, PieceStatus, STATUSES } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
 import PostCard from "@/components/PostCard";
@@ -48,7 +49,7 @@ export default function PipelineView({ pieces }: { pieces: Piece[] }) {
           </select>
           {canEdit && (
             <button className="button primary" onClick={() => setCreating(true)}>
-              + Nueva pieza
+              <Plus size={15} /> Nueva pieza
             </button>
           )}
         </div>

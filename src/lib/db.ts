@@ -205,6 +205,16 @@ export async function insertSource(source: Source): Promise<Source> {
   return source;
 }
 
+export async function updateSourceRow(id: string, patch: Partial<Source>): Promise<void> {
+  const row: Record<string, unknown> = {};
+  if (patch.name !== undefined) row.name = patch.name;
+  if (patch.type !== undefined) row.type = patch.type;
+  if (patch.summary !== undefined) row.summary = patch.summary;
+  if (patch.tags !== undefined) row.tags = patch.tags;
+  const { error } = await adminClient().from("sources").update(row).eq("id", id);
+  if (error) fail("updateSource", error);
+}
+
 export async function deleteSourceRow(id: string): Promise<void> {
   const { error } = await adminClient().from("sources").delete().eq("id", id);
   if (error) fail("deleteSource", error);
@@ -293,4 +303,18 @@ export async function listClientUsers(): Promise<ClientUser[]> {
     .order("created_at");
   if (error) fail("listClientUsers", error);
   return (data ?? []).map((r) => ({ userId: r.user_id, email: r.email, accountId: r.account_id }));
+}
+
+/** Borra los usuarios auth de los clientes ligados a una cuenta (cascada al borrar la cuenta). */
+export async function deleteClientUsersOf(accountId: string): Promise<void> {
+  const db = adminClient();
+  const { data, error } = await db
+    .from("profiles")
+    .select("user_id")
+    .eq("role", "client")
+    .eq("account_id", accountId);
+  if (error) fail("deleteClientUsersOf", error);
+  for (const row of data ?? []) {
+    await db.auth.admin.deleteUser(row.user_id);
+  }
 }

@@ -1,18 +1,29 @@
 "use client";
 
 import { useState } from "react";
+import {
+  Activity,
+  AtSign,
+  CalendarDays,
+  Database,
+  LayoutDashboard,
+  LogOut,
+  Plus,
+  Sparkles,
+  SquareKanban,
+} from "lucide-react";
 import { useStore } from "@/lib/store-context";
 import { ViewId } from "@/lib/views";
 import AccountModal from "@/components/AccountModal";
 import { Account } from "@/lib/types";
 
-const NAV: { id: ViewId; icon: string; label: string; adminOnly: boolean }[] = [
-  { id: "overview", icon: "C", label: "Control", adminOnly: false },
-  { id: "pipeline", icon: "P", label: "Pipeline", adminOnly: false },
-  { id: "calendar", icon: "7", label: "Calendario", adminOnly: false },
-  { id: "generator", icon: "AI", label: "Generador", adminOnly: true },
-  { id: "sources", icon: "F", label: "Fuentes", adminOnly: true },
-  { id: "settings", icon: "IG", label: "IG Ready", adminOnly: true },
+const NAV: { id: ViewId; icon: React.ReactNode; label: string; adminOnly: boolean }[] = [
+  { id: "overview", icon: <LayoutDashboard />, label: "Control", adminOnly: false },
+  { id: "pipeline", icon: <SquareKanban />, label: "Pipeline", adminOnly: false },
+  { id: "calendar", icon: <CalendarDays />, label: "Calendario", adminOnly: false },
+  { id: "generator", icon: <Sparkles />, label: "Generador", adminOnly: true },
+  { id: "sources", icon: <Database />, label: "Fuentes", adminOnly: true },
+  { id: "settings", icon: <AtSign />, label: "IG Ready", adminOnly: true },
 ];
 
 export default function Rail({ view, setView }: { view: ViewId; setView: (v: ViewId) => void }) {
@@ -24,7 +35,9 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
   return (
     <aside className="rail">
       <div className="brand">
-        <div className="mark">C</div>
+        <div className="mark">
+          <Activity size={22} strokeWidth={2.6} />
+        </div>
         <div>
           <strong>Content OS</strong>
           <span>Command Center</span>
@@ -52,7 +65,7 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
         ))}
         {canEdit && (
           <button className="add-account" onClick={() => setModal({ account: null })}>
-            + Agregar cuenta
+            <Plus size={14} /> Agregar cuenta
           </button>
         )}
       </div>
@@ -76,7 +89,7 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
         <strong>{me?.email ?? ""}</strong>
         <span>{canEdit ? "Acceso total al command center." : "Vista de solo lectura de tu cuenta."}</span>
         <button className="button small" style={{ marginTop: 10, width: "100%" }} onClick={signOut}>
-          Cerrar sesión
+          <LogOut size={13} /> Cerrar sesión
         </button>
       </div>
 

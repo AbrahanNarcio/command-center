@@ -28,8 +28,10 @@ export function LineChart({ values }: { values: number[] }) {
             <stop offset="100%" stopColor="#58e6ff" stopOpacity="0" />
           </linearGradient>
         </defs>
-        <polygon points={`0,100 ${points} 100,100`} fill="url(#growthFill)" />
+        <polygon className="line-fill" points={`0,100 ${points} 100,100`} fill="url(#growthFill)" />
         <polyline
+          className="line-draw"
+          pathLength={100}
           points={points}
           fill="none"
           stroke="url(#growthStroke)"

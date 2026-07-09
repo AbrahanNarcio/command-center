@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { adminGate } from "@/lib/auth";
 import { deletePieceRow, updatePieceRow } from "@/lib/db";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, { params }: Params) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const gate = await adminGate();
+  if (gate.response) return gate.response;
 
   const { id } = await params;
   const body = await request.json();
@@ -16,8 +16,8 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const gate = await adminGate();
+  if (gate.response) return gate.response;
 
   const { id } = await params;
   await deletePieceRow(id);

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
-import { deleteAccountRow, updateAccountRow } from "@/lib/db";
+import { adminGate } from "@/lib/auth";
+import { deleteAccountRow, deleteClientUsersOf, updateAccountRow } from "@/lib/db";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, { params }: Params) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const gate = await adminGate();
+  if (gate.response) return gate.response;
 
   const { id } = await params;
   const body = await request.json();
@@ -20,10 +20,12 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const session = await requireAdmin();
-  if (!session) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const gate = await adminGate();
+  if (gate.response) return gate.response;
 
   const { id } = await params;
+  // Los logins de cliente de esta cuenta no sirven sin ella: fuera también.
+  await deleteClientUsersOf(id);
   await deleteAccountRow(id);
   return NextResponse.json({ ok: true });
 }

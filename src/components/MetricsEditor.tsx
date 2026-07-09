@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function MetricsEditor({ metrics, onClose }: Props) {
-  const { saveMetrics } = useStore();
+  const { saveMetrics, activeConnection } = useStore();
   const [kpis, setKpis] = useState<Kpi[]>(metrics.kpis.map((k) => ({ ...k })));
   const [growthNet, setGrowthNet] = useState(metrics.growthNet);
   const [ctrBio, setCtrBio] = useState(metrics.ctrBio);
@@ -26,7 +26,9 @@ export default function MetricsEditor({ metrics, onClose }: Props) {
         <p className="eyebrow">Editar métricas de la cuenta</p>
         <h2>Carga manual de KPIs</h2>
         <p className="modal-sub">
-          Mientras no conectas la API de Meta, cargas los números a mano. Cada cuenta guarda los suyos.
+          {activeConnection
+            ? "Esta cuenta está conectada a Instagram: la próxima sincronización automática va a sobrescribir los KPIs que cargues a mano. Úsalo solo para retoques puntuales."
+            : "Esta cuenta no está conectada a Instagram, así que los números se cargan a mano. Cada cuenta guarda los suyos."}
         </p>
 
         <div className="form-grid two" style={{ marginBottom: 14 }}>

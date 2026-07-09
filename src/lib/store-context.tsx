@@ -52,6 +52,7 @@ interface StoreValue {
   updatePiece: (id: string, patch: Partial<Piece>) => Promise<void>;
   deletePiece: (id: string) => Promise<void>;
   createSource: (input: Partial<Source>) => Promise<void>;
+  updateSource: (id: string, patch: Partial<Source>) => Promise<void>;
   deleteSource: (id: string) => Promise<void>;
   saveMetrics: (accountId: string, patch: Partial<AccountMetrics>) => Promise<void>;
   syncConnection: (accountId: string) => Promise<void>;
@@ -203,6 +204,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [activeId, notify],
   );
 
+  const updateSource = useCallback(
+    async (id: string, patch: Partial<Source>) => {
+      await api(`/api/sources/${id}`, "PATCH", patch);
+      setDb((prev) =>
+        prev
+          ? { ...prev, sources: prev.sources.map((s) => (s.id === id ? { ...s, ...patch } : s)) }
+          : prev,
+      );
+      notify("Fuente actualizada");
+    },
+    [notify],
+  );
+
   const deleteSource = useCallback(
     async (id: string) => {
       await api(`/api/sources/${id}`, "DELETE");
@@ -312,6 +326,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updatePiece,
       deletePiece,
       createSource,
+      updateSource,
       deleteSource,
       saveMetrics,
       syncConnection,
@@ -334,6 +349,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     updatePiece,
     deletePiece,
     createSource,
+    updateSource,
     deleteSource,
     saveMetrics,
     syncConnection,

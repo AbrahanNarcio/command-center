@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import { DAYS, Piece } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
 import PieceModal, { PieceDraft } from "@/components/PieceModal";
@@ -51,7 +52,7 @@ export default function CalendarView({ pieces }: { pieces: Piece[] }) {
               ))}
               {canEdit && (
                 <button className="add-account" style={{ width: "100%" }} onClick={() => setCreatingDay(day)}>
-                  + Agregar
+                  <Plus size={14} /> Agregar
                 </button>
               )}
             </section>
