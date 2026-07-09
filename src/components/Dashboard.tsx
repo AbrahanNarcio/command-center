@@ -118,7 +118,7 @@ export default function Dashboard() {
                 ) : activeConnection?.lastSyncAt ? (
                   <>
                     <strong>{activeAccount.handle}</strong> · Última actualización:{" "}
-                    {syncStamp(activeConnection.lastSyncAt)} · Próxima: {nextSyncLabel()}.
+                    {syncStamp(activeConnection.lastSyncAt)} · Próxima: {nextSyncLabel()}
                   </>
                 ) : activeConnection ? (
                   <>
