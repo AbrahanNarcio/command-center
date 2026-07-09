@@ -5,7 +5,6 @@ import { AtSign, RotateCcw, Search, Sparkles, SquareKanban } from "lucide-react"
 import { useStore } from "@/lib/store-context";
 import { FORMATS, PieceFormat } from "@/lib/types";
 import { ViewId } from "@/lib/views";
-import { relativeTime } from "@/lib/utils";
 import Rail from "@/components/Rail";
 import OverviewView from "@/components/views/OverviewView";
 import PipelineView from "@/components/views/PipelineView";
@@ -13,6 +12,28 @@ import CalendarView from "@/components/views/CalendarView";
 import GeneratorView from "@/components/views/GeneratorView";
 import SourcesView from "@/components/views/SourcesView";
 import SettingsView from "@/components/views/SettingsView";
+
+
+const TZ = "America/Mexico_City";
+
+/** "8 jul, 14:32" en hora de CDMX. */
+function syncStamp(iso: string): string {
+  return new Date(iso).toLocaleString("es-MX", {
+    timeZone: TZ,
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** El cron corre todos los días a las 7:00 CDMX. */
+function nextSyncLabel(): string {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric", hourCycle: "h23" }).format(new Date()),
+  );
+  return hour < 7 ? "hoy a las 7:00" : "mañana a las 7:00";
+}
 
 export default function Dashboard() {
   const {
@@ -94,22 +115,23 @@ export default function Dashboard() {
               <p className="hero-copy">
                 {!activeAccount ? (
                   "Agrega una cuenta para empezar."
+                ) : activeConnection?.lastSyncAt ? (
+                  <>
+                    <strong>{activeAccount.handle}</strong> · Última actualización:{" "}
+                    {syncStamp(activeConnection.lastSyncAt)} · Próxima: {nextSyncLabel()}.
+                  </>
                 ) : activeConnection ? (
                   <>
-                    <strong>{activeAccount.handle}</strong> conectada a Instagram por la vía oficial.
-                    Métricas reales sincronizadas{" "}
-                    {activeConnection.lastSyncAt ? relativeTime(activeConnection.lastSyncAt) : "pendientes"} —
-                    se actualizan solas cada día a las 7:00. Pipeline y calendario en la misma pantalla.
+                    <strong>{activeAccount.handle}</strong> · Conectada, primera sincronización pendiente.
                   </>
                 ) : canEdit ? (
                   <>
-                    <strong>{activeAccount.handle}</strong> todavía sin conexión a Instagram. Conéctala en{" "}
-                    <strong>IG Ready</strong> para traer métricas reales; el pipeline y el calendario ya
-                    están operativos.
+                    <strong>{activeAccount.handle}</strong> · Sin conexión a Instagram — conéctala en{" "}
+                    <strong>IG Ready</strong>.
                   </>
                 ) : (
                   <>
-                    Dashboard de solo lectura de <strong>{activeAccount.name}</strong> ({activeAccount.handle}).
+                    <strong>{activeAccount.handle}</strong> · Vista de solo lectura.
                   </>
                 )}
               </p>
@@ -132,61 +154,31 @@ export default function Dashboard() {
             <div className="command-strip" aria-label="Estado operativo">
               <div className="command-card">
                 <div className="row">
-                  <strong>Instagram</strong>
-                  <span>
-                    {activeConnection
-                      ? activeConnection.status === "error"
-                        ? "Con error"
-                        : `@${activeConnection.username}`
-                      : "Sin conectar"}
-                  </span>
+                  <strong>Quality gate</strong>
+                  <span>{gate.avg}%</span>
                 </div>
                 <div className="pulse-bar">
-                  <span
-                    style={{
-                      ["--w" as string]: activeConnection
-                        ? activeConnection.status === "error"
-                          ? "45%"
-                          : "100%"
-                        : "6%",
-                    }}
-                  />
+                  <span style={{ ["--w" as string]: `${gate.avg}%` }} />
                 </div>
               </div>
               <div className="command-card">
                 <div className="row">
-                  <strong>Última actualización</strong>
-                  <span>
-                    {activeConnection?.lastSyncAt ? relativeTime(activeConnection.lastSyncAt) : "—"}
-                  </span>
+                  <strong>Listas para salir</strong>
+                  <span>{gate.ready} piezas</span>
                 </div>
                 <div className="pulse-bar">
-                  <span style={{ ["--w" as string]: activeConnection?.lastSyncAt ? "100%" : "6%" }} />
+                  <span style={{ ["--w" as string]: `${Math.min(100, gate.ready * 12)}%` }} />
                 </div>
               </div>
-              {accountPieces.length > 0 ? (
-                <div className="command-card">
-                  <div className="row">
-                    <strong>Quality gate</strong>
-                    <span>
-                      {gate.avg}% · {gate.ready} listas{gate.blocked ? ` · ${gate.blocked} rojos` : ""}
-                    </span>
-                  </div>
-                  <div className="pulse-bar">
-                    <span style={{ ["--w" as string]: `${gate.avg}%` }} />
-                  </div>
+              <div className="command-card">
+                <div className="row">
+                  <strong>Bloqueos creativos</strong>
+                  <span>{gate.blocked} rojos</span>
                 </div>
-              ) : (
-                <div className="command-card">
-                  <div className="row">
-                    <strong>Pipeline</strong>
-                    <span>Sin piezas aún</span>
-                  </div>
-                  <div className="pulse-bar">
-                    <span style={{ ["--w" as string]: "6%" }} />
-                  </div>
+                <div className="pulse-bar">
+                  <span style={{ ["--w" as string]: `${Math.min(100, gate.blocked * 20)}%` }} />
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </section>
