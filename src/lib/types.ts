@@ -8,12 +8,12 @@ export interface Account {
   color: string;
 }
 
-export type PieceFormat = "Reel" | "Carrusel" | "Stories" | "Ad";
+export type PieceFormat = "Reel" | "Carrusel" | "Historias" | "Ad";
 export type PieceStatus = "Idea" | "Guion" | "Grabado" | "Editado" | "Aprobado" | "Programado";
 export type PieceObjective = "DM" | "Agenda" | "Registro" | "Venta" | "Tráfico a perfil";
 
 export const STATUSES: PieceStatus[] = ["Idea", "Guion", "Grabado", "Editado", "Aprobado", "Programado"];
-export const FORMATS: PieceFormat[] = ["Reel", "Carrusel", "Stories", "Ad"];
+export const FORMATS: PieceFormat[] = ["Reel", "Carrusel", "Historias", "Ad"];
 export const OBJECTIVES: PieceObjective[] = ["DM", "Agenda", "Registro", "Venta", "Tráfico a perfil"];
 export const DAYS = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"] as const;
 export type Day = (typeof DAYS)[number];
@@ -84,6 +84,8 @@ export interface AccountMetrics {
   recentPosts?: RecentPost[];
   /** Retención real de reels: tiempo promedio de visualización por reel (API oficial). */
   reelsRetention?: FunnelStep[];
+  /** KPIs por rango de tiempo ("1" hoy, "7" y "30" días) para el selector de rango. */
+  kpiRanges?: Record<string, Kpi[]>;
 }
 
 /** Snapshot congelado de métricas, para histórico y PDF. */

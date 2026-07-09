@@ -99,7 +99,7 @@ export default function MetricsEditor({ metrics, onClose }: Props) {
 
         <div className="form-grid two" style={{ marginBottom: 14 }}>
           <label>
-            Net followers
+            Seguidores netos
             {numericField(growthNet, setGrowthNet, "count", { signed: true, placeholder: "120" })}
           </label>
           <label>
@@ -107,7 +107,7 @@ export default function MetricsEditor({ metrics, onClose }: Props) {
             {numericField(ctrBio, setCtrBio, "pct", { placeholder: "3.1" })}
           </label>
           <label>
-            Reach total
+            Alcance total
             {numericField(reachTotal, setReachTotal, "count", { placeholder: "204100" })}
           </label>
         </div>

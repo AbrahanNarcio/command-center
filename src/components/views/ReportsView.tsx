@@ -194,7 +194,7 @@ export default function ReportsView() {
                       <h2>Seguidores</h2>
                     </div>
                     <div className="chart-value">
-                      <strong>{open.data.growthNet}</strong>net
+                      <strong>{open.data.growthNet}</strong>netos
                     </div>
                   </div>
                   <LineChart values={open.data.growth} />

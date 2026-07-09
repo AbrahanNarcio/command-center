@@ -66,7 +66,7 @@ function pctOf(value: number | null, base: number | null): number {
 
 function formatLabel(media: MediaItem): string {
   if (media.media_product_type === "REELS") return "Reels";
-  if (media.media_product_type === "STORY") return "Stories";
+  if (media.media_product_type === "STORY") return "Historias";
   if (media.media_type === "CAROUSEL_ALBUM") return "Carruseles";
   return "Posts";
 }
@@ -93,23 +93,22 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
 
     const profile = await fetchProfile(token);
 
-    // Insights de cuenta con ventana REAL de 30 días (since/until). Si Meta la rechaza,
-    // se cae a la ventana diaria y las tarjetas lo dicen tal cual.
+    // Insights por ventana real (since/until). FULL con fallback a CORE por ventana.
+    const fetchWindow = async (days?: number) => {
+      try {
+        return await fetchAccountInsights(conn.igUserId, token, undefined, days);
+      } catch {
+        return await fetchAccountInsights(conn.igUserId, token, ACCOUNT_METRICS_CORE, days);
+      }
+    };
+
     let insights;
     let windowLabel = "últimos 30 días";
     try {
-      insights = await fetchAccountInsights(conn.igUserId, token, undefined, 30);
+      insights = await fetchWindow(30);
     } catch {
-      try {
-        insights = await fetchAccountInsights(conn.igUserId, token, ACCOUNT_METRICS_CORE, 30);
-      } catch {
-        windowLabel = "hoy (ventana diaria)";
-        try {
-          insights = await fetchAccountInsights(conn.igUserId, token);
-        } catch {
-          insights = await fetchAccountInsights(conn.igUserId, token, ACCOUNT_METRICS_CORE);
-        }
-      }
+      windowLabel = "hoy (ventana diaria)";
+      insights = await fetchWindow(undefined);
     }
 
     // Publicaciones recientes (para formato, top posts y heatmap).
@@ -154,37 +153,63 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
     const metrics = await getMetricsRow(accountId);
     if (!metrics) return { ok: true };
 
-    // ── KPIs: set completo, todo real ──
-    const val = (n: number | null, fmt: (x: number) => string = formatCompact) =>
-      n == null ? "—" : fmt(n);
-    metrics.kpis = [
-      { label: "Vistas", value: val(views), delta: "", detail: `Reproducciones · ${windowLabel}`, color: C.cyan },
-      { label: "Reach", value: val(reach), delta: "", detail: `Cuentas alcanzadas · ${windowLabel}`, color: C.lime },
-      { label: "Seguidores", value: val(profile.followers_count ?? null), delta: "", detail: "Total actual del perfil", color: C.green },
-      { label: "Interaccion", value: er == null ? "—" : `${er.toFixed(1)}%`, delta: "", detail: `Interacciones / reach · ${windowLabel}`, color: C.pink },
-      { label: "Likes", value: val(likes), delta: "", detail: `Me gusta recibidos · ${windowLabel}`, color: C.amber },
-      { label: "Comentarios", value: val(comments), delta: "", detail: `Recibidos · ${windowLabel}`, color: C.violet },
-      { label: "Saves", value: val(saves), delta: "", detail: `Guardados · ${windowLabel}`, color: C.cyan },
-      { label: "Shares", value: val(shares), delta: "", detail: `Compartidos · ${windowLabel}`, color: C.lime },
-      { label: "Cuentas con engagement", value: val(engaged), delta: "", detail: `Interactuaron contigo · ${windowLabel}`, color: C.green },
-      { label: "Taps al link", value: val(linkTaps), delta: "", detail: `Clics en el link del perfil · ${windowLabel}`, color: C.coral },
-      { label: "CTR bio", value: ctrBio == null ? "—" : `${ctrBio.toFixed(2)}%`, delta: "", detail: `Taps al link / reach · ${windowLabel}`, color: C.pink },
-      { label: "Frecuencia", value: frequency == null ? "—" : `${frequency.toFixed(1)}x`, delta: "", detail: `Views por cuenta alcanzada · ${windowLabel}`, color: C.amber },
-    ];
-    if (followsNet != null) {
-      metrics.kpis[11] = { label: "Follows netos", value: formatCompact(followsNet), delta: "", detail: `Follows - unfollows · ${windowLabel}`, color: C.amber };
+    // ── KPIs: set completo, todo real, por rango de tiempo ──
+    const buildKpis = (ins: typeof insights, label: string): Kpi[] => {
+      const g = (name: string) => metricValue(ins, name);
+      const rReach = g("reach");
+      const rViews = g("views");
+      const rInteractions = g("total_interactions");
+      const rLinkTaps = g("profile_links_taps");
+      const rEr = rInteractions != null && rReach ? (rInteractions / rReach) * 100 : null;
+      const rCtr = rLinkTaps != null && rReach ? (rLinkTaps / rReach) * 100 : null;
+      const rFreq = rViews != null && rReach ? rViews / rReach : null;
+      const rFollows = g("follows_and_unfollows");
+      const val = (n: number | null, fmt: (x: number) => string = formatCompact) =>
+        n == null ? "—" : fmt(n);
+      const kpis: Kpi[] = [
+        { label: "Vistas", value: val(rViews), delta: "", detail: `Reproducciones · ${label}`, color: C.cyan },
+        { label: "Alcance", value: val(rReach), delta: "", detail: `Cuentas alcanzadas · ${label}`, color: C.lime },
+        { label: "Seguidores", value: val(profile.followers_count ?? null), delta: "", detail: "Total actual del perfil", color: C.green },
+        { label: "Interacción", value: rEr == null ? "—" : `${rEr.toFixed(1)}%`, delta: "", detail: `Interacciones / alcance · ${label}`, color: C.pink },
+        { label: "Me gusta", value: val(g("likes")), delta: "", detail: `Recibidos · ${label}`, color: C.amber },
+        { label: "Comentarios", value: val(g("comments")), delta: "", detail: `Recibidos · ${label}`, color: C.violet },
+        { label: "Guardados", value: val(g("saves")), delta: "", detail: `Contenido guardado · ${label}`, color: C.cyan },
+        { label: "Compartidos", value: val(g("shares")), delta: "", detail: `Contenido compartido · ${label}`, color: C.lime },
+        { label: "Cuentas con engagement", value: val(g("accounts_engaged")), delta: "", detail: `Interactuaron contigo · ${label}`, color: C.green },
+        { label: "Taps al link", value: val(rLinkTaps), delta: "", detail: `Clics en el link del perfil · ${label}`, color: C.coral },
+        { label: "CTR bio", value: rCtr == null ? "—" : `${rCtr.toFixed(2)}%`, delta: "", detail: `Taps al link / alcance · ${label}`, color: C.pink },
+        { label: "Frecuencia", value: rFreq == null ? "—" : `${rFreq.toFixed(1)}x`, delta: "", detail: `Vistas por cuenta alcanzada · ${label}`, color: C.amber },
+      ];
+      if (rFollows != null) {
+        kpis[11] = { label: "Seguidores netos", value: formatCompact(rFollows), delta: "", detail: `Follows - unfollows · ${label}`, color: C.amber };
+      }
+      return kpis;
+    };
+
+    metrics.kpis = buildKpis(insights, windowLabel);
+
+    // Rangos para el selector (el sync los deja listos; la UI cambia al instante).
+    const kpiRanges: Record<string, Kpi[]> = { "30": metrics.kpis };
+    for (const [days, label] of [[1, "hoy"], [7, "últimos 7 días"]] as [number, string][]) {
+      try {
+        kpiRanges[String(days)] = buildKpis(await fetchWindow(days), label);
+      } catch {
+        // sin ese rango; el selector lo omite
+      }
     }
+    metrics.kpiRanges = kpiRanges;
+
     if (reach != null) metrics.reachTotal = formatCompact(reach);
     if (er != null) metrics.engagementRate = `${er.toFixed(1)}% ER`;
     if (ctrBio != null) metrics.ctrBio = `${ctrBio.toFixed(2)}%`;
 
     // ── Donut: mix real de engagement ──
     const mixParts: [string, number | null, string][] = [
-      ["Likes", likes, C.cyan],
+      ["Me gusta", likes, C.cyan],
       ["Comentarios", comments, C.lime],
-      ["Saves", saves, C.pink],
-      ["Shares", shares, C.amber],
-      ["Reposts", reposts, C.coral],
+      ["Guardados", saves, C.pink],
+      ["Compartidos", shares, C.amber],
+      ["Reposteos", reposts, C.coral],
     ];
     const mixTotal = mixParts.reduce((s, [, v]) => s + (v ?? 0), 0);
     if (mixTotal > 0) {
@@ -288,11 +313,11 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
 
     // ── Funnel real: reach → engagement → interacciones → taps → follows ──
     const funnelParts: [string, number | null, string][] = [
-      ["Reach", reach, C.cyan],
+      ["Alcance", reach, C.cyan],
       ["Cuentas con engagement", engaged, C.lime],
       ["Interacciones", interactions, C.amber],
       ["Taps al link", linkTaps, C.pink],
-      ["Follows netos", followsNet, C.green],
+      ["Seguidores netos", followsNet, C.green],
     ];
     const funnelReal = funnelParts.filter(([, v]) => v != null);
     if (funnelReal.length >= 3) {

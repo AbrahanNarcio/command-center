@@ -12,9 +12,19 @@ const compact = (n: number) =>
 import MetricsEditor from "@/components/MetricsEditor";
 import KpiIcon from "@/components/KpiIcon";
 
+const RANGE_OPTIONS: { key: string; label: string }[] = [
+  { key: "1", label: "Hoy" },
+  { key: "7", label: "7 días" },
+  { key: "30", label: "30 días" },
+];
+
 export default function OverviewView({ pieces }: { pieces: Piece[] }) {
   const { activeMetrics, activeAccount, canEdit } = useStore();
   const [editing, setEditing] = useState(false);
+  const [range, setRange] = useState("30");
+
+  const hasRanges = Boolean(activeMetrics?.kpiRanges && Object.keys(activeMetrics.kpiRanges).length > 1);
+  const kpis = activeMetrics?.kpiRanges?.[range] ?? activeMetrics?.kpis ?? [];
 
   const ops = useMemo(() => {
     const ready = pieces.filter((p) => ["Aprobado", "Programado"].includes(p.status)).length;
@@ -51,18 +61,33 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             Fuente: API oficial de Instagram. Cada tarjeta indica qué mide y de qué periodo.
           </p>
         </div>
-        {canEdit && (
-          <button className="button small" onClick={() => setEditing(true)}>
-            Editar métricas
-          </button>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          {hasRanges && (
+            <div className="filters" role="group" aria-label="Rango de tiempo de los KPIs">
+              {RANGE_OPTIONS.filter((o) => activeMetrics.kpiRanges?.[o.key]).map((o) => (
+                <button
+                  key={o.key}
+                  className={`chip${range === o.key ? " active" : ""}`}
+                  onClick={() => setRange(o.key)}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {canEdit && (
+            <button className="button small" onClick={() => setEditing(true)}>
+              Editar métricas
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="metric-grid">
-        {activeMetrics.kpis.map((kpi, i) => (
+        {kpis.map((kpi, i) => (
           <article
             className="metric-card"
-            key={kpi.label}
+            key={`${kpi.label}-${range}`}
             style={{ ["--accent" as string]: kpi.color, ["--i" as string]: i }}
           >
             <span>{kpi.label}</span>
@@ -83,7 +108,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
               <p>Evolución diaria para ver tendencia.</p>
             </div>
             <div className="chart-value">
-              <strong>{activeMetrics.growthNet}</strong>net followers
+              <strong>{activeMetrics.growthNet}</strong>seguidores netos
             </div>
           </div>
           <LineChart values={activeMetrics.growth} />
@@ -94,7 +119,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             <div>
               <p className="eyebrow">Mix engagement</p>
               <h2>Qué está generando acción</h2>
-              <p>Likes, comentarios, saves, shares y DMs.</p>
+              <p>Me gusta, comentarios, guardados y compartidos.</p>
             </div>
           </div>
           <div className="donut-wrap">
@@ -118,10 +143,10 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
           <div className="chart-top">
             <div>
               <p className="eyebrow">Alcance por formato</p>
-              <h2>Reels vs carruseles vs stories</h2>
+              <h2>Reels vs carruseles vs historias</h2>
             </div>
             <div className="chart-value">
-              <strong>{activeMetrics.reachTotal}</strong>reach
+              <strong>{activeMetrics.reachTotal}</strong>alcance
             </div>
           </div>
           <div className="bars-chart" style={{ ["--count" as string]: activeMetrics.reachByFormat.length }}>
