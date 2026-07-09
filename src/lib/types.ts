@@ -88,8 +88,12 @@ export interface AccountMetrics {
   reelsRetention?: ReelRetention[];
   /** KPIs por rango de tiempo ("1" hoy, "7" y "30" días) para el selector de rango. */
   kpiRanges?: Record<string, Kpi[]>;
-  /** Serie diaria real de seguidores ganados/perdidos (API oficial, ~29 días). */
+  /** Serie diaria real de seguidores ganados/perdidos. El sync la acumula (hasta 400 días). */
   followersDaily?: { date: string; gained: number; lost: number }[];
+  /** Días recientes con cambio de seguidores fuera de lo normal (detectados en el sync). */
+  anomalies?: { date: string; net: number }[];
+  /** Historias activas en el último sync: vistas, respuestas, salidas y % que la terminó. */
+  stories?: { label: string; views: number | null; replies: number | null; exits: number | null; completion: number | null }[];
   /** Total de seguidores al momento del último sync, para reconstruir la serie de totales. */
   followersTotal?: number;
 }

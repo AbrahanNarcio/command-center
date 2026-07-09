@@ -8,7 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/login") || pathname.startsWith("/api")) {
+  // /reset es pública: llega desde el enlace de recuperación del correo.
+  if (pathname.startsWith("/login") || pathname.startsWith("/reset") || pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 

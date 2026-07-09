@@ -165,6 +165,7 @@ export async function fetchAccountInsights(
   token: string,
   metrics: string = ACCOUNT_METRICS_FULL,
   windowDays?: number,
+  endDaysAgo = 0,
 ): Promise<InsightValue[]> {
   const params = new URLSearchParams({
     metric: metrics,
@@ -174,7 +175,8 @@ export async function fetchAccountInsights(
   });
   if (windowDays) {
     // total_value + since/until = suma del rango completo (máx. 30 días por petición).
-    const until = Math.floor(Date.now() / 1000);
+    // endDaysAgo desplaza la ventana hacia atrás (p. ej. 30 = el periodo ANTERIOR de 30 días).
+    const until = Math.floor(Date.now() / 1000) - endDaysAgo * 86400;
     params.set("since", String(until - windowDays * 86400));
     params.set("until", String(until));
   }
@@ -278,6 +280,49 @@ export async function fetchMediaList(igUserId: string, token: string, limit = 50
  * Insights de una publicación individual (una sola llamada para varias métricas).
  * Devuelve mapa métrica→valor; {} si la publicación no las soporta (p. ej. stories viejas).
  */
+export interface StoryInsights {
+  views: number | null;
+  replies: number | null;
+  /** Salidas de la historia (tap_exit). */
+  exits: number | null;
+  tapsBack: number | null;
+  tapsForward: number | null;
+}
+
+/** Métricas de una historia activa: vistas/respuestas + navegación con breakdown. */
+export async function fetchStoryInsights(mediaId: string, token: string): Promise<StoryInsights> {
+  const out: StoryInsights = { views: null, replies: null, exits: null, tapsBack: null, tapsForward: null };
+  try {
+    const base = await fetchMediaMetrics(mediaId, token, "views,replies");
+    out.views = base.views ?? null;
+    out.replies = base.replies ?? null;
+  } catch {
+    // historia sin métricas base
+  }
+  try {
+    const params = new URLSearchParams({
+      metric: "navigation",
+      breakdown: "story_navigation_action_type",
+      access_token: token,
+    });
+    const res = await fetch(`${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${mediaId}/insights?${params}`);
+    const data = await res.json();
+    if (res.ok) {
+      const results: { dimension_values?: string[]; value?: number }[] =
+        data?.data?.[0]?.total_value?.breakdowns?.[0]?.results ?? [];
+      for (const r of results) {
+        const key = r.dimension_values?.[0];
+        if (key === "tap_exit") out.exits = r.value ?? null;
+        if (key === "tap_back") out.tapsBack = r.value ?? null;
+        if (key === "tap_forward") out.tapsForward = r.value ?? null;
+      }
+    }
+  } catch {
+    // navegación no disponible
+  }
+  return out;
+}
+
 export async function fetchMediaMetrics(
   mediaId: string,
   token: string,

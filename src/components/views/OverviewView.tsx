@@ -25,7 +25,9 @@ const FOLLOWER_SERIES: { key: "total" | "gained" | "lost" | "net"; label: string
   { key: "net", label: "Netos", color: "#7a8cff" },
 ];
 
-const FOLLOWER_RANGES = [7, 14, 30];
+/** Rangos del histórico: los largos aparecen solos cuando el acumulado diario los alcanza. */
+const followerRanges = (days: number) =>
+  [7, 14, 30, 60, 90, 365].filter((r, i, arr) => i < 3 || days > arr[i - 1]);
 
 export default function OverviewView({ pieces }: { pieces: Piece[] }) {
   const { activeMetrics, activeAccount, canEdit } = useStore();
@@ -53,6 +55,8 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
       net: slice(net),
       total: slice(total),
     };
+    const dates = slice(daily.map((d) => d.date));
+    const ranges = followerRanges(daily.length);
     const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
     const netSum = sum(series.net);
     const headline = {
@@ -67,7 +71,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
       lost: `perdidos en ${fRange} días`,
       net: `netos en ${fRange} días`,
     };
-    return { series, headline, caption };
+    return { series, headline, caption, dates, ranges };
   }, [activeMetrics, fRange]);
 
   const hasRanges = Boolean(activeMetrics?.kpiRanges && Object.keys(activeMetrics.kpiRanges).length > 1);
@@ -140,7 +144,14 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             <span>{kpi.label}</span>
             <strong>{kpi.value}</strong>
             <p>{kpi.detail}</p>
-            {kpi.delta ? <div className="delta">{kpi.delta}</div> : null}
+            {kpi.delta ? (
+              <div
+                className={`delta${/^[+-]/.test(kpi.delta) ? (kpi.delta.startsWith("-") ? " down" : " up") : ""}`}
+                title="Contra el periodo anterior del mismo tamaño"
+              >
+                {kpi.delta.startsWith("-") ? "▼" : kpi.delta.startsWith("+") ? "▲" : ""} {kpi.delta}
+              </div>
+            ) : null}
             <KpiIcon label={kpi.label} />
           </article>
         ))}
@@ -186,7 +197,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
                   ))}
                 </div>
                 <div className="filters" role="group" aria-label="Rango de días">
-                  {FOLLOWER_RANGES.map((d) => (
+                  {followers.ranges.map((d) => (
                     <button
                       key={d}
                       className={`chip${fRange === d ? " active" : ""}`}
@@ -200,6 +211,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
               <LineChart
                 key={`${fSeries}-${fRange}`}
                 values={followers.series[fSeries]}
+                labels={followers.dates}
                 color={FOLLOWER_SERIES.find((s) => s.key === fSeries)?.color}
               />
             </>
@@ -378,6 +390,56 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
         )}
       </section>
 
+      {activeMetrics.stories && (
+        <section className="chart-card">
+          <div className="chart-top">
+            <div>
+              <p className="eyebrow">Historias</p>
+              <h2>Retención de las historias activas</h2>
+              <p>Vistas, salidas, respuestas y % que la vio completa. Se capturan en cada sincronización (duran 24 h).</p>
+            </div>
+            <div className="chart-value">
+              <strong>{activeMetrics.stories.length}</strong>activas
+            </div>
+          </div>
+          {activeMetrics.stories.length ? (
+            <div className="story-list">
+              {activeMetrics.stories.map((s, i) => (
+                <div className="story-row" key={`${s.label}-${i}`} style={{ ["--i" as string]: i }}>
+                  <span className="story-when">{s.label}</span>
+                  <span className="story-cell">
+                    <b>{s.views?.toLocaleString("es-MX") ?? "—"}</b>
+                    <small>vistas</small>
+                  </span>
+                  <span className="story-cell">
+                    <b>{s.exits?.toLocaleString("es-MX") ?? "—"}</b>
+                    <small>salidas</small>
+                  </span>
+                  <span className="story-cell">
+                    <b>{s.replies?.toLocaleString("es-MX") ?? "—"}</b>
+                    <small>respuestas</small>
+                  </span>
+                  <div className="meter">
+                    <span
+                      style={{
+                        ["--score" as string]: `${s.completion ?? 0}%`,
+                        ["--meter" as string]: "linear-gradient(90deg, var(--violet), rgba(255,255,255,.18))",
+                      }}
+                    />
+                  </div>
+                  <b>{s.completion != null ? `${s.completion}%` : "—"}</b>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-results">
+              No había historias activas en la última sincronización. Publica una historia y en el siguiente
+              sync aparecen sus métricas.
+            </div>
+          )}
+        </section>
+      )}
+
       <div className="analytics-grid three">
         <section className="chart-card">
           <div className="chart-top">
@@ -514,6 +576,26 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             </div>
           </div>
           <div className="alerts">
+            {(activeMetrics.anomalies ?? []).map((a) => {
+              const fecha = new Date(`${a.date}T12:00:00`).toLocaleDateString("es-MX", {
+                weekday: "long",
+                day: "numeric",
+                month: "short",
+              });
+              return (
+                <div
+                  className="alert"
+                  key={`anom-${a.date}`}
+                  style={{ ["--accent" as string]: a.net < 0 ? "var(--coral)" : "var(--green)" }}
+                >
+                  <strong>{a.net < 0 ? "Caída fuerte de seguidores" : "Pico de seguidores"}</strong>
+                  <p>
+                    {a.net < 0 ? "Perdiste" : "Ganaste"} {Math.abs(a.net).toLocaleString("es-MX")} seguidores
+                    netos el {fecha}. Detectado automáticamente contra tu ritmo normal.
+                  </p>
+                </div>
+              );
+            })}
             {alerts.length ? (
               alerts.map((p) => (
                 <div

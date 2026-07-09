@@ -2,6 +2,52 @@ import { NextResponse } from "next/server";
 import { adminClient, supabaseConfigured } from "@/lib/supabase/admin";
 import { isConfigured } from "@/lib/instagram";
 import { syncAccount } from "@/lib/sync";
+import { getMetricsRow, insertReport, listReports } from "@/lib/db";
+import { newId } from "@/lib/seed";
+
+const TZ = process.env.SYNC_TIMEZONE || "America/Mexico_City";
+
+/**
+ * Reporte mensual automático: cada día 1 (hora local), congela las métricas de
+ * cada cuenta como "Reporte mensual · {mes anterior}". Corre dentro del cron
+ * diario para no gastar el segundo cron del plan gratuito de Vercel.
+ */
+async function monthlyReports(): Promise<Record<string, string>> {
+  const now = new Date();
+  const day = Number(now.toLocaleDateString("en-US", { timeZone: TZ, day: "numeric" }));
+  if (day !== 1) return {};
+
+  const prevMonth = new Date(now);
+  prevMonth.setDate(0); // último día del mes anterior
+  const monthLabel = prevMonth.toLocaleDateString("es-MX", { timeZone: TZ, month: "long", year: "numeric" });
+
+  const { data: accounts } = await adminClient().from("accounts").select("id, handle");
+  const out: Record<string, string> = {};
+  for (const acc of accounts ?? []) {
+    try {
+      const metrics = await getMetricsRow(acc.id);
+      if (!metrics) continue;
+      const title = `Reporte mensual ${acc.handle} · ${monthLabel}`;
+      const existing = await listReports(acc.id);
+      if (existing.some((r) => r.title === title)) {
+        out[acc.handle] = "ya existía";
+        continue;
+      }
+      await insertReport({
+        id: newId("rep"),
+        accountId: acc.id,
+        title,
+        note: "Generado automáticamente el día 1 del mes.",
+        createdAt: now.toISOString(),
+        data: metrics,
+      });
+      out[acc.handle] = "generado";
+    } catch (err) {
+      out[acc.handle] = `error: ${err instanceof Error ? err.message : "?"}`;
+    }
+  }
+  return out;
+}
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -32,5 +78,8 @@ export async function GET(request: Request) {
     results[`@${conn.username}`] = result.ok ? "ok" : `error: ${result.error}`;
   }
 
-  return NextResponse.json({ ok: true, ranAt: new Date().toISOString(), results });
+  // Después del sync (métricas frescas), el día 1 se congela el reporte mensual.
+  const monthly = await monthlyReports();
+
+  return NextResponse.json({ ok: true, ranAt: new Date().toISOString(), results, monthly });
 }

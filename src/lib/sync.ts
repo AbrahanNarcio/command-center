@@ -8,6 +8,7 @@ import {
   fetchMediaList,
   fetchMediaMetrics,
   fetchProfile,
+  fetchStoryInsights,
   formatCompact,
   metricValue,
   refreshLongToken,
@@ -105,11 +106,11 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
     }
 
     // Insights por ventana real (since/until). FULL con fallback a CORE por ventana.
-    const fetchWindow = async (days?: number) => {
+    const fetchWindow = async (days?: number, endDaysAgo = 0) => {
       try {
-        return await fetchAccountInsights(conn.igUserId, token, undefined, days);
+        return await fetchAccountInsights(conn.igUserId, token, undefined, days, endDaysAgo);
       } catch {
-        return await fetchAccountInsights(conn.igUserId, token, ACCOUNT_METRICS_CORE, days);
+        return await fetchAccountInsights(conn.igUserId, token, ACCOUNT_METRICS_CORE, days, endDaysAgo);
       }
     };
 
@@ -164,9 +165,30 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
     const metrics = await getMetricsRow(accountId);
     if (!metrics) return { ok: true };
 
+    // ── Ventanas ANTERIORES (mismo tamaño, desplazadas) para el delta comparativo ──
+    const prevOf: Record<string, typeof insights | undefined> = {};
+    await Promise.all(
+      ([[1, 1], [7, 7], [30, 30]] as const).map(async ([days, off]) => {
+        try {
+          prevOf[String(days)] = await fetchWindow(days, off);
+        } catch {
+          // sin periodo anterior: el KPI queda sin delta
+        }
+      }),
+    );
+
+    /** Delta % contra el periodo anterior: "+12%" / "-8.3%" / "" si no se puede. */
+    const dPct = (cur: number | null, prv: number | null | undefined): string => {
+      if (cur == null || prv == null || prv === 0) return "";
+      const p = ((cur - prv) / Math.abs(prv)) * 100;
+      if (!Number.isFinite(p)) return "";
+      return `${p >= 0 ? "+" : ""}${Math.abs(p) >= 10 ? p.toFixed(0) : p.toFixed(1)}%`;
+    };
+
     // ── KPIs: set completo, todo real, por rango de tiempo ──
-    const buildKpis = (ins: typeof insights, label: string): Kpi[] => {
+    const buildKpis = (ins: typeof insights, label: string, prev?: typeof insights): Kpi[] => {
       const g = (name: string) => metricValue(ins, name);
+      const pg = (name: string) => (prev ? metricValue(prev, name) : null);
       const rReach = g("reach");
       const rViews = g("views");
       const rInteractions = g("total_interactions");
@@ -175,35 +197,42 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
       const rCtr = rLinkTaps != null && rReach ? (rLinkTaps / rReach) * 100 : null;
       const rFreq = rViews != null && rReach ? rViews / rReach : null;
       const rFollows = g("follows_and_unfollows");
+      const pReach = pg("reach");
+      const pViews = pg("views");
+      const pInteractions = pg("total_interactions");
+      const pLinkTaps = pg("profile_links_taps");
+      const pEr = pInteractions != null && pReach ? (pInteractions / pReach) * 100 : null;
+      const pCtr = pLinkTaps != null && pReach ? (pLinkTaps / pReach) * 100 : null;
+      const pFreq = pViews != null && pReach ? pViews / pReach : null;
       const val = (n: number | null, fmt: (x: number) => string = formatCompact) =>
         n == null ? "—" : fmt(n);
       const kpis: Kpi[] = [
-        { label: "Vistas", value: val(rViews), delta: "", detail: `Reproducciones · ${label}`, color: C.cyan },
-        { label: "Alcance", value: val(rReach), delta: "", detail: `Cuentas alcanzadas · ${label}`, color: C.lime },
+        { label: "Vistas", value: val(rViews), delta: dPct(rViews, pViews), detail: `Reproducciones · ${label}`, color: C.cyan },
+        { label: "Alcance", value: val(rReach), delta: dPct(rReach, pReach), detail: `Cuentas alcanzadas · ${label}`, color: C.lime },
         { label: "Seguidores", value: val(profile.followers_count ?? null), delta: "", detail: "Total actual del perfil", color: C.green },
-        { label: "Interacción", value: rEr == null ? "—" : `${rEr.toFixed(1)}%`, delta: "", detail: `Interacciones / alcance · ${label}`, color: C.pink },
-        { label: "Me gusta", value: val(g("likes")), delta: "", detail: `Recibidos · ${label}`, color: C.amber },
-        { label: "Comentarios", value: val(g("comments")), delta: "", detail: `Recibidos · ${label}`, color: C.violet },
-        { label: "Guardados", value: val(g("saves")), delta: "", detail: `Contenido guardado · ${label}`, color: C.cyan },
-        { label: "Compartidos", value: val(g("shares")), delta: "", detail: `Contenido compartido · ${label}`, color: C.lime },
-        { label: "Cuentas con engagement", value: val(g("accounts_engaged")), delta: "", detail: `Interactuaron contigo · ${label}`, color: C.green },
-        { label: "Taps al link", value: val(rLinkTaps), delta: "", detail: `Clics en el link del perfil · ${label}`, color: C.coral },
-        { label: "CTR bio", value: rCtr == null ? "—" : `${rCtr.toFixed(2)}%`, delta: "", detail: `Taps al link / alcance · ${label}`, color: C.pink },
-        { label: "Frecuencia", value: rFreq == null ? "—" : `${rFreq.toFixed(1)}x`, delta: "", detail: `Vistas por cuenta alcanzada · ${label}`, color: C.amber },
+        { label: "Interacción", value: rEr == null ? "—" : `${rEr.toFixed(1)}%`, delta: dPct(rEr, pEr), detail: `Interacciones / alcance · ${label}`, color: C.pink },
+        { label: "Me gusta", value: val(g("likes")), delta: dPct(g("likes"), pg("likes")), detail: `Recibidos · ${label}`, color: C.amber },
+        { label: "Comentarios", value: val(g("comments")), delta: dPct(g("comments"), pg("comments")), detail: `Recibidos · ${label}`, color: C.violet },
+        { label: "Guardados", value: val(g("saves")), delta: dPct(g("saves"), pg("saves")), detail: `Contenido guardado · ${label}`, color: C.cyan },
+        { label: "Compartidos", value: val(g("shares")), delta: dPct(g("shares"), pg("shares")), detail: `Contenido compartido · ${label}`, color: C.lime },
+        { label: "Cuentas con engagement", value: val(g("accounts_engaged")), delta: dPct(g("accounts_engaged"), pg("accounts_engaged")), detail: `Interactuaron contigo · ${label}`, color: C.green },
+        { label: "Taps al link", value: val(rLinkTaps), delta: dPct(rLinkTaps, pLinkTaps), detail: `Clics en el link del perfil · ${label}`, color: C.coral },
+        { label: "CTR bio", value: rCtr == null ? "—" : `${rCtr.toFixed(2)}%`, delta: dPct(rCtr, pCtr), detail: `Taps al link / alcance · ${label}`, color: C.pink },
+        { label: "Frecuencia", value: rFreq == null ? "—" : `${rFreq.toFixed(1)}x`, delta: dPct(rFreq, pFreq), detail: `Vistas por cuenta alcanzada · ${label}`, color: C.amber },
       ];
       if (rFollows != null) {
-        kpis[11] = { label: "Seguidores netos", value: formatCompact(rFollows), delta: "", detail: `Follows - unfollows · ${label}`, color: C.amber };
+        kpis[11] = { label: "Seguidores netos", value: formatCompact(rFollows), delta: dPct(rFollows, pg("follows_and_unfollows")), detail: `Follows - unfollows · ${label}`, color: C.amber };
       }
       return kpis;
     };
 
-    metrics.kpis = buildKpis(insights, windowLabel);
+    metrics.kpis = buildKpis(insights, windowLabel, prevOf["30"]);
 
     // Rangos para el selector (el sync los deja listos; la UI cambia al instante).
     const kpiRanges: Record<string, Kpi[]> = { "30": metrics.kpis };
     for (const [days, label] of [[1, "hoy"], [7, "últimos 7 días"]] as [number, string][]) {
       try {
-        kpiRanges[String(days)] = buildKpis(await fetchWindow(days), label);
+        kpiRanges[String(days)] = buildKpis(await fetchWindow(days), label, prevOf[String(days)]);
       } catch {
         // sin ese rango; el selector lo omite
       }
@@ -307,6 +336,26 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
       .slice(0, 12);
     if (recent.length) metrics.recentPosts = recent;
 
+    // ── Historias activas (duran 24 h: cada sync guarda las que encuentre) ──
+    const activeStories = media.filter((m) => m.media_product_type === "STORY").slice(0, 10);
+    metrics.stories = await Promise.all(
+      activeStories.map(async (m) => {
+        const ins = await fetchStoryInsights(m.id, token);
+        const completion =
+          ins.views && ins.exits != null ? Math.max(0, Math.round((1 - ins.exits / ins.views) * 100)) : null;
+        const label = m.timestamp
+          ? new Date(m.timestamp).toLocaleString("es-MX", {
+              timeZone: SYNC_TZ,
+              weekday: "short",
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            })
+          : "Historia";
+        return { label, views: ins.views, replies: ins.replies, exits: ins.exits, completion };
+      }),
+    );
+
     // ── Top publicaciones reales (por likes + comentarios) ──
     const ranked = media
       .filter((m) => m.media_product_type !== "STORY")
@@ -370,11 +419,33 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
     }
 
     // ── Serie diaria de seguidores ganados/perdidos (para la gráfica con selector) ──
+    // La API solo da ~30 días hacia atrás, así que cada sync FUSIONA lo nuevo con lo
+    // acumulado en la base: con el tiempo se juntan 60/90/365 días de histórico.
     try {
       const daily = await fetchFollowersDaily(conn.igUserId, token);
       if (daily.length) {
-        metrics.followersDaily = daily;
+        const merged = new Map<string, { date: string; gained: number; lost: number }>();
+        for (const d of metrics.followersDaily ?? []) merged.set(d.date, d);
+        for (const d of daily) merged.set(d.date, d);
+        metrics.followersDaily = [...merged.values()]
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .slice(-400);
         if (profile.followers_count != null) metrics.followersTotal = profile.followers_count;
+
+        // Anomalías: días de los últimos 30 cuyo cambio neto se sale de lo normal
+        // (mediana ± 6·MAD, robusto a los propios picos). Se guardan las 3 más recientes.
+        const serie = metrics.followersDaily;
+        if (serie.length >= 7) {
+          const nets = serie.map((d) => d.gained - d.lost);
+          const mid = (arr: number[]) => [...arr].sort((a, b) => a - b)[Math.floor(arr.length / 2)];
+          const med = mid(nets);
+          const mad = mid(nets.map((n) => Math.abs(n - med))) || 1;
+          metrics.anomalies = serie
+            .slice(-30)
+            .filter((d) => Math.abs(d.gained - d.lost - med) > Math.max(6 * mad, 120))
+            .map((d) => ({ date: d.date, net: d.gained - d.lost }))
+            .slice(-3);
+        }
       }
     } catch {
       // Sin serie diaria: la gráfica cae al snapshot acumulado de siempre.

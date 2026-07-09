@@ -1,10 +1,24 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import { AccountMetrics } from "@/lib/types";
 
-export function LineChart({ values, color }: { values: number[]; color?: string }) {
+const fmtNum = (n: number) => n.toLocaleString("es-MX");
+const fmtDate = (iso: string) =>
+  new Date(`${iso}T12:00:00`).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: undefined });
+
+export function LineChart({
+  values,
+  color,
+  labels,
+}: {
+  values: number[];
+  color?: string;
+  /** Fecha (YYYY-MM-DD) de cada punto, para el tooltip. */
+  labels?: string[];
+}) {
   const uid = useId();
+  const [hover, setHover] = useState<number | null>(null);
   if (values.length < 2) {
     return (
       <div className="line-chart" style={{ display: "grid", placeItems: "center" }}>
@@ -28,8 +42,18 @@ export function LineChart({ values, color }: { values: number[]; color?: string 
     .join(" ");
   const strokeId = `stroke-${uid}`;
   const fillId = `fill-${uid}`;
+  const xOf = (i: number) => (i / (values.length - 1)) * 100;
+  const yOf = (i: number) => 92 - ((values[i] - min) / range) * 78;
   return (
-    <div className="line-chart">
+    <div
+      className="line-chart has-tip"
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const frac = (e.clientX - rect.left) / rect.width;
+        setHover(Math.max(0, Math.min(values.length - 1, Math.round(frac * (values.length - 1)))));
+      }}
+      onMouseLeave={() => setHover(null)}
+    >
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Tendencia de crecimiento">
         <defs>
           <linearGradient id={strokeId} x1="0" x2="1" y1="0" y2="0">
@@ -62,6 +86,25 @@ export function LineChart({ values, color }: { values: number[]; color?: string 
           vectorEffect="non-scaling-stroke"
         />
       </svg>
+      {hover != null && (
+        <>
+          <span
+            className="line-dot"
+            style={{ left: `${xOf(hover)}%`, top: `${yOf(hover)}%`, background: color ?? "#7a8cff" }}
+          />
+          <div
+            className="line-tip"
+            style={{
+              left: `${xOf(hover)}%`,
+              top: `${yOf(hover)}%`,
+              transform: `translate(${xOf(hover) > 78 ? "-108%" : xOf(hover) < 12 ? "8%" : "-50%"}, -130%)`,
+            }}
+          >
+            <b>{fmtNum(values[hover])}</b>
+            {labels?.[hover] && <span>{fmtDate(labels[hover])}</span>}
+          </div>
+        </>
+      )}
     </div>
   );
 }

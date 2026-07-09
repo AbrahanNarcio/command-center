@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Database,
   FileText,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -16,6 +17,7 @@ import {
 import { useStore } from "@/lib/store-context";
 import { ViewId } from "@/lib/views";
 import AccountModal from "@/components/AccountModal";
+import PasswordModal from "@/components/PasswordModal";
 import { Account } from "@/lib/types";
 
 const NAV: { id: ViewId; icon: React.ReactNode; label: string; adminOnly: boolean }[] = [
@@ -33,6 +35,7 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
 
   const avatarOf = (accountId: string) => metrics.find((m) => m.accountId === accountId)?.avatarUrl;
   const [modal, setModal] = useState<null | { account?: Account | null }>(null);
+  const [passModal, setPassModal] = useState(false);
 
   const nav = NAV.filter((item) => canEdit || !item.adminOnly);
 
@@ -99,12 +102,16 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
         <div className="signal">{isAdmin ? "ADMIN" : canEdit ? "EDITOR" : "CLIENTE"}</div>
         <strong>{me?.email ?? ""}</strong>
         <span>{isAdmin ? "Acceso total al command center." : canEdit ? "Puedes mover todo lo de tu cuenta." : "Vista de solo lectura de tu cuenta."}</span>
-        <button className="button small" style={{ marginTop: 10, width: "100%" }} onClick={signOut}>
+        <button className="button small" style={{ marginTop: 10, width: "100%" }} onClick={() => setPassModal(true)}>
+          <KeyRound size={13} /> Cambiar contraseña
+        </button>
+        <button className="button small" style={{ marginTop: 7, width: "100%" }} onClick={signOut}>
           <LogOut size={13} /> Cerrar sesión
         </button>
       </div>
 
       {modal && <AccountModal account={modal.account} onClose={() => setModal(null)} />}
+      {passModal && <PasswordModal onClose={() => setPassModal(false)} />}
     </aside>
   );
 }

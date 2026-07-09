@@ -9,7 +9,28 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const forgot = async () => {
+    setError(null);
+    setNotice(null);
+    if (!email.includes("@")) {
+      setError("Escribe tu email arriba y vuelve a tocar el enlace.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const supabase = browserClient();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset`,
+      });
+      if (resetError) setError(resetError.message);
+      else setNotice("Listo: revisa tu correo y abre el enlace para crear una contraseña nueva.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,10 +95,24 @@ export default function LoginPage() {
                 <p>{error}</p>
               </div>
             )}
+            {notice && (
+              <div className="alert" style={{ ["--accent" as string]: "var(--green)" }}>
+                <p>{notice}</p>
+              </div>
+            )}
             <button className="button primary" type="submit" disabled={busy}>
               {busy ? "Entrando…" : "Entrar"}
             </button>
           </form>
+          <button
+            type="button"
+            className="button small"
+            style={{ marginTop: 10 }}
+            disabled={busy}
+            onClick={forgot}
+          >
+            Olvidé mi contraseña
+          </button>
           <p style={{ color: "var(--muted)", fontSize: 12, marginTop: 14, marginBottom: 0, lineHeight: 1.5 }}>
             ¿Eres cliente y no tienes acceso? Pide tus credenciales al equipo.
           </p>

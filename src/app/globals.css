@@ -867,6 +867,7 @@ textarea {
 .delta {
   display: inline-flex;
   align-items: center;
+  gap: 3px;
   min-height: 22px;
   margin-top: 12px;
   border-radius: 999px;
@@ -875,6 +876,19 @@ textarea {
   background: var(--accent);
   font-size: 11px;
   font-weight: 900;
+}
+
+/* Comparativa vs periodo anterior: verde sube, coral baja. */
+.delta.up {
+  background: rgba(58, 223, 133, 0.16);
+  color: var(--green);
+  border: 1px solid rgba(58, 223, 133, 0.35);
+}
+
+.delta.down {
+  background: rgba(255, 93, 81, 0.14);
+  color: var(--coral);
+  border: 1px solid rgba(255, 93, 81, 0.35);
 }
 
 .analytics-grid {
@@ -992,6 +1006,49 @@ textarea {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.line-chart.has-tip {
+  position: relative;
+  overflow: visible;
+}
+
+.line-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 2px solid #0b0d14;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.line-tip {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  background: #12141d;
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  padding: 7px 11px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  display: grid;
+  gap: 1px;
+}
+
+.line-tip b {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.line-tip span {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 800;
+  text-transform: capitalize;
 }
 
 .donut-wrap {
@@ -1197,6 +1254,132 @@ textarea {
   text-align: right;
   color: var(--text);
   font-size: 14px;
+}
+
+.health-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.health-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.2fr) repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.045);
+  padding: 11px 14px;
+  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+.health-row:hover {
+  border-color: var(--line-2);
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.health-name b {
+  display: block;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.health-name small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.health-cell {
+  display: grid;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.health-cell small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.health-cell b {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .health-row {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 8px;
+  }
+}
+
+.story-list {
+  display: grid;
+  gap: 10px;
+}
+
+.story-row {
+  display: grid;
+  grid-template-columns: 150px 100px 100px 110px minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.045);
+  padding: 10px 14px;
+  color: var(--soft);
+  font-size: 13px;
+  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+.story-row:hover {
+  border-color: var(--line-2);
+  background: rgba(255, 255, 255, 0.085);
+  transform: translateY(-1px);
+}
+
+.story-when {
+  font-weight: 800;
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+.story-cell {
+  display: grid;
+  line-height: 1.2;
+}
+
+.story-cell b {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.story-cell small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.story-row > b {
+  text-align: right;
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .story-row {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+
+  .story-row .meter {
+    display: none;
+  }
 }
 
 .heatmap {
