@@ -106,44 +106,9 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
           </div>
         </section>
 
-        <section className="chart-card">
-          <div className="chart-top">
-            <div>
-              <p className="eyebrow">Retención reels</p>
-              <h2>Tiempo promedio visto</h2>
-              <p>Cuánto se queda la gente en cada reel.</p>
-            </div>
-            <div className="chart-value">
-              <strong>{activeMetrics.reelsRetention?.length ? activeMetrics.retentionAvg : "—"}</strong>promedio
-            </div>
-          </div>
-          {activeMetrics.reelsRetention?.length ? (
-            <div className="funnel-list">
-              {activeMetrics.reelsRetention.map((r, i) => (
-                <div className="funnel-step" key={`${r.label}-${i}`} style={{ ["--i" as string]: i }}>
-                  <div>
-                    <span>{r.label}</span>
-                    <b>{r.value}</b>
-                  </div>
-                  <div className="meter">
-                    <span
-                      style={{
-                        ["--score" as string]: `${r.pct}%`,
-                        ["--meter" as string]: `linear-gradient(90deg, ${r.color}, rgba(255,255,255,.18))`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="no-results">Se llena solo con la sincronización de Instagram.</div>
-          )}
-        </section>
-
       </div>
 
-      <div className="analytics-grid">
+      <div className="analytics-grid three">
         <section className="chart-card">
           <div className="chart-top">
             <div>
@@ -203,6 +168,43 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
         <section className="chart-card">
           <div className="chart-top">
             <div>
+              <p className="eyebrow">Retención reels</p>
+              <h2>Tiempo promedio visto</h2>
+              <p>Cuánto se queda la gente en cada reel.</p>
+            </div>
+            <div className="chart-value">
+              <strong>{activeMetrics.reelsRetention?.length ? activeMetrics.retentionAvg : "—"}</strong>promedio
+            </div>
+          </div>
+          {activeMetrics.reelsRetention?.length ? (
+            <div className="funnel-list">
+              {activeMetrics.reelsRetention.map((r, i) => (
+                <div className="funnel-step" key={`${r.label}-${i}`} style={{ ["--i" as string]: i }}>
+                  <div>
+                    <span>{r.label}</span>
+                    <b>{r.value}</b>
+                  </div>
+                  <div className="meter">
+                    <span
+                      style={{
+                        ["--score" as string]: `${r.pct}%`,
+                        ["--meter" as string]: `linear-gradient(90deg, ${r.color}, rgba(255,255,255,.18))`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-results">Se llena solo con la sincronización de Instagram.</div>
+          )}
+        </section>
+      </div>
+
+      <div className="analytics-grid three">
+        <section className="chart-card">
+          <div className="chart-top">
+            <div>
               <p className="eyebrow">CTR / perfil</p>
               <h2>Ruta a DM y agenda</h2>
             </div>
@@ -229,9 +231,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             ))}
           </div>
         </section>
-      </div>
 
-      <div className="analytics-grid three">
         <section className="chart-card">
           <div className="chart-top">
             <div>
