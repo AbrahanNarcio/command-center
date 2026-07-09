@@ -29,13 +29,13 @@ export function LineChart({ values }: { values: number[] }) {
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Tendencia de crecimiento">
         <defs>
           <linearGradient id="growthStroke" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="#58e6ff" />
-            <stop offset="55%" stopColor="#d8ff63" />
-            <stop offset="100%" stopColor="#ff77bc" />
+            <stop offset="0%" stopColor="#7a8cff" />
+            <stop offset="55%" stopColor="#feda75" />
+            <stop offset="100%" stopColor="#ff5c9c" />
           </linearGradient>
           <linearGradient id="growthFill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#58e6ff" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="#58e6ff" stopOpacity="0" />
+            <stop offset="0%" stopColor="#7a8cff" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="#7a8cff" stopOpacity="0" />
           </linearGradient>
         </defs>
         <polygon className="line-fill" points={`0,100 ${points} 100,100`} fill="url(#growthFill)" />

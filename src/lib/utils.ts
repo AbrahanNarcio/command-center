@@ -1,12 +1,12 @@
 import { PieceFormat } from "./types";
 
 export const PALETTE: [string, string][] = [
-  ["#58e6ff", "#9b7cff"],
-  ["#d8ff63", "#58e6ff"],
-  ["#ff77bc", "#ffc857"],
-  ["#ff6f61", "#9b7cff"],
-  ["#80ffb5", "#ffc857"],
-  ["#9b7cff", "#58e6ff"],
+  ["#7a8cff", "#b05ce6"],
+  ["#feda75", "#7a8cff"],
+  ["#ff5c9c", "#ffa14e"],
+  ["#ff5d51", "#b05ce6"],
+  ["#80ffb5", "#ffa14e"],
+  ["#b05ce6", "#7a8cff"],
 ];
 
 export function scoreColor(score: number): string {

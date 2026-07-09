@@ -58,8 +58,10 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
             title={canEdit ? "Doble clic para editar" : account.handle}
           >
             {avatarOf(account.id) ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="avatar" src={avatarOf(account.id)} alt="" loading="lazy" />
+              <span className="avatar-ring">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="avatar" src={avatarOf(account.id)} alt="" loading="lazy" />
+              </span>
             ) : (
               <span className="dot" />
             )}

@@ -9,13 +9,13 @@
   --text: #f6f7fb;
   --muted: #9aa3b8;
   --soft: #cad0df;
-  --cyan: #58e6ff;
+  --cyan: #7a8cff;
   --green: #80ffb5;
-  --lime: #d8ff63;
-  --coral: #ff6f61;
-  --amber: #ffc857;
-  --violet: #9b7cff;
-  --pink: #ff77bc;
+  --lime: #feda75;
+  --coral: #ff5d51;
+  --amber: #ffa14e;
+  --violet: #b05ce6;
+  --pink: #ff5c9c;
   --shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
   --radius: 8px;
 }
@@ -88,11 +88,9 @@ button {
   display: grid;
   place-items: center;
   font-weight: 900;
-  color: #061014;
-  background:
-    linear-gradient(135deg, rgba(88, 230, 255, 0.95), rgba(216, 255, 99, 0.95)),
-    #58e6ff;
-  box-shadow: 0 0 28px rgba(88, 230, 255, 0.28);
+  color: #fff;
+  background: linear-gradient(135deg, #feda75, #fa7e1e 30%, #d62976 62%, #962fbf);
+  box-shadow: 0 0 28px rgba(214, 41, 118, 0.32);
 }
 
 .brand strong,
@@ -133,13 +131,21 @@ button {
   font-size: 13px;
 }
 
+.account-btn .avatar-ring {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  padding: 2px;
+  background: conic-gradient(from 210deg, #feda75, #fa7e1e, #fd1d1d, #d62976, #962fbf, #4f5bd5, #feda75);
+  display: grid;
+}
+
 .account-btn .avatar {
-  width: 28px;
-  height: 28px;
+  width: 100%;
+  height: 100%;
   border-radius: 999px;
   object-fit: cover;
-  border: 1px solid var(--line-2);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--accent, var(--cyan)) 45%, transparent);
+  border: 2px solid #0a0c12;
   display: block;
 }
 
@@ -289,8 +295,8 @@ button {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
-    linear-gradient(110deg, rgba(88, 230, 255, 0.16), transparent 36%),
-    linear-gradient(250deg, rgba(255, 111, 97, 0.18), transparent 34%),
+    linear-gradient(110deg, rgba(122, 140, 255, 0.16), transparent 36%),
+    linear-gradient(250deg, rgba(214, 41, 118, 0.2), transparent 34%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035));
   box-shadow: var(--shadow);
   overflow: hidden;
@@ -398,16 +404,16 @@ textarea {
 }
 
 .button.primary {
-  color: #061014;
+  color: #fff;
   border-color: transparent;
-  background: linear-gradient(135deg, var(--cyan), var(--lime));
-  box-shadow: 0 12px 38px rgba(88, 230, 255, 0.18);
+  background: linear-gradient(45deg, #fa7e1e, #d62976 55%, #962fbf);
+  box-shadow: 0 12px 38px rgba(214, 41, 118, 0.24);
 }
 
 .button.danger {
   color: var(--coral);
-  border-color: rgba(255, 111, 97, 0.4);
-  background: rgba(255, 111, 97, 0.08);
+  border-color: rgba(255, 93, 81, 0.4);
+  background: rgba(255, 93, 81, 0.08);
 }
 
 .button.small {
@@ -465,7 +471,7 @@ textarea {
   display: block;
   height: 100%;
   width: var(--w);
-  background: linear-gradient(90deg, var(--cyan), var(--green), var(--amber));
+  background: linear-gradient(90deg, var(--lime), var(--amber), var(--pink));
   border-radius: 999px;
 }
 
@@ -719,7 +725,7 @@ textarea {
 
 .card-actions button.warn {
   color: var(--coral);
-  border-color: rgba(255, 111, 97, 0.35);
+  border-color: rgba(255, 93, 81, 0.35);
 }
 
 .alert,
@@ -936,7 +942,7 @@ textarea {
   aspect-ratio: 1;
   border-radius: 50%;
   position: relative;
-  box-shadow: 0 0 45px rgba(88, 230, 255, 0.14);
+  box-shadow: 0 0 45px rgba(214, 41, 118, 0.18);
 }
 
 .donut-center {
@@ -1137,7 +1143,7 @@ textarea {
 
 .lane.drop {
   border-color: var(--cyan);
-  background: rgba(88, 230, 255, 0.08);
+  background: rgba(122, 140, 255, 0.08);
 }
 
 .lane-head {
@@ -1302,8 +1308,8 @@ input[type="range"] {
 }
 
 .locked {
-  border: 1px solid rgba(255, 111, 97, 0.28);
-  background: rgba(255, 111, 97, 0.08);
+  border: 1px solid rgba(255, 93, 81, 0.28);
+  background: rgba(255, 93, 81, 0.08);
   border-radius: var(--radius);
   padding: 14px;
   margin-bottom: 14px;
@@ -1643,7 +1649,7 @@ input[type="range"] {
 }
 
 .button.primary:hover:not(:disabled) {
-  box-shadow: 0 14px 44px rgba(88, 230, 255, 0.3);
+  box-shadow: 0 14px 44px rgba(214, 41, 118, 0.38);
 }
 
 .metric-card:hover {

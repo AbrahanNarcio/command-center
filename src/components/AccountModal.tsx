@@ -5,7 +5,7 @@ import { Account } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
 import ModalPortal from "@/components/ModalPortal";
 
-const COLORS = ["#58e6ff", "#d8ff63", "#ff77bc", "#ffc857", "#80ffb5", "#9b7cff", "#ff6f61"];
+const COLORS = ["#7a8cff", "#feda75", "#ff5c9c", "#ffa14e", "#80ffb5", "#b05ce6", "#ff5d51"];
 
 export default function AccountModal({ account, onClose }: { account?: Account | null; onClose: () => void }) {
   const { createAccount, updateAccount, deleteAccount, accounts } = useStore();

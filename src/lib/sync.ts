@@ -44,13 +44,13 @@ function localDaySlot(date: Date): { day: string; slot: "AM" | "PM" } | null {
 }
 
 const C = {
-  cyan: "#58e6ff",
-  lime: "#d8ff63",
+  cyan: "#7a8cff",
+  lime: "#feda75",
   green: "#80ffb5",
-  pink: "#ff77bc",
-  amber: "#ffc857",
-  violet: "#9b7cff",
-  coral: "#ff6f61",
+  pink: "#ff5c9c",
+  amber: "#ffa14e",
+  violet: "#b05ce6",
+  coral: "#ff5d51",
 };
 
 export interface SyncResult {
