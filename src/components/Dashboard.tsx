@@ -14,25 +14,25 @@ import SourcesView from "@/components/views/SourcesView";
 import SettingsView from "@/components/views/SettingsView";
 
 
-const TZ = "America/Mexico_City";
-
-/** "8 jul, 14:32" en hora de CDMX. */
+/** "8 jul, 2:32 p.m." en la hora local del dispositivo. */
 function syncStamp(iso: string): string {
   return new Date(iso).toLocaleString("es-MX", {
-    timeZone: TZ,
     day: "numeric",
     month: "short",
-    hour: "2-digit",
+    hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   });
 }
 
-/** El cron corre todos los días a las 7:00 CDMX. */
+/** Próxima corrida del cron (13:00 UTC diario), expresada en hora local con a.m./p.m. */
 function nextSyncLabel(): string {
-  const hour = Number(
-    new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric", hourCycle: "h23" }).format(new Date()),
-  );
-  return hour < 7 ? "hoy a las 7:00" : "mañana a las 7:00";
+  const now = new Date();
+  const next = new Date(now);
+  next.setUTCHours(13, 0, 0, 0);
+  if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
+  const time = next.toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit", hour12: true });
+  return `${next.toDateString() === now.toDateString() ? "hoy" : "mañana"} a las ${time}`;
 }
 
 export default function Dashboard() {

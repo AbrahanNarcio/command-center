@@ -462,7 +462,13 @@ textarea {
 .top-row {
   justify-content: space-between;
   gap: 14px;
-  margin: 18px 0 16px;
+  margin: 20px 0 16px;
+}
+
+/* Vistas sin barra de filtros (Generador, Fuentes, IG Ready): misma separación
+   con el hero que las vistas que sí la tienen. */
+.hero + .view-anim {
+  margin-top: 20px;
 }
 
 .filters {
@@ -1203,6 +1209,12 @@ input[type="range"] {
 .source-card p {
   color: var(--muted);
   line-height: 1.45;
+}
+
+/* Que el título no se meta debajo de los botones editar/eliminar (top-right). */
+.source-card > .eyebrow,
+.source-card h3 {
+  padding-right: 72px;
 }
 
 .tags {
