@@ -1,0 +1,79 @@
+"use client";
+
+import { useState } from "react";
+import { DAYS, Piece } from "@/lib/types";
+import { useStore } from "@/lib/store-context";
+import PieceModal, { PieceDraft } from "@/components/PieceModal";
+
+export default function CalendarView({ pieces }: { pieces: Piece[] }) {
+  const { updatePiece, createPiece, canEdit } = useStore();
+  const [editing, setEditing] = useState<Piece | null>(null);
+  const [creatingDay, setCreatingDay] = useState<(typeof DAYS)[number] | null>(null);
+
+  const balance = [
+    "Contenido de autoridad",
+    "Rompe creencias",
+    "Prueba social",
+    "Objeciones",
+    "CTA directo",
+    "Stories conversación",
+  ];
+
+  return (
+    <div className="panel">
+      <div className="panel-head">
+        <div>
+          <p className="eyebrow">Semana editorial</p>
+          <h2>Calendario</h2>
+          <p style={{ color: "var(--muted)", fontSize: 13, margin: "6px 0 0" }}>
+            No todo post vende, pero toda semana debe mover el negocio: {balance.join(" · ")}.
+          </p>
+        </div>
+      </div>
+      <div className="calendar">
+        {DAYS.map((day) => {
+          const dayItems = pieces.filter((p) => p.day === day).sort((a, b) => a.time.localeCompare(b.time));
+          return (
+            <section className="day" key={day}>
+              <strong>{day}</strong>
+              {dayItems.map((item) => (
+                <div
+                  className="calendar-item"
+                  key={item.id}
+                  onClick={canEdit ? () => setEditing(item) : undefined}
+                  style={canEdit ? undefined : { cursor: "default" }}
+                >
+                  <span>
+                    {item.time} · {item.format}
+                  </span>
+                  <p>{item.hook}</p>
+                </div>
+              ))}
+              {canEdit && (
+                <button className="add-account" style={{ width: "100%" }} onClick={() => setCreatingDay(day)}>
+                  + Agregar
+                </button>
+              )}
+            </section>
+          );
+        })}
+      </div>
+
+      {(editing || creatingDay) && (
+        <PieceModal
+          initial={editing}
+          onClose={() => {
+            setEditing(null);
+            setCreatingDay(null);
+          }}
+          onSave={(draft: PieceDraft) => {
+            if (editing) updatePiece(editing.id, draft);
+            else createPiece({ ...draft, day: creatingDay ?? draft.day });
+            setEditing(null);
+            setCreatingDay(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
