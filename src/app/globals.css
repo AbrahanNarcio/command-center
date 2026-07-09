@@ -523,6 +523,16 @@ textarea {
   outline: 0;
 }
 
+input.invalid,
+textarea.invalid {
+  border-color: var(--coral);
+  box-shadow: 0 0 0 1px rgba(255, 93, 81, 0.35);
+}
+
+input[type="time"] {
+  color-scheme: dark;
+}
+
 select option {
   color: #111;
 }

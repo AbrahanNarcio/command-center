@@ -13,6 +13,7 @@ export default function AccountModal({ account, onClose }: { account?: Account |
   const [handle, setHandle] = useState(account?.handle ?? "@");
   const [kind, setKind] = useState<Account["kind"]>(account?.kind ?? "cliente");
   const [color, setColor] = useState(account?.color ?? COLORS[0]);
+  const [missing, setMissing] = useState<string[]>([]);
 
   const isEdit = Boolean(account);
 
@@ -25,12 +26,22 @@ export default function AccountModal({ account, onClose }: { account?: Account |
         <p className="modal-sub">Tu propia cuenta o la de un cliente. Cada una tiene sus métricas, pipeline y fuentes.</p>
         <div className="form-grid">
           <label>
-            Nombre
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Marca / cliente" />
+            Nombre *
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Marca / cliente"
+              className={missing.includes("Nombre") ? "invalid" : undefined}
+            />
           </label>
           <label>
-            Handle
-            <input value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="@cuenta" />
+            Handle *
+            <input
+              value={handle}
+              onChange={(e) => setHandle(e.target.value)}
+              placeholder="@cuenta"
+              className={missing.includes("Handle") ? "invalid" : undefined}
+            />
           </label>
           <label>
             Tipo
@@ -60,6 +71,11 @@ export default function AccountModal({ account, onClose }: { account?: Account |
             </div>
           </label>
         </div>
+        {missing.length > 0 && (
+          <div className="alert" style={{ ["--accent" as string]: "var(--coral)", marginTop: 12 }}>
+            <p>Faltan campos obligatorios: {missing.join(", ")}.</p>
+          </div>
+        )}
         <div className="modal-actions">
           {isEdit && accounts.length > 1 && (
             <button
@@ -79,9 +95,14 @@ export default function AccountModal({ account, onClose }: { account?: Account |
           <button
             className="button primary"
             onClick={() => {
-              if (!name.trim()) return;
-              if (isEdit) updateAccount(account!.id, { name, handle, kind, color });
-              else createAccount({ name, handle, kind, color });
+              const faltantes: string[] = [];
+              if (!name.trim()) faltantes.push("Nombre");
+              if (!handle.replace("@", "").trim()) faltantes.push("Handle");
+              setMissing(faltantes);
+              if (faltantes.length) return;
+              const cleanHandle = handle.trim().startsWith("@") ? handle.trim() : `@${handle.trim()}`;
+              if (isEdit) updateAccount(account!.id, { name, handle: cleanHandle, kind, color });
+              else createAccount({ name, handle: cleanHandle, kind, color });
               onClose();
             }}
           >

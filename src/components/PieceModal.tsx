@@ -36,6 +36,7 @@ const EMPTY: PieceDraft = {
 
 export default function PieceModal({ initial, onClose, onSave }: Props) {
   const [draft, setDraft] = useState<PieceDraft>(EMPTY);
+  const [missing, setMissing] = useState<string[]>([]);
 
   useEffect(() => {
     if (initial) {
@@ -46,10 +47,25 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
     } else {
       setDraft(EMPTY);
     }
+    setMissing([]);
   }, [initial]);
 
   const set = <K extends keyof PieceDraft>(key: K, value: PieceDraft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
+
+  const invalid = (field: string) => missing.includes(field);
+
+  const save = () => {
+    // Hook, tensión (resumen) y acción (CTA): sin las tres no hay pieza.
+    const faltantes: string[] = [];
+    if (!draft.hook.trim()) faltantes.push("Hook");
+    if (!draft.summary.trim()) faltantes.push("Resumen");
+    if (!draft.cta.trim()) faltantes.push("CTA");
+    if (!draft.time.trim()) faltantes.push("Hora");
+    setMissing(faltantes);
+    if (faltantes.length) return;
+    onSave(draft);
+  };
 
   return (
     <ModalPortal>
@@ -62,21 +78,23 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
         </p>
         <div className="form-grid">
           <label>
-            Hook
+            Hook *
             <textarea
               value={draft.hook}
               onChange={(e) => set("hook", e.target.value)}
               placeholder="La frase que frena el scroll..."
               style={{ minHeight: 70 }}
+              className={invalid("Hook") ? "invalid" : undefined}
             />
           </label>
           <label>
-            Resumen / ángulo
+            Resumen / ángulo *
             <textarea
               value={draft.summary}
               onChange={(e) => set("summary", e.target.value)}
               placeholder="Qué desarrolla la pieza y por qué mueve al negocio..."
               style={{ minHeight: 70 }}
+              className={invalid("Resumen") ? "invalid" : undefined}
             />
           </label>
           <div className="form-grid two">
@@ -120,12 +138,22 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
               </select>
             </label>
             <label>
-              Hora
-              <input value={draft.time} onChange={(e) => set("time", e.target.value)} placeholder="10:00" />
+              Hora *
+              <input
+                type="time"
+                value={draft.time}
+                onChange={(e) => set("time", e.target.value)}
+                className={invalid("Hora") ? "invalid" : undefined}
+              />
             </label>
             <label>
-              CTA
-              <input value={draft.cta} onChange={(e) => set("cta", e.target.value)} placeholder="Comentá SISTEMA" />
+              CTA *
+              <input
+                value={draft.cta}
+                onChange={(e) => set("cta", e.target.value)}
+                placeholder="Comenta SISTEMA"
+                className={invalid("CTA") ? "invalid" : undefined}
+              />
             </label>
             <label>
               Quality score: {draft.score}
@@ -139,17 +167,17 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
             </label>
           </div>
         </div>
+        {missing.length > 0 && (
+          <div className="alert" style={{ ["--accent" as string]: "var(--coral)", marginTop: 12 }}>
+            <strong>Faltan campos obligatorios</strong>
+            <p>Completa: {missing.join(", ")}.</p>
+          </div>
+        )}
         <div className="modal-actions">
           <button className="button" onClick={onClose}>
             Cancelar
           </button>
-          <button
-            className="button primary"
-            onClick={() => {
-              if (!draft.hook.trim()) return;
-              onSave(draft);
-            }}
-          >
+          <button className="button primary" onClick={save}>
             {initial ? "Guardar cambios" : "Crear pieza"}
           </button>
         </div>

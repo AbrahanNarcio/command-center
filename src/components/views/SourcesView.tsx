@@ -14,6 +14,7 @@ export default function SourcesView() {
   const [type, setType] = useState("");
   const [summary, setSummary] = useState("");
   const [tags, setTags] = useState("");
+  const [invalid, setInvalid] = useState(false);
 
   const openCreate = () => {
     setEditing(null);
@@ -21,6 +22,7 @@ export default function SourcesView() {
     setType("");
     setSummary("");
     setTags("");
+    setInvalid(false);
     setOpen(true);
   };
 
@@ -34,7 +36,11 @@ export default function SourcesView() {
   };
 
   const save = () => {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setInvalid(true);
+      return;
+    }
+    setInvalid(false);
     const payload = {
       name,
       type: type || "Notas",
@@ -96,8 +102,13 @@ export default function SourcesView() {
             </p>
             <div className="form-grid">
               <label>
-                Nombre
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Llamadas de venta Q3" />
+                Nombre *
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Llamadas de venta Q3"
+                  className={invalid ? "invalid" : undefined}
+                />
               </label>
               <label>
                 Tipo
@@ -112,6 +123,11 @@ export default function SourcesView() {
                 <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="precio, objeciones, cierre" />
               </label>
             </div>
+            {invalid && (
+              <div className="alert" style={{ ["--accent" as string]: "var(--coral)", marginTop: 12 }}>
+                <p>El nombre de la fuente es obligatorio.</p>
+              </div>
+            )}
             <div className="modal-actions">
               <button className="button" onClick={() => setOpen(false)}>
                 Cancelar

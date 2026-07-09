@@ -134,7 +134,7 @@ async function main() {
     console.log("✓ Cuenta demo ya tenía datos, no se duplicó");
   }
 
-  console.log("\nListo. Entrá con tu email y contraseña de admin en /login.");
+  console.log("\nListo. Entra con tu email y contraseña de admin en /login.");
 }
 
 main().catch((err) => {
