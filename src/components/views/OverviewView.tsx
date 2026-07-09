@@ -47,6 +47,9 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
         <div>
           <p className="eyebrow">{activeAccount?.handle}</p>
           <h2>Métricas · actualizado {relativeTime(activeMetrics.updatedAt)}</h2>
+          <p style={{ color: "var(--muted)", fontSize: 12, margin: "6px 0 0" }}>
+            Fuente: API oficial de Instagram. Cada tarjeta indica qué mide y de qué periodo.
+          </p>
         </div>
         {canEdit && (
           <button className="button small" onClick={() => setEditing(true)}>

@@ -93,12 +93,23 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
 
     const profile = await fetchProfile(token);
 
-    // Insights de cuenta: lista completa, con fallback al núcleo si alguna métrica no existe.
+    // Insights de cuenta con ventana REAL de 30 días (since/until). Si Meta la rechaza,
+    // se cae a la ventana diaria y las tarjetas lo dicen tal cual.
     let insights;
+    let windowLabel = "últimos 30 días";
     try {
-      insights = await fetchAccountInsights(conn.igUserId, token);
+      insights = await fetchAccountInsights(conn.igUserId, token, undefined, 30);
     } catch {
-      insights = await fetchAccountInsights(conn.igUserId, token, ACCOUNT_METRICS_CORE);
+      try {
+        insights = await fetchAccountInsights(conn.igUserId, token, ACCOUNT_METRICS_CORE, 30);
+      } catch {
+        windowLabel = "hoy (ventana diaria)";
+        try {
+          insights = await fetchAccountInsights(conn.igUserId, token);
+        } catch {
+          insights = await fetchAccountInsights(conn.igUserId, token, ACCOUNT_METRICS_CORE);
+        }
+      }
     }
 
     // Publicaciones recientes (para formato, top posts y heatmap).
@@ -147,21 +158,21 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
     const val = (n: number | null, fmt: (x: number) => string = formatCompact) =>
       n == null ? "—" : fmt(n);
     metrics.kpis = [
-      { label: "Vistas", value: val(views), delta: "", detail: "Views en 30d", color: C.cyan },
-      { label: "Reach", value: val(reach), delta: "", detail: "Cuentas alcanzadas", color: C.lime },
-      { label: "Seguidores", value: val(profile.followers_count ?? null), delta: "", detail: "Total actual", color: C.green },
-      { label: "Interaccion", value: er == null ? "—" : `${er.toFixed(1)}%`, delta: "", detail: "Interacciones / reach", color: C.pink },
-      { label: "Likes", value: val(likes), delta: "", detail: "Me gusta", color: C.amber },
-      { label: "Comentarios", value: val(comments), delta: "", detail: "Señal de conversación", color: C.violet },
-      { label: "Saves", value: val(saves), delta: "", detail: "Contenido de alta utilidad", color: C.cyan },
-      { label: "Shares", value: val(shares), delta: "", detail: "Contenido reenviable", color: C.lime },
-      { label: "Cuentas con engagement", value: val(engaged), delta: "", detail: "Interactuaron con tu contenido", color: C.green },
-      { label: "Taps al link", value: val(linkTaps), delta: "", detail: "Clics en links del perfil", color: C.coral },
-      { label: "CTR bio", value: ctrBio == null ? "—" : `${ctrBio.toFixed(2)}%`, delta: "", detail: "Taps al link / reach", color: C.pink },
-      { label: "Frecuencia", value: frequency == null ? "—" : `${frequency.toFixed(1)}x`, delta: "", detail: "Views por cuenta alcanzada", color: C.amber },
+      { label: "Vistas", value: val(views), delta: "", detail: `Reproducciones · ${windowLabel}`, color: C.cyan },
+      { label: "Reach", value: val(reach), delta: "", detail: `Cuentas alcanzadas · ${windowLabel}`, color: C.lime },
+      { label: "Seguidores", value: val(profile.followers_count ?? null), delta: "", detail: "Total actual del perfil", color: C.green },
+      { label: "Interaccion", value: er == null ? "—" : `${er.toFixed(1)}%`, delta: "", detail: `Interacciones / reach · ${windowLabel}`, color: C.pink },
+      { label: "Likes", value: val(likes), delta: "", detail: `Me gusta recibidos · ${windowLabel}`, color: C.amber },
+      { label: "Comentarios", value: val(comments), delta: "", detail: `Recibidos · ${windowLabel}`, color: C.violet },
+      { label: "Saves", value: val(saves), delta: "", detail: `Guardados · ${windowLabel}`, color: C.cyan },
+      { label: "Shares", value: val(shares), delta: "", detail: `Compartidos · ${windowLabel}`, color: C.lime },
+      { label: "Cuentas con engagement", value: val(engaged), delta: "", detail: `Interactuaron contigo · ${windowLabel}`, color: C.green },
+      { label: "Taps al link", value: val(linkTaps), delta: "", detail: `Clics en el link del perfil · ${windowLabel}`, color: C.coral },
+      { label: "CTR bio", value: ctrBio == null ? "—" : `${ctrBio.toFixed(2)}%`, delta: "", detail: `Taps al link / reach · ${windowLabel}`, color: C.pink },
+      { label: "Frecuencia", value: frequency == null ? "—" : `${frequency.toFixed(1)}x`, delta: "", detail: `Views por cuenta alcanzada · ${windowLabel}`, color: C.amber },
     ];
     if (followsNet != null) {
-      metrics.kpis[11] = { label: "Follows netos", value: formatCompact(followsNet), delta: "", detail: "Seguidos - dejados de seguir (día)", color: C.amber };
+      metrics.kpis[11] = { label: "Follows netos", value: formatCompact(followsNet), delta: "", detail: `Follows - unfollows · ${windowLabel}`, color: C.amber };
     }
     if (reach != null) metrics.reachTotal = formatCompact(reach);
     if (er != null) metrics.engagementRate = `${er.toFixed(1)}% ER`;

@@ -162,6 +162,7 @@ export async function fetchAccountInsights(
   igUserId: string,
   token: string,
   metrics: string = ACCOUNT_METRICS_FULL,
+  windowDays?: number,
 ): Promise<InsightValue[]> {
   const params = new URLSearchParams({
     metric: metrics,
@@ -169,6 +170,12 @@ export async function fetchAccountInsights(
     metric_type: "total_value",
     access_token: token,
   });
+  if (windowDays) {
+    // total_value + since/until = suma del rango completo (máx. 30 días por petición).
+    const until = Math.floor(Date.now() / 1000);
+    params.set("since", String(until - windowDays * 86400));
+    params.set("until", String(until));
+  }
   const res = await fetch(
     `${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${igUserId}/insights?${params.toString()}`,
   );

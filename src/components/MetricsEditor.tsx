@@ -56,26 +56,6 @@ function unitOf(kpi: Kpi): Unit {
   return "count";
 }
 
-const DETAIL_OPTIONS = [
-  "Views en 30d",
-  "Cuentas alcanzadas",
-  "Total actual",
-  "Interacciones / reach",
-  "Me gusta",
-  "Señal de conversación",
-  "Contenido de alta utilidad",
-  "Contenido reenviable",
-  "Interactuaron con tu contenido",
-  "Clics en links del perfil",
-  "Taps al link / reach",
-  "Views por cuenta alcanzada",
-  "Seguidos - dejados de seguir (día)",
-  "Crecimiento neto",
-  "ER promedio",
-  "Tráfico al perfil",
-  "Conversaciones iniciadas",
-];
-
 export default function MetricsEditor({ metrics, onClose }: Props) {
   const { saveMetrics, activeConnection } = useStore();
   const [kpis, setKpis] = useState<Kpi[]>(metrics.kpis.map((k) => ({ ...k })));
@@ -114,7 +94,7 @@ export default function MetricsEditor({ metrics, onClose }: Props) {
           {activeConnection
             ? "Esta cuenta está conectada a Instagram: la próxima sincronización automática va a sobrescribir los KPIs que cargues a mano. Úsalo solo para retoques puntuales."
             : "Esta cuenta no está conectada a Instagram, así que los números se cargan a mano. Cada cuenta guarda los suyos."}{" "}
-          Escribe solo el número (letras bloqueadas): el formato K/M/%/x se aplica solo al salir del campo.
+          Escribe solo el número (letras bloqueadas): el formato K/M/%/x se aplica solo al salir del campo. La descripción de cada métrica la fija el sistema e indica qué mide y de qué periodo.
         </p>
 
         <div className="form-grid two" style={{ marginBottom: 14 }}>
@@ -143,13 +123,9 @@ export default function MetricsEditor({ metrics, onClose }: Props) {
               />
               {numericField(kpi.value, (v) => setKpi(idx, "value", v), unitOf(kpi), { placeholder: "12500" })}
               {numericField(kpi.delta, (v) => setKpi(idx, "delta", v), unitOf(kpi), { signed: true, placeholder: "Δ" })}
-              <select value={kpi.detail} onChange={(e) => setKpi(idx, "detail", e.target.value)}>
-                {(DETAIL_OPTIONS.includes(kpi.detail) ? DETAIL_OPTIONS : [kpi.detail, ...DETAIL_OPTIONS]).map(
-                  (opt) => (
-                    <option key={opt}>{opt}</option>
-                  ),
-                )}
-              </select>
+              <span className="kpi-detail-fixed" title="Qué mide y de qué periodo. Lo fija la sincronización.">
+                {kpi.detail}
+              </span>
             </div>
           ))}
         </div>
