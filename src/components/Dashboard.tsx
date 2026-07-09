@@ -42,6 +42,7 @@ export default function Dashboard() {
     setupError,
     activeAccount,
     activeConnection,
+    activeMetrics,
     accountPieces,
     toast,
     notify,
@@ -112,8 +113,16 @@ export default function Dashboard() {
           <div className="hero-inner">
             <div>
               <p className="eyebrow">Content OS · Command Center</p>
-              <h1>{activeAccount ? `${activeAccount.name}.` : "Content OS."}</h1>
-              <p className="hero-copy">
+              <div className="hero-id">
+                {activeMetrics?.avatarUrl && (
+                  <span className="avatar-ring hero-avatar">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img className="avatar" src={activeMetrics.avatarUrl} alt="" loading="lazy" />
+                  </span>
+                )}
+                <div className="hero-id-text">
+                  <h1>{activeAccount ? activeAccount.name : "Content OS"}</h1>
+                  <p className="hero-copy">
                 {!activeAccount ? (
                   "Agrega una cuenta para empezar."
                 ) : activeConnection?.lastSyncAt ? (
@@ -135,7 +144,9 @@ export default function Dashboard() {
                     <strong>{activeAccount.handle}</strong> · Vista de solo lectura.
                   </>
                 )}
-              </p>
+                  </p>
+                </div>
+              </div>
               <div className="hero-actions">
                 {canEdit && (
                   <button className="button primary" onClick={() => setView("generator")}>

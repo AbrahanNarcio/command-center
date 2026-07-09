@@ -131,9 +131,7 @@ button {
   font-size: 13px;
 }
 
-.account-btn .avatar-ring {
-  width: 34px;
-  height: 34px;
+.avatar-ring {
   border-radius: 999px;
   padding: 2.5px;
   /* Degradado diagonal del anillo de historia real de IG: amarillo abajo-izq -> morado arriba-der. */
@@ -141,13 +139,18 @@ button {
   display: grid;
 }
 
-.account-btn .avatar {
+.avatar-ring .avatar {
   width: 100%;
   height: 100%;
   border-radius: 999px;
   object-fit: cover;
   border: 2px solid #0a0c12;
   display: block;
+}
+
+.account-btn .avatar-ring {
+  width: 34px;
+  height: 34px;
 }
 
 .account-btn .dot {
@@ -358,6 +361,42 @@ h3 {
   margin-bottom: 8px;
   font-size: 15px;
   line-height: 1.22;
+}
+
+/* Identidad del hero: avatar con anillo de historia + nombre compacto, estilo perfil de IG. */
+.hero-id {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.hero-avatar {
+  width: 84px;
+  height: 84px;
+  padding: 3px;
+  flex-shrink: 0;
+  box-shadow: 0 0 34px rgba(214, 41, 118, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 44px rgba(214, 41, 118, 0.4);
+}
+
+.hero-id-text {
+  min-width: 0;
+}
+
+.hero-id h1 {
+  margin-bottom: 6px;
+  font-size: clamp(24px, 2.6vw, 38px);
+  line-height: 1.08;
+}
+
+.hero-id .hero-copy {
+  margin-bottom: 0;
 }
 
 .hero-copy {
@@ -2090,6 +2129,15 @@ input[type="range"] {
 @media (max-width: 760px) {
   .app {
     display: block;
+  }
+
+  .hero-id {
+    gap: 12px;
+  }
+
+  .hero-avatar {
+    width: 58px;
+    height: 58px;
   }
 
   .reel-ret-row {
