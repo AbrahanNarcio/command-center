@@ -22,6 +22,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
   const { activeMetrics, activeAccount, canEdit } = useStore();
   const [editing, setEditing] = useState(false);
   const [range, setRange] = useState("30");
+  const [mixHover, setMixHover] = useState<number | null>(null);
 
   const hasRanges = Boolean(activeMetrics?.kpiRanges && Object.keys(activeMetrics.kpiRanges).length > 1);
   const kpis = activeMetrics?.kpiRanges?.[range] ?? activeMetrics?.kpis ?? [];
@@ -123,10 +124,16 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             </div>
           </div>
           <div className="donut-wrap">
-            <Donut metrics={activeMetrics} />
+            <Donut metrics={activeMetrics} hovered={mixHover} onHover={setMixHover} />
             <div className="legend">
-              {activeMetrics.engagementMix.map((m) => (
-                <div className="legend-row" key={m.label} style={{ ["--accent" as string]: m.color }}>
+              {activeMetrics.engagementMix.map((m, i) => (
+                <div
+                  className={`legend-row${mixHover === i ? " on" : ""}`}
+                  key={m.label}
+                  style={{ ["--accent" as string]: m.color }}
+                  onMouseEnter={() => setMixHover(i)}
+                  onMouseLeave={() => setMixHover(null)}
+                >
                   <span className="legend-dot" />
                   <span>{m.label}</span>
                   <b>{m.value}</b>
@@ -230,6 +237,53 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
         </section>
 
       </div>
+
+      <section className="chart-card">
+        <div className="chart-top">
+          <div>
+            <p className="eyebrow">Retención por reel</p>
+            <h2>Tiempo promedio de visualización de cada reel</h2>
+            <p>Segundos que la gente ve cada reel en promedio. Clic para abrir en Instagram.</p>
+          </div>
+          <div className="chart-value">
+            <strong>{activeMetrics.reelsRetention?.length ?? 0}</strong>reels
+          </div>
+        </div>
+        {activeMetrics.reelsRetention?.length ? (
+          <div className="reel-ret-list">
+            {activeMetrics.reelsRetention.map((r, i) => (
+              <a
+                className="reel-ret-row"
+                key={`${r.label}-${i}`}
+                href={r.permalink || undefined}
+                target="_blank"
+                rel="noreferrer"
+                title={r.label}
+                style={{ ["--accent" as string]: r.color, ["--i" as string]: i }}
+              >
+                {r.thumb ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="reel-ret-thumb" src={r.thumb} alt="" loading="lazy" />
+                ) : (
+                  <span className="reel-ret-thumb reel-ret-ph" />
+                )}
+                <span className="reel-ret-caption">{r.label}</span>
+                <div className="meter">
+                  <span
+                    style={{
+                      ["--score" as string]: `${r.pct}%`,
+                      ["--meter" as string]: `linear-gradient(90deg, ${r.color}, rgba(255,255,255,.18))`,
+                    }}
+                  />
+                </div>
+                <b>{r.value}</b>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="no-results">Se llena solo con la sincronización de Instagram.</div>
+        )}
+      </section>
 
       <div className="analytics-grid three">
         <section className="chart-card">

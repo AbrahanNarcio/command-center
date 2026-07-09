@@ -46,6 +46,8 @@ export type Kpi = { label: string; value: string; delta: string; detail: string;
 export type LabeledValue = { label: string; value: string; color: string };
 export type LabeledPct = { label: string; pct: number; color: string };
 export type FunnelStep = { label: string; value: string; pct: number; color: string };
+/** Retención de un reel: FunnelStep + miniatura y enlace (opcionales para datos viejos). */
+export type ReelRetention = FunnelStep & { thumb?: string; permalink?: string };
 export type HeatCell = { day: string; hour: string; heat: number };
 export type Insight = { title: string; text: string; color: string };
 export type RecentPost = {
@@ -83,7 +85,7 @@ export interface AccountMetrics {
   /** Últimas publicaciones con miniatura, para la vista previa. */
   recentPosts?: RecentPost[];
   /** Retención real de reels: tiempo promedio de visualización por reel (API oficial). */
-  reelsRetention?: FunnelStep[];
+  reelsRetention?: ReelRetention[];
   /** KPIs por rango de tiempo ("1" hoy, "7" y "30" días) para el selector de rango. */
   kpiRanges?: Record<string, Kpi[]>;
 }

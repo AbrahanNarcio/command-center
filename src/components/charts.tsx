@@ -53,20 +53,49 @@ export function LineChart({ values }: { values: number[] }) {
   );
 }
 
-export function Donut({ metrics }: { metrics: AccountMetrics }) {
+const DONUT_R = 45.5;
+const DONUT_C = 2 * Math.PI * DONUT_R;
+
+export function Donut({
+  metrics,
+  hovered = null,
+  onHover,
+}: {
+  metrics: AccountMetrics;
+  /** Segmento resaltado (se sincroniza con la leyenda). */
+  hovered?: number | null;
+  onHover?: (index: number | null) => void;
+}) {
   const mix = metrics.engagementMix;
+  const total = mix.reduce((sum, m) => sum + (parseFloat(m.value) || 0), 0) || 100;
   let acc = 0;
-  const stops: string[] = [];
-  const total = mix.reduce((sum, m) => sum + parseFloat(m.value) || 0, 0) || 100;
-  for (const m of mix) {
-    const pct = (parseFloat(m.value) || 0) / total;
-    const start = acc * 100;
-    acc += pct;
-    const end = acc * 100;
-    stops.push(`${m.color} ${start.toFixed(1)}% ${end.toFixed(1)}%`);
-  }
+  const segments = mix.map((m, i) => {
+    const frac = (parseFloat(m.value) || 0) / total;
+    const seg = { ...m, index: i, len: frac * DONUT_C, offset: acc * DONUT_C };
+    acc += frac;
+    return seg;
+  });
   return (
-    <div className="donut" style={{ background: `conic-gradient(${stops.join(", ")})` }}>
+    <div className="donut">
+      <svg viewBox="0 0 120 120" role="img" aria-label="Mix de engagement">
+        {segments.map((s) => (
+          <circle
+            key={s.label}
+            className={`donut-seg${hovered == null ? "" : hovered === s.index ? " on" : " off"}`}
+            cx="60"
+            cy="60"
+            r={DONUT_R}
+            fill="none"
+            stroke={s.color}
+            strokeDasharray={`${Math.max(s.len - 1.5, 0.01)} ${DONUT_C - Math.max(s.len - 1.5, 0.01)}`}
+            strokeDashoffset={-s.offset}
+            onMouseEnter={() => onHover?.(s.index)}
+            onMouseLeave={() => onHover?.(null)}
+          >
+            <title>{`${s.label}: ${s.value}`}</title>
+          </circle>
+        ))}
+      </svg>
       <div className="donut-center">{metrics.engagementRate}</div>
     </div>
   );

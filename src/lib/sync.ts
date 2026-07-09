@@ -11,7 +11,7 @@ import {
   metricValue,
   refreshLongToken,
 } from "./instagram";
-import { FunnelStep, HeatCell, Kpi, LabeledPct, LabeledValue, RecentPost } from "./types";
+import { FunnelStep, HeatCell, Kpi, LabeledPct, LabeledValue, RecentPost, ReelRetention } from "./types";
 
 // Guía: no recalcular en tiempo real en cada carga. Throttle mínimo entre syncs manuales.
 const MIN_SYNC_MS = 30 * 60 * 1000;
@@ -244,11 +244,13 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
     if (reelWatch.length) {
       const maxMs = Math.max(...reelWatch.map((r) => r.ms));
       const colors = [C.cyan, C.lime, C.pink, C.amber, C.violet, C.coral];
-      metrics.reelsRetention = reelWatch.slice(0, 6).map(({ media: m, ms }, i): FunnelStep => ({
+      metrics.reelsRetention = reelWatch.slice(0, 8).map(({ media: m, ms }, i): ReelRetention => ({
         label: (m.caption || "Reel").replace(/\s+/g, " ").slice(0, 46),
         value: `${(ms / 1000).toFixed(1)}s`,
         pct: Math.max(4, Math.round((ms / maxMs) * 100)),
         color: colors[i % colors.length],
+        thumb: m.thumbnail_url ?? m.media_url ?? "",
+        permalink: m.permalink ?? "",
       }));
       const avgMs = reelWatch.reduce((sum, r) => sum + r.ms, 0) / reelWatch.length;
       metrics.retentionAvg = `${(avgMs / 1000).toFixed(1)}s`;
