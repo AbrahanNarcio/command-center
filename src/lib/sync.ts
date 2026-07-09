@@ -11,7 +11,7 @@ import {
   metricValue,
   refreshLongToken,
 } from "./instagram";
-import { FunnelStep, HeatCell, Kpi, LabeledPct, LabeledValue } from "./types";
+import { FunnelStep, HeatCell, Kpi, LabeledPct, LabeledValue, RecentPost } from "./types";
 
 // Guía: no recalcular en tiempo real en cada carga. Throttle mínimo entre syncs manuales.
 const MIN_SYNC_MS = 30 * 60 * 1000;
@@ -204,6 +204,23 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
           color: colors[i % colors.length],
         }));
     }
+
+    // ── Foto de perfil + vista previa de publicaciones (URLs caducan: se renuevan aquí) ──
+    if (profile.profile_picture_url) metrics.avatarUrl = profile.profile_picture_url;
+    const recent = media
+      .filter((m) => m.media_product_type !== "STORY")
+      .map((m): RecentPost => ({
+        id: m.id,
+        thumb: m.thumbnail_url ?? m.media_url ?? "",
+        permalink: m.permalink ?? "",
+        caption: (m.caption ?? "").replace(/\s+/g, " ").slice(0, 80),
+        likes: m.like_count ?? 0,
+        comments: m.comments_count ?? 0,
+        format: formatLabel(m),
+      }))
+      .filter((m) => m.thumb)
+      .slice(0, 12);
+    if (recent.length) metrics.recentPosts = recent;
 
     // ── Top publicaciones reales (por likes + comentarios) ──
     const ranked = media

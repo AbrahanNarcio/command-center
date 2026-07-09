@@ -125,11 +125,12 @@ export interface IgProfile {
   media_count?: number;
   followers_count?: number;
   follows_count?: number;
+  profile_picture_url?: string;
 }
 
 export async function fetchProfile(token: string): Promise<IgProfile> {
   const params = new URLSearchParams({
-    fields: "user_id,username,account_type,media_count,followers_count,follows_count",
+    fields: "user_id,username,account_type,media_count,followers_count,follows_count,profile_picture_url",
     access_token: token,
   });
   const res = await fetch(`${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/me?${params.toString()}`);
@@ -187,12 +188,15 @@ export interface MediaItem {
   like_count?: number;
   comments_count?: number;
   permalink?: string;
+  media_url?: string;
+  /** Miniatura (solo VIDEO/REELS; para imágenes usar media_url). */
+  thumbnail_url?: string;
 }
 
 /** Últimas publicaciones de la cuenta (1 sola llamada). */
 export async function fetchMediaList(igUserId: string, token: string, limit = 50): Promise<MediaItem[]> {
   const params = new URLSearchParams({
-    fields: "id,caption,media_type,media_product_type,timestamp,like_count,comments_count,permalink",
+    fields: "id,caption,media_type,media_product_type,timestamp,like_count,comments_count,permalink,media_url,thumbnail_url",
     limit: String(limit),
     access_token: token,
   });

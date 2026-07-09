@@ -48,6 +48,15 @@ export type LabeledPct = { label: string; pct: number; color: string };
 export type FunnelStep = { label: string; value: string; pct: number; color: string };
 export type HeatCell = { day: string; hour: string; heat: number };
 export type Insight = { title: string; text: string; color: string };
+export type RecentPost = {
+  id: string;
+  thumb: string;
+  permalink: string;
+  caption: string;
+  likes: number;
+  comments: number;
+  format: string;
+};
 
 export interface AccountMetrics {
   accountId: string;
@@ -69,6 +78,10 @@ export interface AccountMetrics {
   topPosts?: FunnelStep[];
   /** Fecha (YYYY-MM-DD) del último snapshot de seguidores, para un punto por día. */
   growthStamp?: string;
+  /** Foto de perfil de IG. Las URLs de Meta caducan; se renuevan en cada sync. */
+  avatarUrl?: string;
+  /** Últimas publicaciones con miniatura, para la vista previa. */
+  recentPosts?: RecentPost[];
 }
 
 export type ConnectionStatus = "connected" | "error" | "expired";

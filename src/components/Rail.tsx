@@ -27,7 +27,9 @@ const NAV: { id: ViewId; icon: React.ReactNode; label: string; adminOnly: boolea
 ];
 
 export default function Rail({ view, setView }: { view: ViewId; setView: (v: ViewId) => void }) {
-  const { accounts, activeId, setActiveId, canEdit, me, signOut } = useStore();
+  const { accounts, metrics, activeId, setActiveId, canEdit, me, signOut } = useStore();
+
+  const avatarOf = (accountId: string) => metrics.find((m) => m.accountId === accountId)?.avatarUrl;
   const [modal, setModal] = useState<null | { account?: Account | null }>(null);
 
   const nav = NAV.filter((item) => canEdit || !item.adminOnly);
@@ -55,7 +57,12 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
             onDoubleClick={canEdit ? () => setModal({ account }) : undefined}
             title={canEdit ? "Doble clic para editar" : account.handle}
           >
-            <span className="dot" />
+            {avatarOf(account.id) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="avatar" src={avatarOf(account.id)} alt="" loading="lazy" />
+            ) : (
+              <span className="dot" />
+            )}
             <span className="who">
               <b>{account.name}</b>
               <small>{account.handle}</small>

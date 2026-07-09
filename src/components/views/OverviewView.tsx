@@ -6,6 +6,9 @@ import { Piece } from "@/lib/types";
 import { relativeTime } from "@/lib/utils";
 import PostCard from "@/components/PostCard";
 import { Donut, LineChart } from "@/components/charts";
+
+const compact = (n: number) =>
+  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : `${n}`;
 import MetricsEditor from "@/components/MetricsEditor";
 
 export default function OverviewView({ pieces }: { pieces: Piece[] }) {
@@ -259,6 +262,43 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
           </div>
         </section>
       </div>
+
+      {activeMetrics.recentPosts?.length ? (
+        <section className="chart-card">
+          <div className="chart-top">
+            <div>
+              <p className="eyebrow">Vista previa</p>
+              <h2>Últimas publicaciones</h2>
+              <p>Miniaturas reales del feed. Clic para abrir en Instagram.</p>
+            </div>
+            <div className="chart-value">
+              <strong>{activeMetrics.recentPosts.length}</strong>posts
+            </div>
+          </div>
+          <div className="post-grid">
+            {activeMetrics.recentPosts.map((post, i) => (
+              <a
+                className="post-thumb"
+                key={post.id}
+                href={post.permalink || undefined}
+                target="_blank"
+                rel="noreferrer"
+                title={post.caption}
+                style={{ ["--i" as string]: i }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={post.thumb} alt={post.caption || post.format} loading="lazy" />
+                <span className="post-overlay">
+                  <b>{post.format}</b>
+                  <span>
+                    ♥ {compact(post.likes)} · 💬 {compact(post.comments)}
+                  </span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="analytics-grid">
         <section className="chart-card">
