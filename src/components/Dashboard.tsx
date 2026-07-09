@@ -252,7 +252,16 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {toast && <div className="toast">{toast.text}</div>}
+      {toast && (
+        <div className="toast">
+          {toast.text}
+          {toast.action && (
+            <button className="toast-undo" onClick={() => toast.action?.run()}>
+              {toast.action.label}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

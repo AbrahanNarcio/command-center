@@ -9,7 +9,8 @@ export async function POST(request: Request) {
   const gate = await accountGate(String(body.accountId || ""));
   if (gate.response) return gate.response;
   const source: Source = {
-    id: newId("src"),
+    // El id llega solo al RESTABLECER una fuente eliminada (deshacer del toast).
+    id: typeof body.id === "string" && body.id ? body.id : newId("src"),
     accountId: String(body.accountId),
     name: String(body.name || "Fuente"),
     type: String(body.type || "Notas"),

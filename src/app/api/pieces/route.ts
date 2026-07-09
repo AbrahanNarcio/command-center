@@ -9,7 +9,8 @@ export async function POST(request: Request) {
   const gate = await accountGate(String(body.accountId || ""));
   if (gate.response) return gate.response;
   const piece: Piece = {
-    id: newId("pz"),
+    // El id llega solo al RESTABLECER una pieza eliminada (deshacer del toast).
+    id: typeof body.id === "string" && body.id ? body.id : newId("pz"),
     accountId: String(body.accountId),
     format: body.format || "Reel",
     status: body.status || "Idea",

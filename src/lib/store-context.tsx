@@ -20,7 +20,8 @@ import {
 } from "./types";
 import { browserClient } from "./supabase/browser";
 
-type Toast = { id: number; text: string };
+type ToastAction = { label: string; run: () => void | Promise<void> };
+type Toast = { id: number; text: string; action?: ToastAction };
 
 interface StoreValue {
   loading: boolean;
@@ -45,7 +46,7 @@ interface StoreValue {
   accountSources: Source[];
   toast: Toast | null;
   setActiveId: (id: string) => void;
-  notify: (text: string) => void;
+  notify: (text: string, action?: ToastAction) => void;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
   createAccount: (input: Partial<Account>) => Promise<void>;
@@ -113,10 +114,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     await load(false);
   }, [load]);
 
-  const notify = useCallback((text: string) => {
+  const notify = useCallback((text: string, action?: ToastAction) => {
     const id = Date.now();
-    setToast({ id, text });
-    setTimeout(() => setToast((t) => (t && t.id === id ? null : t)), 2400);
+    setToast({ id, text, action });
+    // Con acción de deshacer, el toast dura más para dar tiempo de tocarla.
+    setTimeout(() => setToast((t) => (t && t.id === id ? null : t)), action ? 6500 : 2400);
   }, []);
 
   const signOut = useCallback(async () => {
@@ -191,11 +193,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const deletePiece = useCallback(
     async (id: string) => {
+      const removed = db?.pieces.find((p) => p.id === id);
       await api(`/api/pieces/${id}`, "DELETE");
       setDb((prev) => (prev ? { ...prev, pieces: prev.pieces.filter((p) => p.id !== id) } : prev));
-      notify("Pieza eliminada");
+      notify(
+        "Pieza eliminada",
+        removed && {
+          label: "Restablecer",
+          run: async () => {
+            const piece = await api<Piece>("/api/pieces", "POST", removed);
+            setDb((prev) => (prev ? { ...prev, pieces: [...prev.pieces, piece] } : prev));
+            notify("Pieza restablecida");
+          },
+        },
+      );
     },
-    [notify],
+    [db, notify],
   );
 
   const createSource = useCallback(
@@ -222,11 +235,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const deleteSource = useCallback(
     async (id: string) => {
+      const removed = db?.sources.find((x) => x.id === id);
       await api(`/api/sources/${id}`, "DELETE");
       setDb((prev) => (prev ? { ...prev, sources: prev.sources.filter((s) => s.id !== id) } : prev));
-      notify("Fuente eliminada");
+      notify(
+        "Fuente eliminada",
+        removed && {
+          label: "Restablecer",
+          run: async () => {
+            const source = await api<Source>("/api/sources", "POST", removed);
+            setDb((prev) => (prev ? { ...prev, sources: [...prev.sources, source] } : prev));
+            notify("Fuente restablecida");
+          },
+        },
+      );
     },
-    [notify],
+    [db, notify],
   );
 
   const saveMetrics = useCallback(

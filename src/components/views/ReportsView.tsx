@@ -76,8 +76,23 @@ export default function ReportsView() {
   };
 
   const remove = async (id: string) => {
+    const removed = reports?.find((r) => r.id === id);
     await fetch(`/api/reports/${id}`, { method: "DELETE" });
-    notify("Reporte eliminado");
+    notify(
+      "Reporte eliminado",
+      removed && {
+        label: "Restablecer",
+        run: async () => {
+          const res = await fetch("/api/reports", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ restore: removed }),
+          });
+          if (res.ok) notify("Reporte restablecido");
+          await load();
+        },
+      },
+    );
     await load();
   };
 

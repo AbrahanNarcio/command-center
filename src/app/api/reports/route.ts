@@ -37,6 +37,26 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
+
+  // Restablecer un reporte recién eliminado (deshacer del toast): se reinsertan
+  // los datos originales tal cual, sin tomar un snapshot nuevo.
+  if (body.restore && typeof body.restore === "object") {
+    const r = body.restore as Report;
+    if (!r.id || !r.accountId || !r.data) return NextResponse.json({ error: "restore inválido" }, { status: 400 });
+    const restoreGate = await accountGate(String(r.accountId));
+    if (restoreGate.response) return restoreGate.response;
+    const restored: Report = {
+      id: String(r.id),
+      accountId: String(r.accountId),
+      title: String(r.title || "Reporte"),
+      note: String(r.note || "").slice(0, 600),
+      createdAt: typeof r.createdAt === "string" ? r.createdAt : new Date().toISOString(),
+      data: r.data,
+    };
+    await insertReport(restored);
+    return NextResponse.json(restored);
+  }
+
   const accountId = typeof body.accountId === "string" ? body.accountId : "";
   const note = typeof body.note === "string" ? body.note.slice(0, 600) : "";
   if (!accountId) return NextResponse.json({ error: "Falta accountId" }, { status: 400 });

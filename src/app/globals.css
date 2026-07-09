@@ -1779,6 +1779,9 @@ input[type="range"] {
   bottom: 22px;
   right: 22px;
   z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   border: 1px solid var(--line-2);
   border-radius: var(--radius);
   background: #0c0f17;
@@ -1787,6 +1790,24 @@ input[type="range"] {
   font-size: 13px;
   font-weight: 800;
   box-shadow: var(--shadow);
+}
+
+/* Deshacer dentro del toast ("Restablecer"). */
+.toast-undo {
+  border: 1px solid rgba(122, 140, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(122, 140, 255, 0.14);
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.toast-undo:hover {
+  background: rgba(122, 140, 255, 0.26);
+  transform: translateY(-1px);
 }
 
 .loading-screen {
