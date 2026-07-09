@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "IG Performance Command Center",
+  title: "Content OS",
   description:
     "Centro de mando de contenido e Instagram multi-cuenta: métricas, pipeline, calendario y generador.",
 };
