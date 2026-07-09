@@ -132,11 +132,12 @@ button {
 }
 
 .account-btn .avatar-ring {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
-  padding: 2px;
-  background: conic-gradient(from 210deg, #feda75, #fa7e1e, #fd1d1d, #d62976, #962fbf, #4f5bd5, #feda75);
+  padding: 2.5px;
+  /* Degradado diagonal del anillo de historia real de IG: amarillo abajo-izq -> morado arriba-der. */
+  background: linear-gradient(45deg, #feda75, #fa7e1e 30%, #d62976 60%, #962fbf 85%, #4f5bd5);
   display: grid;
 }
 
