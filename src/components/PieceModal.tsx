@@ -11,6 +11,7 @@ import {
   PieceStatus,
   STATUSES,
 } from "@/lib/types";
+import ModalPortal from "@/components/ModalPortal";
 
 export type PieceDraft = Omit<Piece, "id" | "accountId">;
 
@@ -51,6 +52,7 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
     setDraft((d) => ({ ...d, [key]: value }));
 
   return (
+    <ModalPortal>
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <p className="eyebrow">{initial ? "Editar pieza" : "Nueva pieza"}</p>
@@ -153,5 +155,6 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

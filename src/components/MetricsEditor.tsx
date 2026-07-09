@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AccountMetrics, Kpi } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
+import ModalPortal from "@/components/ModalPortal";
 
 interface Props {
   metrics: AccountMetrics;
@@ -21,6 +22,7 @@ export default function MetricsEditor({ metrics, onClose }: Props) {
     setKpis((prev) => prev.map((k, i) => (i === idx ? { ...k, [key]: value } : k)));
 
   return (
+    <ModalPortal>
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: "min(760px, 100%)" }}>
         <p className="eyebrow">Editar métricas de la cuenta</p>
@@ -80,5 +82,6 @@ export default function MetricsEditor({ metrics, onClose }: Props) {
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

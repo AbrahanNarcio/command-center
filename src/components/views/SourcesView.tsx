@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Source } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
+import ModalPortal from "@/components/ModalPortal";
 
 export default function SourcesView() {
   const { accountSources, createSource, updateSource, deleteSource } = useStore();
@@ -85,6 +86,7 @@ export default function SourcesView() {
       </div>
 
       {open && (
+        <ModalPortal>
         <div className="modal-backdrop" onClick={() => setOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <p className="eyebrow">{editing ? "Editar fuente" : "Nueva fuente"}</p>
@@ -120,6 +122,7 @@ export default function SourcesView() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
     </>
   );

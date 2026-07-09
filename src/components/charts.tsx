@@ -3,7 +3,17 @@
 import { AccountMetrics } from "@/lib/types";
 
 export function LineChart({ values }: { values: number[] }) {
-  if (values.length < 2) return <div className="line-chart" />;
+  if (values.length < 2) {
+    return (
+      <div className="line-chart" style={{ display: "grid", placeItems: "center" }}>
+        <p style={{ color: "var(--muted)", fontSize: 13, textAlign: "center", padding: "0 20px" }}>
+          La línea se dibuja con un punto por día.
+          <br />
+          Mañana, después del sync automático, aparece el primer tramo.
+        </p>
+      </div>
+    );
+  }
   const max = Math.max(...values);
   const min = Math.min(...values);
   const range = max - min || 1;

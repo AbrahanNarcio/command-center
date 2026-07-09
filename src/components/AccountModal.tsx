@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Account } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
+import ModalPortal from "@/components/ModalPortal";
 
 const COLORS = ["#58e6ff", "#d8ff63", "#ff77bc", "#ffc857", "#80ffb5", "#9b7cff", "#ff6f61"];
 
@@ -16,6 +17,7 @@ export default function AccountModal({ account, onClose }: { account?: Account |
   const isEdit = Boolean(account);
 
   return (
+    <ModalPortal>
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <p className="eyebrow">{isEdit ? "Editar cuenta" : "Nueva cuenta"}</p>
@@ -88,5 +90,6 @@ export default function AccountModal({ account, onClose }: { account?: Account |
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }
