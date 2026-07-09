@@ -5,7 +5,7 @@ import {
   MediaItem,
   fetchAccountInsights,
   fetchMediaList,
-  fetchMediaReach,
+  fetchMediaMetrics,
   fetchProfile,
   formatCompact,
   metricValue,
@@ -186,12 +186,36 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
         }));
     }
 
-    // ── Alcance por formato: reach real de las últimas publicaciones ──
+    // ── Alcance por formato + watch time de reels (una llamada por publicación) ──
     const nonStories = media.filter((m) => m.media_product_type !== "STORY").slice(0, MEDIA_REACH_LIMIT);
     const formatReach = new Map<string, number>();
+    const reelWatch: { media: MediaItem; ms: number }[] = [];
     for (const item of nonStories) {
-      const r = await fetchMediaReach(item.id, token);
+      const isReel = item.media_product_type === "REELS";
+      const values = await fetchMediaMetrics(
+        item.id,
+        token,
+        isReel ? "reach,ig_reels_avg_watch_time" : "reach",
+      );
+      const r = values.reach;
       if (r != null) formatReach.set(formatLabel(item), (formatReach.get(formatLabel(item)) ?? 0) + r);
+      if (isReel && values.ig_reels_avg_watch_time != null) {
+        reelWatch.push({ media: item, ms: values.ig_reels_avg_watch_time });
+      }
+    }
+
+    // ── Retención real de reels: tiempo promedio de visualización (la API no da caída por tramo) ──
+    if (reelWatch.length) {
+      const maxMs = Math.max(...reelWatch.map((r) => r.ms));
+      const colors = [C.cyan, C.lime, C.pink, C.amber, C.violet, C.coral];
+      metrics.reelsRetention = reelWatch.slice(0, 6).map(({ media: m, ms }, i): FunnelStep => ({
+        label: (m.caption || "Reel").replace(/\s+/g, " ").slice(0, 46),
+        value: `${(ms / 1000).toFixed(1)}s`,
+        pct: Math.max(4, Math.round((ms / maxMs) * 100)),
+        color: colors[i % colors.length],
+      }));
+      const avgMs = reelWatch.reduce((sum, r) => sum + r.ms, 0) / reelWatch.length;
+      metrics.retentionAvg = `${(avgMs / 1000).toFixed(1)}s`;
     }
     if (formatReach.size > 0) {
       const max = Math.max(...formatReach.values());

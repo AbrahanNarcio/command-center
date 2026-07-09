@@ -12,6 +12,7 @@ import CalendarView from "@/components/views/CalendarView";
 import GeneratorView from "@/components/views/GeneratorView";
 import SourcesView from "@/components/views/SourcesView";
 import SettingsView from "@/components/views/SettingsView";
+import ReportsView from "@/components/views/ReportsView";
 
 
 /** "8 jul, 2:32 p.m." en la hora local del dispositivo. */
@@ -233,6 +234,7 @@ export default function Dashboard() {
           {view === "overview" && <OverviewView pieces={filtered} />}
           {view === "pipeline" && <PipelineView pieces={filtered} />}
           {view === "calendar" && <CalendarView pieces={filtered} />}
+          {view === "reports" && <ReportsView />}
           {view === "generator" && canEdit && <GeneratorView />}
           {view === "sources" && canEdit && <SourcesView />}
           {view === "settings" && canEdit && <SettingsView />}

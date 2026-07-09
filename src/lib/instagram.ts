@@ -210,16 +210,27 @@ export async function fetchMediaList(igUserId: string, token: string, limit = 50
   return (data.data ?? []) as MediaItem[];
 }
 
-/** Reach de una publicación individual. Devuelve null si no está disponible (p. ej. stories viejas). */
-export async function fetchMediaReach(mediaId: string, token: string): Promise<number | null> {
-  const params = new URLSearchParams({ metric: "reach", access_token: token });
+/**
+ * Insights de una publicación individual (una sola llamada para varias métricas).
+ * Devuelve mapa métrica→valor; {} si la publicación no las soporta (p. ej. stories viejas).
+ */
+export async function fetchMediaMetrics(
+  mediaId: string,
+  token: string,
+  metrics: string,
+): Promise<Record<string, number>> {
+  const params = new URLSearchParams({ metric: metrics, access_token: token });
   const res = await fetch(
     `${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${mediaId}/insights?${params.toString()}`,
   );
   const data = await res.json();
-  if (!res.ok) return null;
-  const item = (data.data ?? []).find((i: InsightValue) => i.name === "reach");
-  return item?.values?.[0]?.value ?? item?.total_value?.value ?? null;
+  if (!res.ok) return {};
+  const out: Record<string, number> = {};
+  for (const item of (data.data ?? []) as InsightValue[]) {
+    const value = item.values?.[0]?.value ?? item.total_value?.value;
+    if (typeof value === "number") out[item.name] = value;
+  }
+  return out;
 }
 
 export function metricValue(insights: InsightValue[], name: string): number | null {

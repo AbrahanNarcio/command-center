@@ -82,6 +82,18 @@ export interface AccountMetrics {
   avatarUrl?: string;
   /** Últimas publicaciones con miniatura, para la vista previa. */
   recentPosts?: RecentPost[];
+  /** Retención real de reels: tiempo promedio de visualización por reel (API oficial). */
+  reelsRetention?: FunnelStep[];
+}
+
+/** Snapshot congelado de métricas, para histórico y PDF. */
+export interface Report {
+  id: string;
+  accountId: string;
+  title: string;
+  note: string;
+  createdAt: string;
+  data: AccountMetrics;
 }
 
 export type ConnectionStatus = "connected" | "error" | "expired";

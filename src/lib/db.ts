@@ -4,6 +4,7 @@ import {
   AccountConnection,
   AccountMetrics,
   Piece,
+  Report,
   Source,
 } from "./types";
 
@@ -285,6 +286,47 @@ export async function patchConnection(
 export async function deleteConnectionRow(accountId: string): Promise<void> {
   const { error } = await adminClient().from("connections").delete().eq("account_id", accountId);
   if (error) fail("deleteConnection", error);
+}
+
+/* ── reports (snapshots congelados de métricas) ─────────────── */
+
+type ReportRow = { id: string; account_id: string; title: string; note: string; data: AccountMetrics; created_at: string };
+
+const toReport = (r: ReportRow): Report => ({
+  id: r.id,
+  accountId: r.account_id,
+  title: r.title,
+  note: r.note ?? "",
+  createdAt: r.created_at,
+  data: r.data,
+});
+
+export async function listReports(accountId: string): Promise<Report[]> {
+  const { data, error } = await adminClient()
+    .from("reports")
+    .select("*")
+    .eq("account_id", accountId)
+    .order("created_at", { ascending: false });
+  if (error) fail("listReports", error);
+  return (data as ReportRow[]).map(toReport);
+}
+
+export async function insertReport(report: Report): Promise<Report> {
+  const { error } = await adminClient().from("reports").insert({
+    id: report.id,
+    account_id: report.accountId,
+    title: report.title,
+    note: report.note,
+    data: report.data,
+    created_at: report.createdAt,
+  });
+  if (error) fail("insertReport", error);
+  return report;
+}
+
+export async function deleteReportRow(id: string): Promise<void> {
+  const { error } = await adminClient().from("reports").delete().eq("id", id);
+  if (error) fail("deleteReport", error);
 }
 
 /* ── client users (profiles) ────────────────────────────────── */

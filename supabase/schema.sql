@@ -79,3 +79,14 @@ alter table sources enable row level security;
 alter table metrics enable row level security;
 alter table connections enable row level security;
 alter table profiles enable row level security;
+
+-- Reportes: snapshots congelados de métricas (histórico que el sync no pisa)
+create table if not exists reports (
+  id text primary key,
+  account_id text not null references accounts(id) on delete cascade,
+  title text not null,
+  note text not null default '',
+  data jsonb not null,
+  created_at timestamptz not null default now()
+);
+alter table reports enable row level security;
