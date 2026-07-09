@@ -10,6 +10,7 @@ import { Donut, LineChart } from "@/components/charts";
 const compact = (n: number) =>
   n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : `${n}`;
 import MetricsEditor from "@/components/MetricsEditor";
+import KpiIcon from "@/components/KpiIcon";
 
 export default function OverviewView({ pieces }: { pieces: Piece[] }) {
   const { activeMetrics, activeAccount, canEdit } = useStore();
@@ -65,6 +66,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             <strong>{kpi.value}</strong>
             <p>{kpi.detail}</p>
             {kpi.delta ? <div className="delta">{kpi.delta}</div> : null}
+            <KpiIcon label={kpi.label} />
           </article>
         ))}
       </div>

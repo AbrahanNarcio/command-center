@@ -6,6 +6,7 @@ import { Report } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
 import { Donut, LineChart } from "@/components/charts";
 import ModalPortal from "@/components/ModalPortal";
+import KpiIcon from "@/components/KpiIcon";
 
 function stamp(iso: string): string {
   return new Date(iso).toLocaleString("es-MX", {
@@ -180,6 +181,7 @@ export default function ReportsView() {
                     <span>{kpi.label}</span>
                     <strong>{kpi.value}</strong>
                     <p>{kpi.detail}</p>
+                    <KpiIcon label={kpi.label} />
                   </article>
                 ))}
               </div>

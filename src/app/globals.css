@@ -777,16 +777,21 @@ textarea {
   position: relative;
 }
 
-.metric-card::after {
-  content: "";
+.metric-card .metric-icon {
   position: absolute;
-  right: -20px;
-  bottom: -26px;
-  width: 92px;
-  height: 92px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 24%, transparent), transparent 68%);
+  right: 10px;
+  bottom: 6px;
+  color: var(--accent);
+  opacity: 0.3;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 60%, transparent));
+  pointer-events: none;
+}
+
+.metric-card .metric-icon svg {
+  width: 46px;
+  height: 46px;
+  stroke-width: 1.6;
+  display: block;
 }
 
 .metric-card span {
