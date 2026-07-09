@@ -5,6 +5,7 @@ import { AtSign, RotateCcw, Search, Sparkles, SquareKanban } from "lucide-react"
 import { useStore } from "@/lib/store-context";
 import { FORMATS, PieceFormat } from "@/lib/types";
 import { ViewId } from "@/lib/views";
+import { relativeTime } from "@/lib/utils";
 import Rail from "@/components/Rail";
 import OverviewView from "@/components/views/OverviewView";
 import PipelineView from "@/components/views/PipelineView";
@@ -14,7 +15,17 @@ import SourcesView from "@/components/views/SourcesView";
 import SettingsView from "@/components/views/SettingsView";
 
 export default function Dashboard() {
-  const { loading, setupError, activeAccount, accountPieces, toast, notify, refresh, canEdit } = useStore();
+  const {
+    loading,
+    setupError,
+    activeAccount,
+    activeConnection,
+    accountPieces,
+    toast,
+    notify,
+    refresh,
+    canEdit,
+  } = useStore();
   const [view, setView] = useState<ViewId>("overview");
   const [format, setFormat] = useState<PieceFormat | "all">("all");
   const [search, setSearch] = useState("");
@@ -78,17 +89,28 @@ export default function Dashboard() {
         <section className="hero">
           <div className="hero-inner">
             <div>
-              <p className="eyebrow">{activeAccount ? `${activeAccount.name} · Content OS` : "Content OS"}</p>
-              <h1>IG Performance Command Center.</h1>
+              <p className="eyebrow">Content OS · Command Center</p>
+              <h1>{activeAccount ? `${activeAccount.name}.` : "Content OS."}</h1>
               <p className="hero-copy">
-                {activeAccount ? (
+                {!activeAccount ? (
+                  "Agrega una cuenta para empezar."
+                ) : activeConnection ? (
                   <>
-                    Operando <strong>{activeAccount.name}</strong> ({activeAccount.handle}). Métricas,
-                    pipeline, calendario y generación en una sola pantalla — multi-cuenta, sin tocar Meta
-                    hasta conectar por la vía oficial.
+                    <strong>{activeAccount.handle}</strong> conectada a Instagram por la vía oficial.
+                    Métricas reales sincronizadas{" "}
+                    {activeConnection.lastSyncAt ? relativeTime(activeConnection.lastSyncAt) : "pendientes"} —
+                    se actualizan solas cada día a las 7:00. Pipeline y calendario en la misma pantalla.
+                  </>
+                ) : canEdit ? (
+                  <>
+                    <strong>{activeAccount.handle}</strong> todavía sin conexión a Instagram. Conéctala en{" "}
+                    <strong>IG Ready</strong> para traer métricas reales; el pipeline y el calendario ya
+                    están operativos.
                   </>
                 ) : (
-                  "Agregá una cuenta para empezar."
+                  <>
+                    Dashboard de solo lectura de <strong>{activeAccount.name}</strong> ({activeAccount.handle}).
+                  </>
                 )}
               </p>
               <div className="hero-actions">
@@ -110,31 +132,61 @@ export default function Dashboard() {
             <div className="command-strip" aria-label="Estado operativo">
               <div className="command-card">
                 <div className="row">
-                  <strong>Quality gate</strong>
-                  <span>{gate.avg}%</span>
+                  <strong>Instagram</strong>
+                  <span>
+                    {activeConnection
+                      ? activeConnection.status === "error"
+                        ? "Con error"
+                        : `@${activeConnection.username}`
+                      : "Sin conectar"}
+                  </span>
                 </div>
                 <div className="pulse-bar">
-                  <span style={{ ["--w" as string]: `${gate.avg}%` }} />
+                  <span
+                    style={{
+                      ["--w" as string]: activeConnection
+                        ? activeConnection.status === "error"
+                          ? "45%"
+                          : "100%"
+                        : "6%",
+                    }}
+                  />
                 </div>
               </div>
               <div className="command-card">
                 <div className="row">
-                  <strong>Listas para salir</strong>
-                  <span>{gate.ready} piezas</span>
+                  <strong>Última actualización</strong>
+                  <span>
+                    {activeConnection?.lastSyncAt ? relativeTime(activeConnection.lastSyncAt) : "—"}
+                  </span>
                 </div>
                 <div className="pulse-bar">
-                  <span style={{ ["--w" as string]: `${Math.min(100, gate.ready * 12)}%` }} />
+                  <span style={{ ["--w" as string]: activeConnection?.lastSyncAt ? "100%" : "6%" }} />
                 </div>
               </div>
-              <div className="command-card">
-                <div className="row">
-                  <strong>Bloqueos creativos</strong>
-                  <span>{gate.blocked} rojos</span>
+              {accountPieces.length > 0 ? (
+                <div className="command-card">
+                  <div className="row">
+                    <strong>Quality gate</strong>
+                    <span>
+                      {gate.avg}% · {gate.ready} listas{gate.blocked ? ` · ${gate.blocked} rojos` : ""}
+                    </span>
+                  </div>
+                  <div className="pulse-bar">
+                    <span style={{ ["--w" as string]: `${gate.avg}%` }} />
+                  </div>
                 </div>
-                <div className="pulse-bar">
-                  <span style={{ ["--w" as string]: `${Math.min(100, gate.blocked * 20)}%` }} />
+              ) : (
+                <div className="command-card">
+                  <div className="row">
+                    <strong>Pipeline</strong>
+                    <span>Sin piezas aún</span>
+                  </div>
+                  <div className="pulse-bar">
+                    <span style={{ ["--w" as string]: "6%" }} />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </section>
