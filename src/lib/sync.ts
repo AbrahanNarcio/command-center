@@ -4,6 +4,7 @@ import {
   ACCOUNT_METRICS_CORE,
   MediaItem,
   fetchAccountInsights,
+  fetchFollowersDaily,
   fetchMediaList,
   fetchMediaMetrics,
   fetchProfile,
@@ -356,6 +357,17 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
         }
       }
       metrics.heatmap = cells;
+    }
+
+    // ── Serie diaria de seguidores ganados/perdidos (para la gráfica con selector) ──
+    try {
+      const daily = await fetchFollowersDaily(conn.igUserId, token);
+      if (daily.length) {
+        metrics.followersDaily = daily;
+        if (profile.followers_count != null) metrics.followersTotal = profile.followers_count;
+      }
+    } catch {
+      // Sin serie diaria: la gráfica cae al snapshot acumulado de siempre.
     }
 
     // ── Snapshot diario de seguidores → gráfico de crecimiento real ──

@@ -10,6 +10,8 @@ export async function POST(request: Request) {
   const email = String(body.email || "").trim().toLowerCase();
   const password = String(body.password || "");
   const accountId = String(body.accountId || "");
+  // 'client' = solo lectura (nombre histórico de viewer); 'editor' = mueve su propia cuenta.
+  const role = body.role === "editor" ? "editor" : "client";
 
   if (!email.includes("@")) return NextResponse.json({ error: "Email inválido" }, { status: 400 });
   if (password.length < 8) return NextResponse.json({ error: "La contraseña debe tener al menos 8 caracteres" }, { status: 400 });
@@ -28,13 +30,16 @@ export async function POST(request: Request) {
   const { error: profileError } = await supabase.from("profiles").insert({
     user_id: created.user.id,
     email,
-    role: "client",
+    role,
     account_id: accountId,
   });
   if (profileError) {
     await supabase.auth.admin.deleteUser(created.user.id);
-    return NextResponse.json({ error: profileError.message }, { status: 400 });
+    const hint = /profiles_role_check/.test(profileError.message)
+      ? " Falta la migración de roles: corre el bloque de roles de supabase/schema.sql en el SQL Editor de Supabase."
+      : "";
+    return NextResponse.json({ error: profileError.message + hint }, { status: 400 });
   }
 
-  return NextResponse.json({ userId: created.user.id, email, accountId }, { status: 201 });
+  return NextResponse.json({ userId: created.user.id, email, accountId, role }, { status: 201 });
 }

@@ -28,6 +28,7 @@ function ClientAccessPanel() {
   const { activeAccount, clientUsers, createClientUser, deleteClientUser } = useStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"client" | "editor">("client");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -41,12 +42,13 @@ function ClientAccessPanel() {
       <div className="panel-head">
         <div>
           <p className="eyebrow">Acceso de clientes · {activeAccount?.handle}</p>
-          <h2>Login de solo lectura para esta cuenta</h2>
+          <h2>Accesos para esta cuenta</h2>
         </div>
       </div>
       <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
-        El cliente entra con estas credenciales y ve únicamente su dashboard (métricas, pipeline y
-        calendario), sin poder editar nada.
+        Dos niveles: <strong>Solo lectura</strong> ve su dashboard sin tocar nada. <strong>Editor</strong>{" "}
+        puede mover todo lo de su propia cuenta (piezas, calendario, fuentes, métricas, reportes y
+        conectar su Instagram), pero no ve ninguna otra cuenta.
       </p>
 
       {accountUsers.length > 0 && (
@@ -55,7 +57,12 @@ function ClientAccessPanel() {
             <div key={u.userId}>
               <span className="check">✓</span>
               <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                {u.email}
+                <span>
+                  {u.email}{" "}
+                  <em style={{ color: "var(--muted)", fontStyle: "normal", fontSize: 12 }}>
+                    · {u.role === "editor" ? "Editor" : "Solo lectura"}
+                  </em>
+                </span>
                 <button className="button small danger" onClick={() => deleteClientUser(u.userId)}>
                   Quitar
                 </button>
@@ -89,6 +96,13 @@ function ClientAccessPanel() {
           Contraseña (mín. 8)
           <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="contraseña temporal" />
         </label>
+        <label>
+          Nivel de acceso
+          <select value={role} onChange={(e) => setRole(e.target.value === "editor" ? "editor" : "client")}>
+            <option value="client">Solo lectura (ve su dashboard)</option>
+            <option value="editor">Editor (mueve todo lo de su cuenta)</option>
+          </select>
+        </label>
       </div>
       {error && (
         <div className="alert" style={{ ["--accent" as string]: "var(--coral)", marginTop: 10 }}>
@@ -103,12 +117,13 @@ function ClientAccessPanel() {
             if (!activeAccount) return;
             setBusy(true);
             setError(null);
-            const err = await createClientUser(activeAccount.id, email, password);
+            const err = await createClientUser(activeAccount.id, email, password, role);
             setBusy(false);
             if (err) setError(err);
             else {
               setEmail("");
               setPassword("");
+              setRole("client");
             }
           }}
         >
@@ -120,7 +135,7 @@ function ClientAccessPanel() {
 }
 
 export default function SettingsView() {
-  const { activeAccount, activeConnection, igConfigured, syncConnection, disconnectConnection } = useStore();
+  const { activeAccount, activeConnection, igConfigured, isAdmin, syncConnection, disconnectConnection } = useStore();
   const [busy, setBusy] = useState(false);
 
   // Cualquier conexión existente (incluso con error) se muestra como conectada,
@@ -278,7 +293,7 @@ export default function SettingsView() {
         </div>
       </section>
     </div>
-    <ClientAccessPanel />
+    {isAdmin && <ClientAccessPanel />}
     </>
   );
 }

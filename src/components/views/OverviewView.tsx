@@ -18,11 +18,57 @@ const RANGE_OPTIONS: { key: string; label: string }[] = [
   { key: "30", label: "30 días" },
 ];
 
+const FOLLOWER_SERIES: { key: "total" | "gained" | "lost" | "net"; label: string; color?: string }[] = [
+  { key: "total", label: "Totales" },
+  { key: "gained", label: "Ganados", color: "#3adf85" },
+  { key: "lost", label: "Perdidos", color: "#ff5d51" },
+  { key: "net", label: "Netos", color: "#7a8cff" },
+];
+
+const FOLLOWER_RANGES = [7, 14, 30];
+
 export default function OverviewView({ pieces }: { pieces: Piece[] }) {
   const { activeMetrics, activeAccount, canEdit } = useStore();
   const [editing, setEditing] = useState(false);
   const [range, setRange] = useState("30");
   const [mixHover, setMixHover] = useState<number | null>(null);
+  const [fSeries, setFSeries] = useState<"total" | "gained" | "lost" | "net">("total");
+  const [fRange, setFRange] = useState(30);
+
+  // Serie de seguidores: ganados/perdidos vienen del sync; netos y totales se derivan.
+  const followers = useMemo(() => {
+    const daily = activeMetrics?.followersDaily;
+    if (!daily?.length) return null;
+    const net = daily.map((d) => d.gained - d.lost);
+    let running = activeMetrics?.followersTotal ?? 0;
+    const total = [...net].reverse().map((n) => {
+      const t = running;
+      running -= n;
+      return t;
+    }).reverse();
+    const slice = <T,>(arr: T[]) => arr.slice(-fRange);
+    const series = {
+      gained: slice(daily.map((d) => d.gained)),
+      lost: slice(daily.map((d) => d.lost)),
+      net: slice(net),
+      total: slice(total),
+    };
+    const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
+    const netSum = sum(series.net);
+    const headline = {
+      total: activeMetrics?.followersTotal != null ? compact(activeMetrics.followersTotal) : "—",
+      gained: `+${compact(sum(series.gained))}`,
+      lost: `-${compact(sum(series.lost))}`,
+      net: `${netSum >= 0 ? "+" : "-"}${compact(Math.abs(netSum))}`,
+    };
+    const caption = {
+      total: "seguidores hoy",
+      gained: `ganados en ${fRange} días`,
+      lost: `perdidos en ${fRange} días`,
+      net: `netos en ${fRange} días`,
+    };
+    return { series, headline, caption };
+  }, [activeMetrics, fRange]);
 
   const hasRanges = Boolean(activeMetrics?.kpiRanges && Object.keys(activeMetrics.kpiRanges).length > 1);
   const kpis = activeMetrics?.kpiRanges?.[range] ?? activeMetrics?.kpis ?? [];
@@ -104,15 +150,62 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
         <section className="chart-card tall">
           <div className="chart-top">
             <div>
-              <p className="eyebrow">Crecimiento 30 días</p>
-              <h2>Seguidores, alcance e interacción</h2>
-              <p>Evolución diaria para ver tendencia.</p>
+              <p className="eyebrow">Seguidores</p>
+              <h2>{followers ? "Evolución diaria real" : "Crecimiento 30 días"}</h2>
+              <p>
+                {followers
+                  ? "Totales, ganados, perdidos y netos por día. Lo mismo que ves en Instagram, aquí."
+                  : "Evolución diaria para ver tendencia."}
+              </p>
             </div>
             <div className="chart-value">
-              <strong>{activeMetrics.growthNet}</strong>seguidores netos
+              {followers ? (
+                <>
+                  <strong>{followers.headline[fSeries]}</strong>
+                  {followers.caption[fSeries]}
+                </>
+              ) : (
+                <>
+                  <strong>{activeMetrics.growthNet}</strong>seguidores netos
+                </>
+              )}
             </div>
           </div>
-          <LineChart values={activeMetrics.growth} />
+          {followers ? (
+            <>
+              <div className="follower-controls">
+                <div className="filters" role="group" aria-label="Serie de seguidores">
+                  {FOLLOWER_SERIES.map((s) => (
+                    <button
+                      key={s.key}
+                      className={`chip${fSeries === s.key ? " active" : ""}`}
+                      onClick={() => setFSeries(s.key)}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="filters" role="group" aria-label="Rango de días">
+                  {FOLLOWER_RANGES.map((d) => (
+                    <button
+                      key={d}
+                      className={`chip${fRange === d ? " active" : ""}`}
+                      onClick={() => setFRange(d)}
+                    >
+                      {d} días
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <LineChart
+                key={`${fSeries}-${fRange}`}
+                values={followers.series[fSeries]}
+                color={FOLLOWER_SERIES.find((s) => s.key === fSeries)?.color}
+              />
+            </>
+          ) : (
+            <LineChart values={activeMetrics.growth} />
+          )}
         </section>
 
         <section className="chart-card tall">

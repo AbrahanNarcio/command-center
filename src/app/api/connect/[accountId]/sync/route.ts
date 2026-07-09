@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminGate } from "@/lib/auth";
+import { accountGate } from "@/lib/auth";
 import { isConfigured } from "@/lib/instagram";
 import { syncAccount } from "@/lib/sync";
 
@@ -8,10 +8,10 @@ export const dynamic = "force-dynamic";
 type Params = { params: Promise<{ accountId: string }> };
 
 export async function POST(request: Request, { params }: Params) {
-  const gate = await adminGate();
+  const { accountId } = await params;
+  const gate = await accountGate(accountId);
   if (gate.response) return gate.response;
 
-  const { accountId } = await params;
   if (!isConfigured()) {
     return NextResponse.json({ error: "Instagram no configurado" }, { status: 400 });
   }

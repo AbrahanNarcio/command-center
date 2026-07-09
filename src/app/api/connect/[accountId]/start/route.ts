@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { requireAdmin } from "@/lib/auth";
+import { canManageAccount, getSessionProfile } from "@/lib/auth";
 import { appOrigin, buildAuthUrl, isConfigured } from "@/lib/instagram";
 import { adminClient } from "@/lib/supabase/admin";
 
@@ -12,9 +12,9 @@ export async function GET(request: Request, { params }: Params) {
   const { accountId } = await params;
   const origin = appOrigin(new URL(request.url).origin);
 
-  const session = await requireAdmin();
-  if (!session) {
-    return NextResponse.redirect(`${origin}/?igerror=${encodeURIComponent("Solo el administrador puede conectar cuentas")}`);
+  const session = await getSessionProfile();
+  if (!session || !canManageAccount(session, accountId)) {
+    return NextResponse.redirect(`${origin}/?igerror=${encodeURIComponent("No tienes permiso para conectar esta cuenta")}`);
   }
   if (!isConfigured()) {
     return NextResponse.redirect(`${origin}/?igerror=${encodeURIComponent("Instagram no configurado (faltan variables de entorno)")}`);

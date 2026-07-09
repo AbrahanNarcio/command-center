@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminGate, getSessionProfile } from "@/lib/auth";
+import { accountGate, getSessionProfile } from "@/lib/auth";
 import { getMetricsRow, insertReport, listReports } from "@/lib/db";
 import { newId } from "@/lib/seed";
 import { Report } from "@/lib/types";
@@ -36,13 +36,13 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const gate = await adminGate();
-  if (gate.response) return gate.response;
-
   const body = await request.json().catch(() => ({}));
   const accountId = typeof body.accountId === "string" ? body.accountId : "";
   const note = typeof body.note === "string" ? body.note.slice(0, 600) : "";
   if (!accountId) return NextResponse.json({ error: "Falta accountId" }, { status: 400 });
+
+  const gate = await accountGate(accountId);
+  if (gate.response) return gate.response;
 
   const metrics = await getMetricsRow(accountId);
   if (!metrics) return NextResponse.json({ error: "La cuenta no tiene métricas" }, { status: 404 });

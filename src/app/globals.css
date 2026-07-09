@@ -929,6 +929,15 @@ textarea {
   white-space: nowrap;
 }
 
+.follower-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
 .line-chart {
   height: 250px;
   border: 1px solid var(--line);

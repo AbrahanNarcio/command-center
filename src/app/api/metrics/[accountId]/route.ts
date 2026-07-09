@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminGate } from "@/lib/auth";
+import { accountGate } from "@/lib/auth";
 import { getMetricsRow, upsertMetrics } from "@/lib/db";
 import { AccountMetrics } from "@/lib/types";
 
@@ -11,10 +11,10 @@ const EDITABLE: (keyof Omit<AccountMetrics, "accountId" | "updatedAt">)[] = [
 ];
 
 export async function PUT(request: Request, { params }: Params) {
-  const gate = await adminGate();
+  const { accountId } = await params;
+  const gate = await accountGate(accountId);
   if (gate.response) return gate.response;
 
-  const { accountId } = await params;
   const body = await request.json();
   const current = await getMetricsRow(accountId);
   if (!current) return NextResponse.json({ error: "not found" }, { status: 404 });

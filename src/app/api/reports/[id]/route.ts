@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { adminGate } from "@/lib/auth";
-import { deleteReportRow } from "@/lib/db";
+import { accountGate } from "@/lib/auth";
+import { deleteReportRow, rowAccountId } from "@/lib/db";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const gate = await adminGate();
+  const { id } = await params;
+  const gate = await accountGate((await rowAccountId("reports", id)) ?? "");
   if (gate.response) return gate.response;
 
-  const { id } = await params;
   await deleteReportRow(id);
   return NextResponse.json({ ok: true });
 }

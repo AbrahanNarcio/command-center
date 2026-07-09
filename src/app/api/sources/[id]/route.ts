@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { adminGate } from "@/lib/auth";
-import { deleteSourceRow, updateSourceRow } from "@/lib/db";
+import { accountGate } from "@/lib/auth";
+import { deleteSourceRow, rowAccountId, updateSourceRow } from "@/lib/db";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, { params }: Params) {
-  const gate = await adminGate();
+  const { id } = await params;
+  const gate = await accountGate((await rowAccountId("sources", id)) ?? "");
   if (gate.response) return gate.response;
 
-  const { id } = await params;
   const body = await request.json();
   await updateSourceRow(id, {
     name: typeof body.name === "string" ? body.name : undefined,
@@ -20,10 +20,10 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const gate = await adminGate();
+  const { id } = await params;
+  const gate = await accountGate((await rowAccountId("sources", id)) ?? "");
   if (gate.response) return gate.response;
 
-  const { id } = await params;
   await deleteSourceRow(id);
   return NextResponse.json({ ok: true });
 }

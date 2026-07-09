@@ -186,6 +186,61 @@ export async function fetchAccountInsights(
   return (data.data ?? []) as InsightValue[];
 }
 
+export type FollowersDay = { date: string; gained: number; lost: number };
+
+/**
+ * Serie diaria de seguidores ganados y perdidos (últimos ~29 días).
+ * follower_count da los buckets diarios de ganados en una llamada; el breakdown
+ * ganados/perdidos solo existe como total por ventana, así que se pide una
+ * ventana de ±60s alrededor del end_time de cada bucket (verificado: devuelve
+ * exactamente ese día). Las llamadas por día van en paralelo.
+ */
+export async function fetchFollowersDaily(igUserId: string, token: string): Promise<FollowersDay[]> {
+  const now = Math.floor(Date.now() / 1000);
+  const qs = new URLSearchParams({
+    metric: "follower_count",
+    period: "day",
+    since: String(now - 29 * 86400),
+    until: String(now),
+    access_token: token,
+  });
+  const res = await fetch(`${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${igUserId}/insights?${qs}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || "No se pudo leer follower_count.");
+  const buckets: { value?: number; end_time?: string }[] = data.data?.[0]?.values ?? [];
+
+  const days = await Promise.all(
+    buckets.map(async (b) => {
+      if (!b.end_time) return null;
+      const end = Math.floor(Date.parse(b.end_time) / 1000);
+      const day: FollowersDay = { date: b.end_time.slice(0, 10), gained: b.value ?? 0, lost: 0 };
+      try {
+        const q = new URLSearchParams({
+          metric: "follows_and_unfollows",
+          period: "day",
+          metric_type: "total_value",
+          breakdown: "follow_type",
+          since: String(end - 60),
+          until: String(end + 60),
+          access_token: token,
+        });
+        const r = await fetch(`${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${igUserId}/insights?${q}`);
+        const j = await r.json();
+        const results: { dimension_values?: string[]; value?: number }[] =
+          j?.data?.[0]?.total_value?.breakdowns?.[0]?.results ?? [];
+        for (const item of results) {
+          if (item.dimension_values?.[0] === "FOLLOWER") day.gained = item.value ?? day.gained;
+          if (item.dimension_values?.[0] === "NON_FOLLOWER") day.lost = item.value ?? 0;
+        }
+      } catch {
+        // Sin breakdown ese día: se queda gained del bucket y lost 0.
+      }
+      return day;
+    }),
+  );
+  return days.filter((d): d is FollowersDay => d !== null);
+}
+
 export interface MediaItem {
   id: string;
   caption?: string;

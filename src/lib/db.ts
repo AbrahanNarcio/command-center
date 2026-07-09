@@ -335,16 +335,23 @@ export interface ClientUser {
   userId: string;
   email: string;
   accountId: string | null;
+  /** 'client'/'viewer' = solo lectura; 'editor' = mueve su propia cuenta. */
+  role: string;
 }
 
 export async function listClientUsers(): Promise<ClientUser[]> {
   const { data, error } = await adminClient()
     .from("profiles")
-    .select("user_id, email, account_id")
-    .eq("role", "client")
+    .select("user_id, email, account_id, role")
+    .neq("role", "admin")
     .order("created_at");
   if (error) fail("listClientUsers", error);
-  return (data ?? []).map((r) => ({ userId: r.user_id, email: r.email, accountId: r.account_id }));
+  return (data ?? []).map((r) => ({
+    userId: r.user_id,
+    email: r.email,
+    accountId: r.account_id,
+    role: r.role ?? "client",
+  }));
 }
 
 /** Borra los usuarios auth de los clientes ligados a una cuenta (cascada al borrar la cuenta). */
@@ -353,10 +360,17 @@ export async function deleteClientUsersOf(accountId: string): Promise<void> {
   const { data, error } = await db
     .from("profiles")
     .select("user_id")
-    .eq("role", "client")
+    .neq("role", "admin")
     .eq("account_id", accountId);
   if (error) fail("deleteClientUsersOf", error);
   for (const row of data ?? []) {
     await db.auth.admin.deleteUser(row.user_id);
   }
+}
+
+/** Cuenta a la que pertenece una fila (para el guard por cuenta en PATCH/DELETE). */
+export async function rowAccountId(table: "pieces" | "sources" | "reports", id: string): Promise<string | null> {
+  const { data, error } = await adminClient().from(table).select("account_id").eq("id", id).maybeSingle();
+  if (error) fail(`rowAccountId:${table}`, error);
+  return data?.account_id ?? null;
 }

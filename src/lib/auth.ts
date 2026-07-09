@@ -2,14 +2,28 @@ import { NextResponse } from "next/server";
 import { adminClient, supabaseConfigured } from "./supabase/admin";
 import { serverClient } from "./supabase/server";
 
-export type Role = "admin" | "client";
+/**
+ * Roles:
+ * - admin: acceso total a todas las cuentas.
+ * - editor: ve y mueve TODO pero solo de su propia cuenta (piezas, calendario,
+ *   fuentes, métricas, reportes y conectar su Instagram).
+ * - viewer: solo lectura de su cuenta. En la base se guarda como 'client'
+ *   (nombre histórico) o 'viewer'; ambos se tratan igual.
+ */
+export type Role = "admin" | "editor" | "viewer";
 
 export interface SessionProfile {
   userId: string;
   email: string;
   role: Role;
-  /** For client role: the single account they can view. */
+  /** Para editor/viewer: la única cuenta a la que pertenecen. */
   accountId: string | null;
+}
+
+function toRole(raw: unknown): Role {
+  if (raw === "admin") return "admin";
+  if (raw === "editor") return "editor";
+  return "viewer";
 }
 
 /** Resolve the logged-in user + profile, or null. */
@@ -31,9 +45,15 @@ export async function getSessionProfile(): Promise<SessionProfile | null> {
   return {
     userId: user.id,
     email: profile.email ?? user.email ?? "",
-    role: profile.role === "admin" ? "admin" : "client",
+    role: toRole(profile.role),
     accountId: profile.account_id ?? null,
   };
+}
+
+/** ¿Puede esta sesión administrar (escribir sobre) la cuenta dada? */
+export function canManageAccount(session: SessionProfile, accountId: string): boolean {
+  if (session.role === "admin") return true;
+  return session.role === "editor" && !!session.accountId && session.accountId === accountId;
 }
 
 export async function requireAdmin(): Promise<SessionProfile | null> {
@@ -56,6 +76,21 @@ export async function adminGate(): Promise<AdminGate> {
     return { session: null, response: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
   }
   if (session.role !== "admin") {
+    return { session: null, response: NextResponse.json({ error: "forbidden" }, { status: 403 }) };
+  }
+  return { session, response: null };
+}
+
+/**
+ * Guard para escrituras sobre UNA cuenta: admin siempre; editor solo si es SU
+ * cuenta. Los viewers nunca escriben. Mismo contrato 401/403 que adminGate.
+ */
+export async function accountGate(accountId: string): Promise<AdminGate> {
+  const session = await getSessionProfile();
+  if (!session) {
+    return { session: null, response: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
+  }
+  if (!accountId || !canManageAccount(session, accountId)) {
     return { session: null, response: NextResponse.json({ error: "forbidden" }, { status: 403 }) };
   }
   return { session, response: null };

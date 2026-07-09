@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { adminGate } from "@/lib/auth";
+import { accountGate } from "@/lib/auth";
 import { insertSource } from "@/lib/db";
 import { newId } from "@/lib/seed";
 import { Source } from "@/lib/types";
 
 export async function POST(request: Request) {
-  const gate = await adminGate();
-  if (gate.response) return gate.response;
-
   const body = await request.json();
+  const gate = await accountGate(String(body.accountId || ""));
+  if (gate.response) return gate.response;
   const source: Source = {
     id: newId("src"),
     accountId: String(body.accountId),

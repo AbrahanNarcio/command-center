@@ -1,8 +1,10 @@
 "use client";
 
+import { useId } from "react";
 import { AccountMetrics } from "@/lib/types";
 
-export function LineChart({ values }: { values: number[] }) {
+export function LineChart({ values, color }: { values: number[]; color?: string }) {
+  const uid = useId();
   if (values.length < 2) {
     return (
       <div className="line-chart" style={{ display: "grid", placeItems: "center" }}>
@@ -24,27 +26,38 @@ export function LineChart({ values }: { values: number[] }) {
       return `${x.toFixed(2)},${y.toFixed(2)}`;
     })
     .join(" ");
+  const strokeId = `stroke-${uid}`;
+  const fillId = `fill-${uid}`;
   return (
     <div className="line-chart">
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Tendencia de crecimiento">
         <defs>
-          <linearGradient id="growthStroke" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="#7a8cff" />
-            <stop offset="55%" stopColor="#feda75" />
-            <stop offset="100%" stopColor="#ff5c9c" />
+          <linearGradient id={strokeId} x1="0" x2="1" y1="0" y2="0">
+            {color ? (
+              <>
+                <stop offset="0%" stopColor={color} stopOpacity="0.75" />
+                <stop offset="100%" stopColor={color} />
+              </>
+            ) : (
+              <>
+                <stop offset="0%" stopColor="#7a8cff" />
+                <stop offset="55%" stopColor="#feda75" />
+                <stop offset="100%" stopColor="#ff5c9c" />
+              </>
+            )}
           </linearGradient>
-          <linearGradient id="growthFill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#7a8cff" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="#7a8cff" stopOpacity="0" />
+          <linearGradient id={fillId} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor={color ?? "#7a8cff"} stopOpacity="0.28" />
+            <stop offset="100%" stopColor={color ?? "#7a8cff"} stopOpacity="0" />
           </linearGradient>
         </defs>
-        <polygon className="line-fill" points={`0,100 ${points} 100,100`} fill="url(#growthFill)" />
+        <polygon className="line-fill" points={`0,100 ${points} 100,100`} fill={`url(#${fillId})`} />
         <polyline
           className="line-draw"
           pathLength={100}
           points={points}
           fill="none"
-          stroke="url(#growthStroke)"
+          stroke={`url(#${strokeId})`}
           strokeWidth={2.8}
           vectorEffect="non-scaling-stroke"
         />

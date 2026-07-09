@@ -62,14 +62,21 @@ create table if not exists connections (
   error text
 );
 
--- Perfil de cada usuario logueado: admin (equipo, edita todo) o client (ve solo su cuenta).
+-- Perfil de cada usuario logueado. Roles:
+--   admin  = equipo, acceso total a todas las cuentas
+--   editor = mueve todo pero SOLO de su cuenta (piezas, fuentes, métricas, reportes, conectar su IG)
+--   client = solo lectura de su cuenta (nombre histórico de "viewer")
 create table if not exists profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   email text not null,
-  role text not null default 'client' check (role in ('admin','client')),
+  role text not null default 'client' check (role in ('admin','editor','client')),
   account_id text references accounts(id) on delete set null,
   created_at timestamptz not null default now()
 );
+
+-- MIGRACIÓN DE ROLES (bases creadas antes del rol editor): corre este bloque una vez.
+-- alter table profiles drop constraint if exists profiles_role_check;
+-- alter table profiles add constraint profiles_role_check check (role in ('admin','editor','client'));
 
 -- RLS activado sin políticas: la anon key no puede leer nada.
 -- Todo el acceso pasa por el servidor Next con el service role.

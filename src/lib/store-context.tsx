@@ -33,7 +33,10 @@ interface StoreValue {
   clientUsers: ClientUserView[];
   igConfigured: boolean;
   me: Me | null;
+  /** admin o editor: puede mover su(s) cuenta(s). */
   canEdit: boolean;
+  /** Solo admin: cuentas, usuarios y accesos. */
+  isAdmin: boolean;
   activeId: string;
   activeAccount: Account | undefined;
   activeMetrics: AccountMetrics | undefined;
@@ -57,7 +60,7 @@ interface StoreValue {
   saveMetrics: (accountId: string, patch: Partial<AccountMetrics>) => Promise<void>;
   syncConnection: (accountId: string) => Promise<void>;
   disconnectConnection: (accountId: string) => Promise<void>;
-  createClientUser: (accountId: string, email: string, password: string) => Promise<string | null>;
+  createClientUser: (accountId: string, email: string, password: string, role: "client" | "editor") => Promise<string | null>;
   deleteClientUser: (userId: string) => Promise<void>;
 }
 
@@ -267,9 +270,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const createClientUser = useCallback(
-    async (accountId: string, email: string, password: string): Promise<string | null> => {
+    async (accountId: string, email: string, password: string, role: "client" | "editor"): Promise<string | null> => {
       try {
-        await api("/api/clients", "POST", { accountId, email, password });
+        await api("/api/clients", "POST", { accountId, email, password, role });
         await refresh();
         notify("Acceso de cliente creado");
         return null;
@@ -307,7 +310,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       clientUsers: db?.clientUsers ?? [],
       igConfigured: db?.igConfigured ?? false,
       me,
-      canEdit: me?.role === "admin",
+      canEdit: me?.role === "admin" || me?.role === "editor",
+      isAdmin: me?.role === "admin",
       activeId,
       activeAccount: accounts.find((a) => a.id === activeId),
       activeMetrics: metrics.find((m) => m.accountId === activeId),

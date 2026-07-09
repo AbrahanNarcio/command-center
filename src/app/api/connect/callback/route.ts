@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { requireAdmin } from "@/lib/auth";
+import { canManageAccount, getSessionProfile } from "@/lib/auth";
 import { upsertConnection } from "@/lib/db";
 import { seal } from "@/lib/crypto";
 import {
@@ -36,9 +36,9 @@ export async function GET(request: Request) {
     return back(origin, { igerror: "Instagram no configurado" });
   }
 
-  const session = await requireAdmin();
+  const session = await getSessionProfile();
   if (!session) {
-    return back(origin, { igerror: "Sesión de administrador requerida para conectar" });
+    return back(origin, { igerror: "Inicia sesión para conectar la cuenta" });
   }
   if (!code || !state) {
     return back(origin, { igerror: "Respuesta de Meta incompleta (sin code/state)" });
@@ -51,6 +51,9 @@ export async function GET(request: Request) {
   }
 
   const accountId = state.split(".")[0];
+  if (!canManageAccount(session, accountId)) {
+    return back(origin, { igerror: "No tienes permiso para conectar esta cuenta" });
+  }
 
   try {
     const short = await exchangeCodeForShortToken(code);

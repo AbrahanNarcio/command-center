@@ -29,7 +29,7 @@ const NAV: { id: ViewId; icon: React.ReactNode; label: string; adminOnly: boolea
 ];
 
 export default function Rail({ view, setView }: { view: ViewId; setView: (v: ViewId) => void }) {
-  const { accounts, metrics, activeId, setActiveId, canEdit, me, signOut } = useStore();
+  const { accounts, metrics, activeId, setActiveId, canEdit, isAdmin, me, signOut } = useStore();
 
   const avatarOf = (accountId: string) => metrics.find((m) => m.accountId === accountId)?.avatarUrl;
   const [modal, setModal] = useState<null | { account?: Account | null }>(null);
@@ -56,8 +56,8 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
             className={`account-btn${account.id === activeId ? " active" : ""}`}
             style={{ ["--accent" as string]: account.color }}
             onClick={() => setActiveId(account.id)}
-            onDoubleClick={canEdit ? () => setModal({ account }) : undefined}
-            title={canEdit ? "Doble clic para editar" : account.handle}
+            onDoubleClick={isAdmin ? () => setModal({ account }) : undefined}
+            title={isAdmin ? "Doble clic para editar" : account.handle}
           >
             {avatarOf(account.id) ? (
               <span className="avatar-ring">
@@ -74,7 +74,7 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
             <span className="kind">{account.kind === "propia" ? "Yo" : "Cli"}</span>
           </button>
         ))}
-        {canEdit && (
+        {isAdmin && (
           <button className="add-account" onClick={() => setModal({ account: null })}>
             <Plus size={14} /> Agregar cuenta
           </button>
@@ -96,9 +96,9 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
       </nav>
 
       <div className="mini-card">
-        <div className="signal">{canEdit ? "ADMIN" : "CLIENTE"}</div>
+        <div className="signal">{isAdmin ? "ADMIN" : canEdit ? "EDITOR" : "CLIENTE"}</div>
         <strong>{me?.email ?? ""}</strong>
-        <span>{canEdit ? "Acceso total al command center." : "Vista de solo lectura de tu cuenta."}</span>
+        <span>{isAdmin ? "Acceso total al command center." : canEdit ? "Puedes mover todo lo de tu cuenta." : "Vista de solo lectura de tu cuenta."}</span>
         <button className="button small" style={{ marginTop: 10, width: "100%" }} onClick={signOut}>
           <LogOut size={13} /> Cerrar sesión
         </button>

@@ -88,6 +88,10 @@ export interface AccountMetrics {
   reelsRetention?: ReelRetention[];
   /** KPIs por rango de tiempo ("1" hoy, "7" y "30" días) para el selector de rango. */
   kpiRanges?: Record<string, Kpi[]>;
+  /** Serie diaria real de seguidores ganados/perdidos (API oficial, ~29 días). */
+  followersDaily?: { date: string; gained: number; lost: number }[];
+  /** Total de seguidores al momento del último sync, para reconstruir la serie de totales. */
+  followersTotal?: number;
 }
 
 /** Snapshot congelado de métricas, para histórico y PDF. */
@@ -144,13 +148,15 @@ export interface Db {
 
 export interface Me {
   email: string;
-  role: "admin" | "client";
+  role: "admin" | "editor" | "viewer";
 }
 
 export interface ClientUserView {
   userId: string;
   email: string;
   accountId: string | null;
+  /** 'client'/'viewer' = solo lectura; 'editor' = mueve su propia cuenta. */
+  role?: string;
 }
 
 /** Payload sent to the browser — connections stripped of token material. */
