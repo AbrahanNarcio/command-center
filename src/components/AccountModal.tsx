@@ -23,7 +23,10 @@ export default function AccountModal({ account, onClose }: { account?: Account |
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <p className="eyebrow">{isEdit ? "Editar cuenta" : "Nueva cuenta"}</p>
         <h2>{isEdit ? "Ajustes de la cuenta" : "Agregar cuenta"}</h2>
-        <p className="modal-sub">Tu propia cuenta o la de un cliente. Cada una tiene sus métricas, pipeline y fuentes.</p>
+        <p className="modal-sub">
+          Tu propia cuenta o la de un cliente. Cada una tiene sus métricas, pipeline y fuentes. El nombre
+          y el @ pueden ser provisionales: al conectar Instagram se actualizan solos con los del perfil real.
+        </p>
         <div className="form-grid">
           <label>
             Nombre *

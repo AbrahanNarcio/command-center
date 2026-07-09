@@ -1,4 +1,4 @@
-import { getConnection, getMetricsRow, patchConnection, upsertMetrics } from "./db";
+import { getConnection, getMetricsRow, patchConnection, updateAccountRow, upsertMetrics } from "./db";
 import { open, seal } from "./crypto";
 import {
   ACCOUNT_METRICS_CORE,
@@ -93,6 +93,16 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
     }
 
     const profile = await fetchProfile(token);
+
+    // Arroba y nombre siempre espejo del perfil real (si se renombra en IG, aquí también).
+    try {
+      await updateAccountRow(accountId, {
+        handle: `@${profile.username}`,
+        ...(profile.name?.trim() ? { name: profile.name.trim() } : {}),
+      });
+    } catch {
+      // No bloquear el sync por esto.
+    }
 
     // Insights por ventana real (since/until). FULL con fallback a CORE por ventana.
     const fetchWindow = async (days?: number) => {

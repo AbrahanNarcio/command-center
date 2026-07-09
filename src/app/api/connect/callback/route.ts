@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { canManageAccount, getSessionProfile } from "@/lib/auth";
-import { upsertConnection } from "@/lib/db";
+import { updateAccountRow, upsertConnection } from "@/lib/db";
 import { seal } from "@/lib/crypto";
 import {
   IG_CONFIG,
@@ -89,6 +89,14 @@ export async function GET(request: Request) {
     };
 
     await upsertConnection(connection);
+
+    // El arroba y el nombre reales del perfil pisan lo que se puso al crear la
+    // cuenta (placeholder): desde aquí Instagram es la fuente de verdad.
+    await updateAccountRow(accountId, {
+      handle: `@${profile.username}`,
+      ...(profile.name?.trim() ? { name: profile.name.trim() } : {}),
+    });
+
     return back(origin, { igconnected: profile.username });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error desconocido al conectar";

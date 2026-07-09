@@ -122,6 +122,8 @@ export interface IgProfile {
   user_id: string;
   username: string;
   account_type: string;
+  /** Nombre visible del perfil (para autocompletar la cuenta al conectar). */
+  name?: string;
   media_count?: number;
   followers_count?: number;
   follows_count?: number;
@@ -130,7 +132,7 @@ export interface IgProfile {
 
 export async function fetchProfile(token: string): Promise<IgProfile> {
   const params = new URLSearchParams({
-    fields: "user_id,username,account_type,media_count,followers_count,follows_count,profile_picture_url",
+    fields: "user_id,username,account_type,name,media_count,followers_count,follows_count,profile_picture_url",
     access_token: token,
   });
   const res = await fetch(`${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/me?${params.toString()}`);
