@@ -10,14 +10,71 @@ interface Props {
   onClose: () => void;
 }
 
-/** Valores tipo métrica: 12, 12.5, 12.5K, 3.1%, 1.3x, +120, -0.4, o — (sin dato). */
-const VALUE_RE = /^[+-]?\d+([.,]\d+)?\s*(K|M|%|x)?$|^—$|^-$/i;
+type Unit = "count" | "pct" | "x";
 
-const isValidValue = (v: string, allowEmpty = false) => {
-  const t = v.trim();
-  if (!t) return allowEmpty;
-  return VALUE_RE.test(t);
-};
+/** Solo dígitos, separador decimal y signo. Las letras no entran. */
+const sanitize = (v: string) => v.replace(/[^0-9.,+-]/g, "");
+
+/** "255.0K" → "255000", "3.1%" → "3.1", "1.3x" → "1.3", "—" → "". */
+function toRaw(value: string): string {
+  const t = value.trim();
+  if (!t || t === "—" || t === "-") return "";
+  const m = t.match(/^([+-]?\d+(?:[.,]\d+)?)\s*(K|M|%|x)?$/i);
+  if (!m) return "";
+  const n = parseFloat(m[1].replace(",", "."));
+  if (Number.isNaN(n)) return "";
+  const suffix = (m[2] ?? "").toUpperCase();
+  if (suffix === "K") return String(n * 1_000);
+  if (suffix === "M") return String(n * 1_000_000);
+  return String(n);
+}
+
+/** Número crudo → valor formateado según la unidad de la métrica. */
+function format(raw: string, unit: Unit, signed = false): string {
+  const t = raw.trim().replace(",", ".");
+  if (!t || t === "+" || t === "-") return signed ? "" : "—";
+  const n = parseFloat(t);
+  if (Number.isNaN(n)) return signed ? "" : "—";
+  const sign = signed && n > 0 ? "+" : "";
+  if (unit === "pct") return `${sign}${parseFloat(n.toFixed(2))}%`;
+  if (unit === "x") return `${sign}${parseFloat(n.toFixed(2))}x`;
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `${sign}${(n / 1_000_000).toFixed(2)}M`;
+  if (abs >= 1_000) return `${sign}${(n / 1_000).toFixed(1)}K`;
+  return `${sign}${parseFloat(n.toFixed(2))}`;
+}
+
+/** ¿El valor ya está formateado (tiene sufijo o es —)? Entonces no re-formatear al guardar. */
+const isFormatted = (v: string) => /[KM%x—]/i.test(v.trim()) || v.trim() === "";
+
+/** Unidad de cada KPI, deducida de su valor actual o de su etiqueta. */
+function unitOf(kpi: Kpi): Unit {
+  if (/%\s*$/.test(kpi.value)) return "pct";
+  if (/x\s*$/i.test(kpi.value)) return "x";
+  if (/ctr|interacci|retenci/i.test(kpi.label)) return "pct";
+  if (/frecuencia/i.test(kpi.label)) return "x";
+  return "count";
+}
+
+const DETAIL_OPTIONS = [
+  "Views en 30d",
+  "Cuentas alcanzadas",
+  "Total actual",
+  "Interacciones / reach",
+  "Me gusta",
+  "Señal de conversación",
+  "Contenido de alta utilidad",
+  "Contenido reenviable",
+  "Interactuaron con tu contenido",
+  "Clics en links del perfil",
+  "Taps al link / reach",
+  "Views por cuenta alcanzada",
+  "Seguidos - dejados de seguir (día)",
+  "Crecimiento neto",
+  "ER promedio",
+  "Tráfico al perfil",
+  "Conversaciones iniciadas",
+];
 
 export default function MetricsEditor({ metrics, onClose }: Props) {
   const { saveMetrics, activeConnection } = useStore();
@@ -26,22 +83,26 @@ export default function MetricsEditor({ metrics, onClose }: Props) {
   const [ctrBio, setCtrBio] = useState(metrics.ctrBio);
   const [reachTotal, setReachTotal] = useState(metrics.reachTotal);
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<string[]>([]);
-
-  const validate = (): string[] => {
-    const bad: string[] = [];
-    if (!isValidValue(growthNet)) bad.push("Net followers");
-    if (!isValidValue(ctrBio)) bad.push("CTR bio");
-    if (!isValidValue(reachTotal)) bad.push("Reach total");
-    kpis.forEach((k, i) => {
-      if (!isValidValue(k.value)) bad.push(`Valor de "${k.label || `KPI ${i + 1}`}"`);
-      if (!isValidValue(k.delta, true)) bad.push(`Δ de "${k.label || `KPI ${i + 1}`}"`);
-    });
-    return bad;
-  };
 
   const setKpi = (idx: number, key: keyof Kpi, value: string) =>
     setKpis((prev) => prev.map((k, i) => (i === idx ? { ...k, [key]: value } : k)));
+
+  /** Al entrar: número crudo editable. Mientras escribes: solo números. Al salir: formato automático. */
+  const numericField = (
+    value: string,
+    onChange: (v: string) => void,
+    unit: Unit,
+    opts: { signed?: boolean; placeholder?: string } = {},
+  ) => (
+    <input
+      value={value}
+      inputMode="decimal"
+      placeholder={opts.placeholder}
+      onFocus={(e) => onChange(toRaw(e.target.value))}
+      onChange={(e) => onChange(sanitize(e.target.value))}
+      onBlur={(e) => onChange(format(e.target.value, unit, opts.signed))}
+    />
+  );
 
   return (
     <ModalPortal>
@@ -52,36 +113,22 @@ export default function MetricsEditor({ metrics, onClose }: Props) {
         <p className="modal-sub">
           {activeConnection
             ? "Esta cuenta está conectada a Instagram: la próxima sincronización automática va a sobrescribir los KPIs que cargues a mano. Úsalo solo para retoques puntuales."
-            : "Esta cuenta no está conectada a Instagram, así que los números se cargan a mano. Cada cuenta guarda los suyos."}
+            : "Esta cuenta no está conectada a Instagram, así que los números se cargan a mano. Cada cuenta guarda los suyos."}{" "}
+          Escribe solo el número (letras bloqueadas): el formato K/M/%/x se aplica solo al salir del campo.
         </p>
 
         <div className="form-grid two" style={{ marginBottom: 14 }}>
           <label>
             Net followers
-            <input
-              value={growthNet}
-              onChange={(e) => setGrowthNet(e.target.value)}
-              placeholder="+120"
-              className={isValidValue(growthNet) ? undefined : "invalid"}
-            />
+            {numericField(growthNet, setGrowthNet, "count", { signed: true, placeholder: "120" })}
           </label>
           <label>
             CTR bio
-            <input
-              value={ctrBio}
-              onChange={(e) => setCtrBio(e.target.value)}
-              placeholder="3.1%"
-              className={isValidValue(ctrBio) ? undefined : "invalid"}
-            />
+            {numericField(ctrBio, setCtrBio, "pct", { placeholder: "3.1" })}
           </label>
           <label>
             Reach total
-            <input
-              value={reachTotal}
-              onChange={(e) => setReachTotal(e.target.value)}
-              placeholder="204.1K"
-              className={isValidValue(reachTotal) ? undefined : "invalid"}
-            />
+            {numericField(reachTotal, setReachTotal, "count", { placeholder: "204100" })}
           </label>
         </div>
 
@@ -89,33 +136,24 @@ export default function MetricsEditor({ metrics, onClose }: Props) {
         <div className="kpi-editor">
           {kpis.map((kpi, idx) => (
             <div className="kpi-editor-row" key={idx}>
-              <input value={kpi.label} onChange={(e) => setKpi(idx, "label", e.target.value)} placeholder="Label" />
               <input
-                value={kpi.value}
-                onChange={(e) => setKpi(idx, "value", e.target.value)}
-                placeholder="12.5K"
-                className={isValidValue(kpi.value) ? undefined : "invalid"}
+                value={kpi.label}
+                onChange={(e) => setKpi(idx, "label", e.target.value)}
+                placeholder="Métrica"
               />
-              <input
-                value={kpi.delta}
-                onChange={(e) => setKpi(idx, "delta", e.target.value)}
-                placeholder="+8%"
-                className={isValidValue(kpi.delta, true) ? undefined : "invalid"}
-              />
-              <input value={kpi.detail} onChange={(e) => setKpi(idx, "detail", e.target.value)} placeholder="Detalle" />
+              {numericField(kpi.value, (v) => setKpi(idx, "value", v), unitOf(kpi), { placeholder: "12500" })}
+              {numericField(kpi.delta, (v) => setKpi(idx, "delta", v), unitOf(kpi), { signed: true, placeholder: "Δ" })}
+              <select value={kpi.detail} onChange={(e) => setKpi(idx, "detail", e.target.value)}>
+                {(DETAIL_OPTIONS.includes(kpi.detail) ? DETAIL_OPTIONS : [kpi.detail, ...DETAIL_OPTIONS]).map(
+                  (opt) => (
+                    <option key={opt}>{opt}</option>
+                  ),
+                )}
+              </select>
             </div>
           ))}
         </div>
 
-        {errors.length > 0 && (
-          <div className="alert" style={{ ["--accent" as string]: "var(--coral)", marginTop: 12 }}>
-            <strong>Formato inválido</strong>
-            <p>
-              Usa números con sufijo opcional K, M, % o x (ej. 12.5K, 3.1%, +120, 1.3x), o — si no hay dato.
-              Corrige: {errors.slice(0, 4).join(" · ")}{errors.length > 4 ? ` y ${errors.length - 4} más` : ""}.
-            </p>
-          </div>
-        )}
         <div className="modal-actions">
           <button className="button" onClick={onClose}>
             Cancelar
@@ -124,12 +162,20 @@ export default function MetricsEditor({ metrics, onClose }: Props) {
             className="button primary"
             disabled={saving}
             onClick={async () => {
-              const bad = validate();
-              setErrors(bad);
-              if (bad.length) return;
+              // Si un campo quedó a medio editar (sin blur), formatearlo antes de guardar.
+              const clean = kpis.map((k) => ({
+                ...k,
+                value: isFormatted(k.value) && k.value.trim() !== "" ? k.value : format(k.value, unitOf(k)),
+                delta: k.delta.trim() === "" || isFormatted(k.delta) ? k.delta : format(k.delta, unitOf(k), true),
+              }));
               setSaving(true);
               try {
-                await saveMetrics(metrics.accountId, { kpis, growthNet, ctrBio, reachTotal });
+                await saveMetrics(metrics.accountId, {
+                  kpis: clean,
+                  growthNet: isFormatted(growthNet) ? growthNet : format(growthNet, "count", true),
+                  ctrBio: isFormatted(ctrBio) ? ctrBio : format(ctrBio, "pct"),
+                  reachTotal: isFormatted(reachTotal) ? reachTotal : format(reachTotal, "count"),
+                });
                 onClose();
               } finally {
                 setSaving(false);
