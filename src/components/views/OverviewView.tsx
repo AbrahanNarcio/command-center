@@ -57,7 +57,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             <span>{kpi.label}</span>
             <strong>{kpi.value}</strong>
             <p>{kpi.detail}</p>
-            <div className="delta">{kpi.delta}</div>
+            {kpi.delta ? <div className="delta">{kpi.delta}</div> : null}
           </article>
         ))}
       </div>
@@ -123,33 +123,65 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
           </div>
         </section>
 
-        <section className="chart-card">
-          <div className="chart-top">
-            <div>
-              <p className="eyebrow">Retención reels</p>
-              <h2>Caída por tramo</h2>
-            </div>
-            <div className="chart-value">
-              <strong>{activeMetrics.retentionAvg}</strong>avg finish
-            </div>
-          </div>
-          <div className="retention-list">
-            {activeMetrics.retention.map((r) => (
-              <div className="retention-row" key={r.label}>
-                <span>{r.label}</span>
-                <div className="meter">
-                  <span
-                    style={{
-                      ["--score" as string]: `${r.pct}%`,
-                      ["--meter" as string]: `linear-gradient(90deg, ${r.color}, rgba(255,255,255,.18))`,
-                    }}
-                  />
-                </div>
-                <b>{r.pct}%</b>
+        {activeMetrics.topPosts?.length ? (
+          <section className="chart-card">
+            <div className="chart-top">
+              <div>
+                <p className="eyebrow">Top publicaciones</p>
+                <h2>Lo que más interacción generó</h2>
               </div>
-            ))}
-          </div>
-        </section>
+              <div className="chart-value">
+                <strong>{activeMetrics.topPosts.length}</strong>posts
+              </div>
+            </div>
+            <div className="funnel-list">
+              {activeMetrics.topPosts.map((p, i) => (
+                <div className="funnel-step" key={`${p.label}-${i}`}>
+                  <div>
+                    <span>{p.label}</span>
+                    <b>{p.value}</b>
+                  </div>
+                  <div className="meter">
+                    <span
+                      style={{
+                        ["--score" as string]: `${p.pct}%`,
+                        ["--meter" as string]: `linear-gradient(90deg, ${p.color}, rgba(255,255,255,.18))`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <section className="chart-card">
+            <div className="chart-top">
+              <div>
+                <p className="eyebrow">Retención reels</p>
+                <h2>Caída por tramo</h2>
+              </div>
+              <div className="chart-value">
+                <strong>{activeMetrics.retentionAvg}</strong>avg finish
+              </div>
+            </div>
+            <div className="retention-list">
+              {activeMetrics.retention.map((r) => (
+                <div className="retention-row" key={r.label}>
+                  <span>{r.label}</span>
+                  <div className="meter">
+                    <span
+                      style={{
+                        ["--score" as string]: `${r.pct}%`,
+                        ["--meter" as string]: `linear-gradient(90deg, ${r.color}, rgba(255,255,255,.18))`,
+                      }}
+                    />
+                  </div>
+                  <b>{r.pct}%</b>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="chart-card">
           <div className="chart-top">

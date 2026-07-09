@@ -146,13 +146,24 @@ export interface InsightValue {
   total_value?: { value: number };
 }
 
+/** Lista completa de métricas de cuenta que intentamos leer (verificadas en la referencia). */
+export const ACCOUNT_METRICS_FULL =
+  "reach,views,total_interactions,likes,comments,shares,saves,replies,reposts,profile_links_taps,accounts_engaged,follows_and_unfollows";
+/** Subconjunto núcleo que siempre funciona; fallback si el full falla en alguna versión. */
+export const ACCOUNT_METRICS_CORE =
+  "reach,views,total_interactions,likes,comments,shares,saves,profile_links_taps";
+
 /**
  * Account-level insights. Metric names verified against the insights reference.
  * `impressions` intentionally omitted (removed for v22+).
  */
-export async function fetchAccountInsights(igUserId: string, token: string): Promise<InsightValue[]> {
+export async function fetchAccountInsights(
+  igUserId: string,
+  token: string,
+  metrics: string = ACCOUNT_METRICS_FULL,
+): Promise<InsightValue[]> {
   const params = new URLSearchParams({
-    metric: "reach,views,total_interactions,likes,comments,shares,saves,profile_links_taps",
+    metric: metrics,
     period: "day",
     metric_type: "total_value",
     access_token: token,
@@ -165,6 +176,46 @@ export async function fetchAccountInsights(igUserId: string, token: string): Pro
     throw new Error(data?.error?.message || "No se pudieron leer los insights.");
   }
   return (data.data ?? []) as InsightValue[];
+}
+
+export interface MediaItem {
+  id: string;
+  caption?: string;
+  media_type?: string; // IMAGE | VIDEO | CAROUSEL_ALBUM
+  media_product_type?: string; // FEED | REELS | STORY
+  timestamp?: string;
+  like_count?: number;
+  comments_count?: number;
+  permalink?: string;
+}
+
+/** Últimas publicaciones de la cuenta (1 sola llamada). */
+export async function fetchMediaList(igUserId: string, token: string, limit = 50): Promise<MediaItem[]> {
+  const params = new URLSearchParams({
+    fields: "id,caption,media_type,media_product_type,timestamp,like_count,comments_count,permalink",
+    limit: String(limit),
+    access_token: token,
+  });
+  const res = await fetch(
+    `${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${igUserId}/media?${params.toString()}`,
+  );
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error?.message || "No se pudieron leer las publicaciones.");
+  }
+  return (data.data ?? []) as MediaItem[];
+}
+
+/** Reach de una publicación individual. Devuelve null si no está disponible (p. ej. stories viejas). */
+export async function fetchMediaReach(mediaId: string, token: string): Promise<number | null> {
+  const params = new URLSearchParams({ metric: "reach", access_token: token });
+  const res = await fetch(
+    `${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${mediaId}/insights?${params.toString()}`,
+  );
+  const data = await res.json();
+  if (!res.ok) return null;
+  const item = (data.data ?? []).find((i: InsightValue) => i.name === "reach");
+  return item?.values?.[0]?.value ?? item?.total_value?.value ?? null;
 }
 
 export function metricValue(insights: InsightValue[], name: string): number | null {

@@ -37,9 +37,9 @@ export default function LoginPage() {
     <div className="loading-screen">
       <div style={{ width: "min(420px, 92vw)" }}>
         <div className="brand" style={{ marginBottom: 22 }}>
-          <div className="mark">S</div>
+          <div className="mark">C</div>
           <div>
-            <strong style={{ color: "var(--text)" }}>SYK Command</strong>
+            <strong style={{ color: "var(--text)" }}>Content OS</strong>
             <span>IG Performance Command Center</span>
           </div>
         </div>

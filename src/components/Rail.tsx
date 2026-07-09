@@ -24,10 +24,10 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
   return (
     <aside className="rail">
       <div className="brand">
-        <div className="mark">S</div>
+        <div className="mark">C</div>
         <div>
-          <strong>SYK Command</strong>
-          <span>Content OS</span>
+          <strong>Content OS</strong>
+          <span>Command Center</span>
         </div>
       </div>
 

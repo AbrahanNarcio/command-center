@@ -65,6 +65,10 @@ export interface AccountMetrics {
   ctrBio: string;
   heatmap: HeatCell[];
   insights: Insight[];
+  /** Top publicaciones reales (reemplaza a retención cuando hay sync). */
+  topPosts?: FunnelStep[];
+  /** Fecha (YYYY-MM-DD) del último snapshot de seguidores, para un punto por día. */
+  growthStamp?: string;
 }
 
 export type ConnectionStatus = "connected" | "error" | "expired";

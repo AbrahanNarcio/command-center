@@ -77,7 +77,7 @@ export default function Dashboard() {
         <section className="hero">
           <div className="hero-inner">
             <div>
-              <p className="eyebrow">SYK Content Command Center</p>
+              <p className="eyebrow">{activeAccount ? `${activeAccount.name} · Content OS` : "Content OS"}</p>
               <h1>IG Performance Command Center.</h1>
               <p className="hero-copy">
                 {activeAccount ? (
