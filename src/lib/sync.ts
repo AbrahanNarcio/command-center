@@ -216,6 +216,18 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
       }));
       const avgMs = reelWatch.reduce((sum, r) => sum + r.ms, 0) / reelWatch.length;
       metrics.retentionAvg = `${(avgMs / 1000).toFixed(1)}s`;
+
+      // Curva por tramos (mismo formato que el mock): % de reels cuyo tiempo
+      // promedio visto SUPERA cada tramo. La API no da la curva real por espectador.
+      const total = reelWatch.length;
+      const over = (ms: number) => Math.round((reelWatch.filter((r) => r.ms >= ms).length / total) * 100);
+      metrics.retention = [
+        { label: "0-3s", pct: 100, color: C.cyan },
+        { label: "3-8s", pct: over(3000), color: C.green },
+        { label: "8-15s", pct: over(8000), color: C.lime },
+        { label: "15-30s", pct: over(15000), color: C.amber },
+        { label: "30s+", pct: over(30000), color: C.coral },
+      ];
     }
     if (formatReach.size > 0) {
       const max = Math.max(...formatReach.values());

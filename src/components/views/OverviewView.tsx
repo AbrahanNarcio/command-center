@@ -171,21 +171,19 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
           <div className="chart-top">
             <div>
               <p className="eyebrow">Retención reels</p>
-              <h2>Tiempo promedio visto</h2>
-              <p>Cuánto se queda la gente en cada reel.</p>
+              <h2>Caída por tramo</h2>
+              <p>% de reels que retienen más de cada tramo.</p>
             </div>
             <div className="chart-value">
-              <strong>{activeMetrics.reelsRetention?.length ? activeMetrics.retentionAvg : "—"}</strong>promedio
+              <strong>{activeMetrics.retention?.some((r) => r.pct > 0) ? activeMetrics.retentionAvg : "—"}</strong>
+              tiempo promedio
             </div>
           </div>
-          {activeMetrics.reelsRetention?.length ? (
-            <div className="funnel-list">
-              {activeMetrics.reelsRetention.map((r, i) => (
-                <div className="funnel-step" key={`${r.label}-${i}`} style={{ ["--i" as string]: i }}>
-                  <div>
-                    <span>{r.label}</span>
-                    <b>{r.value}</b>
-                  </div>
+          {activeMetrics.retention?.some((r) => r.pct > 0) ? (
+            <div className="retention-list">
+              {activeMetrics.retention.map((r, i) => (
+                <div className="retention-row" key={r.label} style={{ ["--i" as string]: i }}>
+                  <span>{r.label}</span>
                   <div className="meter">
                     <span
                       style={{
@@ -194,6 +192,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
                       }}
                     />
                   </div>
+                  <b>{r.pct}%</b>
                 </div>
               ))}
             </div>
@@ -201,6 +200,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             <div className="no-results">Se llena solo con la sincronización de Instagram.</div>
           )}
         </section>
+
       </div>
 
       <div className="analytics-grid three">
