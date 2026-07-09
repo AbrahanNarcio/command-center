@@ -104,7 +104,9 @@ export default function SettingsView() {
   const { activeAccount, activeConnection, igConfigured, syncConnection, disconnectConnection } = useStore();
   const [busy, setBusy] = useState(false);
 
-  const connected = activeConnection?.status === "connected" || activeConnection?.status === "expired";
+  // Cualquier conexión existente (incluso con error) se muestra como conectada,
+  // con su alerta — nunca esconder el error volviendo al botón de conectar.
+  const connected = Boolean(activeConnection);
 
   return (
     <>

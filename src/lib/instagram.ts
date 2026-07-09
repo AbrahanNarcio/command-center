@@ -14,9 +14,9 @@ export const IG_CONFIG = {
   appSecret: process.env.IG_APP_SECRET ?? "",
   redirectUri: process.env.IG_REDIRECT_URI ?? "",
   apiVersion: process.env.IG_API_VERSION ?? "v21.0",
-  // Comma-separated. instagram_business_basic covers profile + media + media insights.
+  // Comma-separated. basic = perfil + media; manage_insights = métricas (requerido para el sync).
   // Add instagram_business_content_publish / _manage_messages / _manage_comments only if used.
-  scopes: (process.env.IG_SCOPES ?? "instagram_business_basic").trim(),
+  scopes: (process.env.IG_SCOPES ?? "instagram_business_basic,instagram_business_manage_insights").trim(),
   graphHost: "https://graph.instagram.com",
   authHost: "https://www.instagram.com",
   tokenHost: "https://api.instagram.com",

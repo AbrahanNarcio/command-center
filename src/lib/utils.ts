@@ -22,12 +22,15 @@ export function formatSlug(format: PieceFormat): string {
 export function relativeTime(iso: string): string {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return "—";
-  const diff = Date.now() - then;
+  const raw = Date.now() - then;
+  const future = raw < 0;
+  const diff = Math.abs(raw);
   const mins = Math.round(diff / 60000);
-  if (mins < 1) return "hace instantes";
-  if (mins < 60) return `hace ${mins} min`;
+  const fmt = (txt: string) => (future ? `en ${txt}` : `hace ${txt}`);
+  if (mins < 1) return future ? "en instantes" : "hace instantes";
+  if (mins < 60) return fmt(`${mins} min`);
   const hours = Math.round(mins / 60);
-  if (hours < 24) return `hace ${hours} h`;
+  if (hours < 24) return fmt(`${hours} h`);
   const days = Math.round(hours / 24);
-  return `hace ${days} d`;
+  return fmt(`${days} días`);
 }
