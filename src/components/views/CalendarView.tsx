@@ -11,15 +11,6 @@ export default function CalendarView({ pieces }: { pieces: Piece[] }) {
   const [editing, setEditing] = useState<Piece | null>(null);
   const [creatingDay, setCreatingDay] = useState<(typeof DAYS)[number] | null>(null);
 
-  const balance = [
-    "Contenido de autoridad",
-    "Rompe creencias",
-    "Prueba social",
-    "Objeciones",
-    "CTA directo",
-    "Stories conversación",
-  ];
-
   return (
     <div className="panel">
       <div className="panel-head">
@@ -27,7 +18,8 @@ export default function CalendarView({ pieces }: { pieces: Piece[] }) {
           <p className="eyebrow">Semana editorial</p>
           <h2>Calendario</h2>
           <p style={{ color: "var(--muted)", fontSize: 13, margin: "6px 0 0" }}>
-            No todo post vende, pero toda semana debe mover el negocio: {balance.join(" · ")}.
+            Tus publicaciones ordenadas por día y hora. Toca una para editarla, o usa Agregar para
+            programar una nueva en ese día.
           </p>
         </div>
       </div>

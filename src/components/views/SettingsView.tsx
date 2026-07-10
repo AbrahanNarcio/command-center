@@ -314,8 +314,8 @@ export default function SettingsView() {
         {igConfigured && !connected && (
           <>
             <p style={{ color: "var(--soft)", lineHeight: 1.5, marginBottom: 14 }}>
-              Conecta <strong>{activeAccount?.name}</strong> con su cuenta de Instagram Business o Creator. Se
-              abre la pantalla oficial de Meta, aceptas permisos, y el token se guarda cifrado en el servidor.
+              Conecta <strong>{activeAccount?.name}</strong> con su cuenta de Instagram (debe ser una cuenta
+              de empresa o creador). Una vez conectada, las métricas y publicaciones se cargan solas cada día.
             </p>
             <a className="button paint" href={`/api/connect/${activeAccount?.id}/start`}>
               Conectar Instagram con OAuth
@@ -386,11 +386,20 @@ export default function SettingsView() {
           </>
         )}
 
-        <p style={{ color: "var(--muted)", fontSize: 12, marginTop: 14, lineHeight: 1.5 }}>
-          Flujo oficial: clic en Conectar → pantalla de Meta → aceptas permisos → Meta redirige con un{" "}
-          <code>code</code> → el backend lo cambia por un token de larga duración y lo guarda cifrado
-          (AES-256-GCM). Nunca en el frontend. Sync con throttle y refresh automático del token.
-        </p>
+        <div style={{ marginTop: 14 }}>
+          <p style={{ color: "var(--muted)", fontSize: 12, fontWeight: 900, marginBottom: 6 }}>
+            Paso a paso para conectar
+          </p>
+          <ol style={{ color: "var(--muted)", fontSize: 12, lineHeight: 1.6, margin: 0, paddingLeft: 18 }}>
+            <li>Toca el botón de conectar.</li>
+            <li>Inicia sesión en Instagram y acepta los permisos que pide.</li>
+            <li>Vuelves aquí con la cuenta ya conectada.</li>
+          </ol>
+          <p style={{ color: "var(--muted)", fontSize: 12, marginTop: 8, lineHeight: 1.5 }}>
+            A partir de ahí, las métricas se actualizan solas una vez al día. Tu acceso a Instagram se
+            guarda de forma segura y nunca queda expuesto.
+          </p>
+        </div>
       </section>
 
       <section className="panel">

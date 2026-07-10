@@ -61,6 +61,10 @@ export default function SourcesView() {
         <div>
           <p className="eyebrow">Materia prima</p>
           <h2>Banco de fuentes</h2>
+          <p style={{ color: "var(--muted)", fontSize: 13, margin: "6px 0 0" }}>
+            Guarda aquí el material del que salen tus piezas: transcripciones, DMs, llamadas, comentarios
+            y objeciones reales. Usa Nueva fuente para agregar más.
+          </p>
         </div>
         <button className="button primary" onClick={openCreate}>
           <Plus size={15} /> Nueva fuente
@@ -98,7 +102,8 @@ export default function SourcesView() {
             <p className="eyebrow">{editing ? "Editar fuente" : "Nueva fuente"}</p>
             <h2>{editing ? editing.name : "Cargar materia prima"}</h2>
             <p className="modal-sub">
-              Transcripciones, DMs, llamadas, comentarios, objeciones. Cuanto más real, mejor genera.
+              Pega el contenido real de tu fuente (una transcripción, un DM, comentarios…). Entre más real
+              sea, mejores piezas genera.
             </p>
             <div className="form-grid">
               <label>

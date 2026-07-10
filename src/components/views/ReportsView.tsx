@@ -104,8 +104,8 @@ export default function ReportsView() {
             <p className="eyebrow">Histórico · {activeAccount?.handle}</p>
             <h2>Reportes</h2>
             <p style={{ color: "var(--muted)", fontSize: 13, margin: "6px 0 0" }}>
-              Cada reporte congela las métricas del momento. El sync diario no los toca: sirven para
-              comparar periodos y compartir resultados en PDF.
+              Guarda una foto de tus métricas de hoy para ver cómo evolucionas con el tiempo y compartir
+              resultados en PDF con tu cliente.
             </p>
           </div>
         </div>

@@ -69,8 +69,12 @@ export default function GeneratorView() {
       <section className="panel">
         <div className="panel-head">
           <div>
-            <p className="eyebrow">Mock IA</p>
+            <p className="eyebrow">Generador</p>
             <h2>Crear pieza</h2>
+            <p style={{ color: "var(--muted)", fontSize: 13, margin: "6px 0 0" }}>
+              Elige la fuente, el formato y el objetivo, y genera un borrador de guion para editar y
+              enviar al pipeline.
+            </p>
           </div>
         </div>
         <div className="form-grid">

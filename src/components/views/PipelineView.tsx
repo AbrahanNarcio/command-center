@@ -38,6 +38,10 @@ export default function PipelineView({ pieces }: { pieces: Piece[] }) {
         <div>
           <p className="eyebrow">Workflow editorial</p>
           <h2>Pipeline de producción</h2>
+          <p style={{ color: "var(--muted)", fontSize: 13, margin: "6px 0 0" }}>
+            El avance de cada pieza, de idea a publicada. Filtra por responsable o estado, y toca una
+            pieza para editarla.
+          </p>
         </div>
         <div className="toolbar">
           <select value={owner} onChange={(e) => setOwner(e.target.value)}>
