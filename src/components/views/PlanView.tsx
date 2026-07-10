@@ -102,7 +102,7 @@ export default function PlanView() {
             <button className="icon-button" title="Semana anterior" onClick={() => shiftWeek(-1)}>
               <ChevronLeft size={16} />
             </button>
-            <strong className="cal-monthlabel" style={{ minWidth: 280 }}>
+            <strong className="cal-monthlabel" style={{ minWidth: 280, textTransform: "none" }}>
               {weekLabel}
             </strong>
             <button className="icon-button" title="Semana siguiente" onClick={() => shiftWeek(1)}>
