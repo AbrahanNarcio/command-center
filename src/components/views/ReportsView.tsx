@@ -263,7 +263,7 @@ export default function ReportsView() {
                             <span
                               style={{
                                 ["--score" as string]: `${p.pct}%`,
-                                ["--meter" as string]: `linear-gradient(90deg, ${accentVar(p.color)}, rgba(var(--tint),.18))`,
+                                ["--meter" as string]: `linear-gradient(90deg, ${accentVar(p.color)}, color-mix(in srgb, ${accentVar(p.color)} 22%, transparent))`,
                               }}
                             />
                           </div>
@@ -294,7 +294,7 @@ export default function ReportsView() {
                             <span
                               style={{
                                 ["--score" as string]: `${r.pct}%`,
-                                ["--meter" as string]: `linear-gradient(90deg, ${accentVar(r.color)}, rgba(var(--tint),.18))`,
+                                ["--meter" as string]: `linear-gradient(90deg, ${accentVar(r.color)}, color-mix(in srgb, ${accentVar(r.color)} 22%, transparent))`,
                               }}
                             />
                           </div>
@@ -324,7 +324,7 @@ export default function ReportsView() {
                           <span
                             style={{
                               ["--score" as string]: `${f.pct}%`,
-                              ["--meter" as string]: `linear-gradient(90deg, ${accentVar(f.color)}, rgba(var(--tint),.18))`,
+                              ["--meter" as string]: `linear-gradient(90deg, ${accentVar(f.color)}, color-mix(in srgb, ${accentVar(f.color)} 22%, transparent))`,
                             }}
                           />
                         </div>

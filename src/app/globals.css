@@ -1373,7 +1373,9 @@ textarea {
 .bar-fill {
   min-height: 10px;
   border-radius: 7px 7px 0 0;
-  background: linear-gradient(180deg, var(--accent), rgba(var(--tint), 0.1));
+  /* Desvanece hacia el propio color transparente (no hacia el velo del tema,
+     que en claro/aero es oscuro y ensuciaba la barra). */
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 14%, transparent));
   box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
@@ -1948,6 +1950,18 @@ textarea {
   font-weight: 800;
 }
 
+/* En claro/aero el azul del heat es profundo: cuando la celda calienta, el
+   texto vira a blanco en proporción al calor para no perderse (Lun / AM). */
+:root[data-theme="light"] .heat-cell,
+:root[data-theme="aero"] .heat-cell {
+  color: color-mix(in srgb, #fff min(calc(var(--heat) * 2.2%), 100%), var(--text));
+}
+
+:root[data-theme="light"] .heat-cell span,
+:root[data-theme="aero"] .heat-cell span {
+  color: color-mix(in srgb, #fff min(calc(var(--heat) * 2.2%), 100%), var(--muted));
+}
+
 .bar-row {
   display: grid;
   grid-template-columns: 98px 1fr 30px;
@@ -1997,14 +2011,16 @@ textarea {
   align-items: center;
   gap: 6px;
   padding: 18px 8px 7px;
+  /* El velo sobre la foto siempre es oscuro, así que el texto va claro FIJO
+     (con var(--text) quedaba oscuro sobre oscuro en claro/aero). */
   background: linear-gradient(transparent, rgba(3, 4, 8, 0.85));
-  color: var(--text);
+  color: #f6f7fb;
   font-size: 10px;
   font-weight: 800;
 }
 
 .post-overlay b {
-  color: var(--cyan);
+  color: #8fa4ff;
   text-transform: uppercase;
   font-size: 9px;
 }
