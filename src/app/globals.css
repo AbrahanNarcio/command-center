@@ -259,6 +259,22 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 5px rgba(10, 70, 120, 0.32);
 }
 
+/* Campos de texto aero: vidrio hundido (blanco esmerilado + sombra interior),
+   para que la búsqueda y los formularios no se pierdan contra el fondo. */
+:root[data-theme="aero"] input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+:root[data-theme="aero"] textarea {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(12, 90, 150, 0.38);
+  box-shadow: inset 0 2px 4px rgba(10, 70, 120, 0.16), inset 0 -1px 0 rgba(255, 255, 255, 0.9);
+}
+
+:root[data-theme="aero"] input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):focus,
+:root[data-theme="aero"] textarea:focus {
+  background: #ffffff;
+  border-color: rgba(15, 134, 221, 0.7);
+  box-shadow: inset 0 2px 4px rgba(10, 70, 120, 0.12), 0 0 0 3px rgba(64, 170, 235, 0.3);
+}
+
 :root[data-theme="aero"] .nav button:nth-child(1) i { --ic: #1d9ee6; } /* Control: azul cielo */
 :root[data-theme="aero"] .nav button:nth-child(2) i { --ic: #7c53e0; } /* Pipeline: violeta */
 :root[data-theme="aero"] .nav button:nth-child(3) i { --ic: #f08c1a; } /* Calendario: naranja */
