@@ -25,7 +25,7 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{if(localStorage.getItem('theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}",
+              "try{var t=localStorage.getItem('theme');if(t==='light'||t==='glass')document.documentElement.setAttribute('data-theme',t);}catch(e){}",
           }}
         />
       </head>

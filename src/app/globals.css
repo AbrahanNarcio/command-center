@@ -84,7 +84,60 @@ body {
   background-size: 38px 38px, 38px 38px, auto;
 }
 
-/* Transición suave solo al conmutar el tema (la activa el toggle). */
+/* Tema glass (glassmorphism): fondo de aurora vívido + superficies esmeriladas.
+   Paneles de vidrio ahumado translúcido con desenfoque; los acentos se conservan. */
+:root[data-theme="glass"] {
+  --tint: 255, 255, 255;
+  --bg: #0a0e1c;
+  --rail-bg: rgba(255, 255, 255, 0.06);
+  --panel: rgba(16, 20, 38, 0.42);
+  --panel-2: rgba(255, 255, 255, 0.06);
+  --panel-3: rgba(255, 255, 255, 0.1);
+  --line: rgba(255, 255, 255, 0.16);
+  --line-2: rgba(255, 255, 255, 0.3);
+  --sunken: rgba(255, 255, 255, 0.04);
+  --sunken-2: rgba(0, 0, 0, 0.18);
+  --edge: rgba(255, 255, 255, 0.14);
+  --elevated: rgba(18, 22, 40, 0.72);
+  --scrim: rgba(5, 7, 14, 0.5);
+  --text: #f3f5ff;
+  --muted: #b9c0da;
+  --soft: #dfe4f5;
+  --text-inverse: #061014;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="glass"] body {
+  background:
+    radial-gradient(1200px 820px at 10% 6%, rgba(122, 140, 255, 0.5), transparent 60%),
+    radial-gradient(1000px 720px at 90% 10%, rgba(214, 41, 118, 0.42), transparent 58%),
+    radial-gradient(1150px 900px at 74% 96%, rgba(80, 120, 255, 0.42), transparent 60%),
+    radial-gradient(920px 720px at 16% 92%, rgba(176, 92, 230, 0.42), transparent 60%),
+    linear-gradient(135deg, #0a0e1c, #0c1226 55%, #0a0f22);
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+/* Esmerilado de las superficies principales (solo en glass). */
+:root[data-theme="glass"] .panel,
+:root[data-theme="glass"] .hero,
+:root[data-theme="glass"] .metric-card,
+:root[data-theme="glass"] .chart-card,
+:root[data-theme="glass"] .command-card,
+:root[data-theme="glass"] .source-card,
+:root[data-theme="glass"] .mini-card,
+:root[data-theme="glass"] .script-card,
+:root[data-theme="glass"] .report-row,
+:root[data-theme="glass"] .month-cell:not(.empty),
+:root[data-theme="glass"] .day,
+:root[data-theme="glass"] .modal,
+:root[data-theme="glass"] .toast {
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), var(--shadow);
+}
+
+/* Transición suave solo al conmutar el tema (la activa el selector). */
 .theme-anim,
 .theme-anim * {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease,
@@ -316,6 +369,41 @@ button {
   border-radius: var(--radius);
   background: var(--panel-2);
   padding: 14px;
+}
+
+/* Selector de tema (oscuro / claro / glass). */
+.theme-seg {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.theme-seg-btn {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(var(--tint), 0.05);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.theme-seg-btn:hover {
+  color: var(--text);
+  border-color: var(--line-2);
+}
+
+.theme-seg-btn.active {
+  color: var(--text);
+  border-color: var(--line-2);
+  background: rgba(var(--tint), 0.13);
 }
 
 .signal {
