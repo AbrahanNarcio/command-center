@@ -283,12 +283,20 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
     // ── Retención real de reels: tiempo promedio de visualización (la API no da caída por tramo) ──
     if (reelWatch.length) {
       const maxMs = Math.max(...reelWatch.map((r) => r.ms));
-      const colors = [C.cyan, C.lime, C.pink, C.amber, C.violet, C.coral];
-      metrics.reelsRetention = reelWatch.slice(0, 8).map(({ media: m, ms }, i): ReelRetention => ({
+      // Código de colores por tramo de segundos (coherente en toda la app):
+      // 0-3s azul · 3-8s verde · 8-15s amarillo · 15-30s naranja · 30s+ rojo.
+      const colorForSeconds = (sec: number): string => {
+        if (sec < 3) return C.cyan;
+        if (sec < 8) return C.green;
+        if (sec < 15) return C.lime;
+        if (sec < 30) return C.amber;
+        return C.coral;
+      };
+      metrics.reelsRetention = reelWatch.slice(0, 8).map(({ media: m, ms }): ReelRetention => ({
         label: (m.caption || "Reel").replace(/\s+/g, " ").slice(0, 46),
         value: `${(ms / 1000).toFixed(1)}s`,
         pct: Math.max(4, Math.round((ms / maxMs) * 100)),
-        color: colors[i % colors.length],
+        color: colorForSeconds(ms / 1000),
         thumb: m.thumbnail_url ?? m.media_url ?? "",
         permalink: m.permalink ?? "",
       }));
@@ -296,7 +304,7 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
       metrics.retentionAvg = `${(avgMs / 1000).toFixed(1)}s`;
 
       // Curva por tramos (mismo formato que el mock): % de reels cuyo tiempo
-      // promedio visto SUPERA cada tramo. La API no da la curva real por espectador.
+      // promedio visto SUPERA cada tramo. Mismos colores por tramo que arriba.
       const total = reelWatch.length;
       const over = (ms: number) => Math.round((reelWatch.filter((r) => r.ms >= ms).length / total) * 100);
       metrics.retention = [

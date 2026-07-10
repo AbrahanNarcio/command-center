@@ -29,6 +29,15 @@ const FOLLOWER_SERIES: { key: "total" | "gained" | "lost" | "net"; label: string
 const followerRanges = (days: number) =>
   [7, 14, 30, 60, 90, 365].filter((r, i, arr) => i < 3 || days > arr[i - 1]);
 
+// Código de colores por tiempo promedio de reel (coherente con el sync y la caída por tramo).
+const RET_LEGEND: { label: string; color: string }[] = [
+  { label: "0-3s", color: "#7a8cff" },
+  { label: "3-8s", color: "#80ffb5" },
+  { label: "8-15s", color: "#feda75" },
+  { label: "15-30s", color: "#ffa14e" },
+  { label: "30s+", color: "#ff5d51" },
+];
+
 export default function OverviewView({ pieces }: { pieces: Piece[] }) {
   const { activeMetrics, activeAccount, canEdit } = useStore();
   const [editing, setEditing] = useState(false);
@@ -353,6 +362,14 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
           <div className="chart-value">
             <strong>{activeMetrics.reelsRetention?.length ?? 0}</strong>reels
           </div>
+        </div>
+        <div className="ret-legend" aria-label="Código de colores por segundos">
+          {RET_LEGEND.map((l) => (
+            <span className="ret-legend-item" key={l.label}>
+              <span className="ret-legend-dot" style={{ background: l.color }} />
+              {l.label}
+            </span>
+          ))}
         </div>
         {activeMetrics.reelsRetention?.length ? (
           <div className="reel-ret-list">

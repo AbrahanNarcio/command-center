@@ -1306,6 +1306,30 @@ textarea {
   margin-top: 9px;
 }
 
+.ret-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ret-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.ret-legend-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
 .reel-ret-list {
   display: grid;
   gap: 10px;
