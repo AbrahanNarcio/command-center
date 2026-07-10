@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { RefreshCw, Unplug } from "lucide-react";
+import { Dice5, RefreshCw, Unplug } from "lucide-react";
 import { useStore } from "@/lib/store-context";
 import { relativeTime } from "@/lib/utils";
+import ConfirmModal from "@/components/ConfirmModal";
+import { generatePassword } from "@/lib/password-gen";
 
 const DONT = [
   "Scraping de followers o viewers de stories",
@@ -25,12 +27,23 @@ const SETUP = [
 ];
 
 function ClientAccessPanel() {
-  const { activeAccount, clientUsers, createClientUser, deleteClientUser } = useStore();
+  const { activeAccount, clientUsers, createClientUser, deleteClientUser, notify } = useStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"client" | "editor">("client");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Credenciales recién creadas, para copiarlas antes de que desaparezcan.
+  const [created, setCreated] = useState<{ email: string; password: string } | null>(null);
+
+  const copy = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      notify(`${label} copiada`);
+    } catch {
+      notify("No se pudo copiar");
+    }
+  };
 
   const accountUsers = clientUsers.filter((u) => u.accountId === activeAccount?.id);
   // Accesos que quedaron sin cuenta (p. ej. si se borró la cuenta antes de la cascada):
@@ -94,7 +107,21 @@ function ClientAccessPanel() {
         </label>
         <label>
           Contraseña (mín. 12)
-          <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="contraseña temporal fuerte" />
+          <div className="input-with-action">
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="contraseña temporal fuerte"
+            />
+            <button
+              type="button"
+              className="input-action"
+              title="Generar una contraseña fuerte"
+              onClick={() => setPassword(generatePassword(16))}
+            >
+              <Dice5 size={14} /> Generar
+            </button>
+          </div>
         </label>
         <label>
           Nivel de acceso
@@ -121,6 +148,7 @@ function ClientAccessPanel() {
             setBusy(false);
             if (err) setError(err);
             else {
+              setCreated({ email, password });
               setEmail("");
               setPassword("");
               setRole("client");
@@ -130,6 +158,31 @@ function ClientAccessPanel() {
           {busy ? "Creando…" : "Crear acceso"}
         </button>
       </div>
+
+      {created && (
+        <div className="alert" style={{ ["--accent" as string]: "var(--green)", marginTop: 12 }}>
+          <strong>Acceso creado. Copia estas credenciales ahora.</strong>
+          <p style={{ marginBottom: 8 }}>
+            La contraseña no se vuelve a mostrar. Compártela con la persona por un canal seguro y pídele
+            que la cambie al entrar.
+          </p>
+          <div className="cred-row">
+            <code>{created.email}</code>
+            <button className="button small" onClick={() => copy(created.email, "Correo")}>
+              Copiar correo
+            </button>
+          </div>
+          <div className="cred-row">
+            <code>{created.password}</code>
+            <button className="button small" onClick={() => copy(created.password, "Contraseña")}>
+              Copiar contraseña
+            </button>
+          </div>
+          <button className="button small" style={{ marginTop: 8 }} onClick={() => setCreated(null)}>
+            Listo, ya la guardé
+          </button>
+        </div>
+      )}
     </section>
   );
 }
@@ -230,6 +283,7 @@ function HealthPanel() {
 export default function SettingsView() {
   const { activeAccount, activeConnection, igConfigured, isAdmin, syncConnection, disconnectConnection } = useStore();
   const [busy, setBusy] = useState(false);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
 
   // Cualquier conexión existente (incluso con error) se muestra como conectada,
   // con su alerta — nunca esconder el error volviendo al botón de conectar.
@@ -313,11 +367,22 @@ export default function SettingsView() {
               <button
                 className="button danger"
                 disabled={busy}
-                onClick={() => disconnectConnection(activeConnection.accountId)}
+                onClick={() => setConfirmDisconnect(true)}
               >
                 <Unplug size={15} /> Desconectar
               </button>
             </div>
+            {confirmDisconnect && (
+              <ConfirmModal
+                danger
+                title={`¿Desconectar @${activeConnection.username}?`}
+                message="Se borrará la conexión y el token guardado. Las métricas y publicaciones sincronizadas dejarán de actualizarse, y no se recuperan a menos que vuelvas a conectar la cuenta con Instagram."
+                confirmLabel="Sí, desconectar"
+                cancelLabel="No, cancelar"
+                onConfirm={() => disconnectConnection(activeConnection.accountId)}
+                onClose={() => setConfirmDisconnect(false)}
+              />
+            )}
           </>
         )}
 

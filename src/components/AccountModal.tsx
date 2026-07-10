@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Account } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
 import ModalPortal from "@/components/ModalPortal";
+import ConfirmModal from "@/components/ConfirmModal";
 
 const COLORS = ["#7a8cff", "#feda75", "#ff5c9c", "#ffa14e", "#80ffb5", "#b05ce6", "#ff5d51"];
 
@@ -14,6 +15,7 @@ export default function AccountModal({ account, onClose }: { account?: Account |
   const [kind, setKind] = useState<Account["kind"]>(account?.kind ?? "cliente");
   const [color, setColor] = useState(account?.color ?? COLORS[0]);
   const [missing, setMissing] = useState<string[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const isEdit = Boolean(account);
 
@@ -84,10 +86,7 @@ export default function AccountModal({ account, onClose }: { account?: Account |
             <button
               className="button danger"
               style={{ marginRight: "auto" }}
-              onClick={() => {
-                deleteAccount(account!.id);
-                onClose();
-              }}
+              onClick={() => setConfirmDelete(true)}
             >
               Eliminar
             </button>
@@ -113,6 +112,20 @@ export default function AccountModal({ account, onClose }: { account?: Account |
           </button>
         </div>
       </div>
+      {confirmDelete && account && (
+        <ConfirmModal
+          danger
+          title={`¿Eliminar la cuenta ${account.name}?`}
+          message="Se borran para siempre sus métricas, piezas, fuentes, reportes y los accesos de sus usuarios. Si está conectada a Instagram, también se desconecta. Esta acción no se puede deshacer."
+          confirmLabel="Sí, eliminar todo"
+          cancelLabel="No, conservar"
+          onConfirm={() => {
+            deleteAccount(account.id);
+            onClose();
+          }}
+          onClose={() => setConfirmDelete(false)}
+        />
+      )}
     </div>
     </ModalPortal>
   );
