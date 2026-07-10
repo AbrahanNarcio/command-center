@@ -452,33 +452,19 @@ textarea {
   box-shadow: 0 8px 24px rgba(122, 140, 255, 0.22);
 }
 
-/* Acento de IA (solo para acciones de generación con IA): azul → violeta. */
-.button.ai {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  color: #fff;
-  border-color: transparent;
-  background: linear-gradient(135deg, #7a8cff, #b05ce6);
-  box-shadow: 0 10px 30px rgba(176, 92, 230, 0.26);
-}
-
-.button.ai:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 38px rgba(176, 92, 230, 0.4);
-}
-
 .button.danger {
   color: var(--coral);
   border-color: rgba(255, 93, 81, 0.4);
   background: rgba(255, 93, 81, 0.08);
 }
 
-/* Variante "paint": base azul; al pasar el mouse se pinta con el degradado de
-   Instagram (barrido de izq. a der.) y el texto pasa a blanco. Sin subrayado
-   aunque sea un <a>. */
-.button.paint {
+/* ── Botones "barrido" (mismo lenguaje visual, distinto color) ──
+   Base con un tinte suave del color; al pasar el mouse un barrido de izq. a der.
+   pinta el degradado y el texto pasa a blanco.
+   .paint = Instagram (cosas de Instagram)   .ai = IA (generación con IA)
+   El mecanismo es idéntico a propósito: el color es lo que dice de qué se trata. */
+.button.paint,
+.button.ai {
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -486,36 +472,69 @@ textarea {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  color: var(--cyan);
   text-decoration: none;
-  border: 1px solid color-mix(in srgb, var(--cyan) 55%, var(--line));
-  background: color-mix(in srgb, var(--cyan) 12%, transparent);
 }
 
-.button.paint::before {
+.button.paint::before,
+.button.ai::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(45deg, #feda75, #fa7e1e 30%, #d62976 60%, #962fbf 85%, #4f5bd5);
   transform: translateX(-101%);
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .button.paint:hover:not(:disabled)::before,
-.button.paint:focus-visible::before {
+.button.paint:focus-visible::before,
+.button.ai:hover:not(:disabled)::before,
+.button.ai:focus-visible::before {
   transform: translateX(0);
 }
 
 .button.paint:hover:not(:disabled),
-.button.paint:focus-visible {
+.button.paint:focus-visible,
+.button.ai:hover:not(:disabled),
+.button.ai:focus-visible {
   color: #fff;
   border-color: transparent;
+}
+
+/* Instagram: base azul, barrido con el degradado de Instagram. */
+.button.paint {
+  color: var(--cyan);
+  border: 1px solid color-mix(in srgb, var(--cyan) 55%, var(--line));
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
+}
+
+.button.paint::before {
+  background: linear-gradient(45deg, #feda75, #fa7e1e 30%, #d62976 60%, #962fbf 85%, #4f5bd5);
+}
+
+.button.paint:hover:not(:disabled),
+.button.paint:focus-visible {
   box-shadow: 0 12px 38px rgba(214, 41, 118, 0.32);
 }
 
+/* IA: base violeta, barrido con el degradado azul → violeta. */
+.button.ai {
+  color: #b98cff;
+  border: 1px solid color-mix(in srgb, #b05ce6 55%, var(--line));
+  background: color-mix(in srgb, #b05ce6 12%, transparent);
+}
+
+.button.ai::before {
+  background: linear-gradient(135deg, #7a8cff, #b05ce6);
+}
+
+.button.ai:hover:not(:disabled),
+.button.ai:focus-visible {
+  box-shadow: 0 12px 38px rgba(176, 92, 230, 0.38);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .button.paint::before {
+  .button.paint::before,
+  .button.ai::before {
     transition: none;
   }
 }
