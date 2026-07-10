@@ -1,1 +1,10 @@
-export type ViewId = "overview" | "pipeline" | "calendar" | "generator" | "sources" | "settings" | "reports";
+export type ViewId =
+  | "summary"
+  | "overview"
+  | "pipeline"
+  | "calendar"
+  | "plan"
+  | "generator"
+  | "sources"
+  | "settings"
+  | "reports";

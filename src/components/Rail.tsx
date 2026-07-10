@@ -7,8 +7,10 @@ import {
   CalendarDays,
   Database,
   FileText,
+  Gauge,
   KeyRound,
   LayoutDashboard,
+  ListChecks,
   LogOut,
   Plus,
   Sparkles,
@@ -22,6 +24,8 @@ import ThemeSelector from "@/components/ThemeSelector";
 import { Account } from "@/lib/types";
 
 const NAV: { id: ViewId; icon: React.ReactNode; label: string; adminOnly: boolean }[] = [
+  { id: "summary", icon: <Gauge />, label: "Resumen", adminOnly: false },
+  { id: "plan", icon: <ListChecks />, label: "Planeación", adminOnly: false },
   { id: "overview", icon: <LayoutDashboard />, label: "Control", adminOnly: false },
   { id: "pipeline", icon: <SquareKanban />, label: "Pipeline", adminOnly: false },
   { id: "calendar", icon: <CalendarDays />, label: "Calendario", adminOnly: false },

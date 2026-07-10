@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AtSign, RotateCcw, Search, Sparkles, SquareKanban } from "lucide-react";
 import { useStore } from "@/lib/store-context";
 import { FORMATS, PieceFormat } from "@/lib/types";
@@ -13,6 +13,8 @@ import GeneratorView from "@/components/views/GeneratorView";
 import SourcesView from "@/components/views/SourcesView";
 import SettingsView from "@/components/views/SettingsView";
 import ReportsView from "@/components/views/ReportsView";
+import SummaryView from "@/components/views/SummaryView";
+import PlanView from "@/components/views/PlanView";
 import SplashScreen from "@/components/SplashScreen";
 import TopLoader from "@/components/TopLoader";
 
@@ -55,6 +57,14 @@ export default function Dashboard() {
   const [view, setView] = useState<ViewId>("overview");
   const [format, setFormat] = useState<PieceFormat | "all">("all");
   const [search, setSearch] = useState("");
+
+  // El cliente (solo lectura) aterriza en el Resumen; el equipo, en Control.
+  const landed = useRef(false);
+  useEffect(() => {
+    if (loading || landed.current) return;
+    landed.current = true;
+    if (!canEdit) setView("summary");
+  }, [loading, canEdit]);
 
   // Handle the OAuth redirect back from Meta (?igconnected=... / ?igerror=...).
   useEffect(() => {
@@ -248,6 +258,8 @@ export default function Dashboard() {
         )}
 
         <div className="view-anim" key={`${view}-${activeAccount?.id ?? ""}`}>
+          {view === "summary" && <SummaryView go={setView} />}
+          {view === "plan" && <PlanView />}
           {view === "overview" && <OverviewView pieces={accountPieces} />}
           {view === "pipeline" && <PipelineView pieces={filtered} />}
           {view === "calendar" && <CalendarView pieces={filtered} />}
