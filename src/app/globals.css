@@ -542,6 +542,21 @@ textarea {
   border-color: transparent;
 }
 
+/* Solo en tema claro: el botón de IA lleva texto negro sobre su barrido violeta
+   (el blanco no se aprecia bien). El tema oscuro se queda como está. */
+:root[data-theme="light"] .button.ai:hover:not(:disabled),
+:root[data-theme="light"] .button.ai:focus-visible {
+  color: #0c0f17;
+}
+
+/* Solo en tema claro: el reposo del botón de IA usa un violeta más oscuro
+   para que se aprecie sobre el fondo claro. */
+:root[data-theme="light"] .button.ai {
+  color: var(--violet);
+  border-color: color-mix(in srgb, var(--violet) 55%, var(--line));
+  background: color-mix(in srgb, var(--violet) 14%, transparent);
+}
+
 /* Instagram: base azul, barrido con el degradado de Instagram. */
 .button.paint {
   color: var(--cyan);
