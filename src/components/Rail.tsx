@@ -47,7 +47,7 @@ const NAV_GROUPS: { label: string; internal: boolean; items: NavItem[] }[] = [
       { id: "calendar", icon: <CalendarDays />, label: "Calendario" },
       { id: "generator", icon: <Sparkles />, label: "Generador" },
       { id: "sources", icon: <Database />, label: "Fuentes" },
-      { id: "settings", icon: <AtSign />, label: "IG Ready" },
+      { id: "settings", icon: <AtSign />, label: "Conexión Instagram" },
     ],
   },
 ];

@@ -153,7 +153,7 @@ export default function Dashboard() {
                 ) : canEdit ? (
                   <>
                     <strong>{activeAccount.handle}</strong> · Sin conexión a Instagram — conéctala en{" "}
-                    <strong>IG Ready</strong>.
+                    <strong>Conexión Instagram</strong>.
                   </>
                 ) : (
                   <>
@@ -180,7 +180,7 @@ export default function Dashboard() {
                 )}
                 {canEdit && (
                   <button className="button" onClick={() => setView("settings")}>
-                    <AtSign size={15} /> IG Ready
+                    <AtSign size={15} /> Conexión Instagram
                   </button>
                 )}
               </div>

@@ -283,7 +283,7 @@ body {
 :root[data-theme="aero"] .nav .nav-calendar i { --ic: #f08c1a; } /* Calendario: naranja */
 :root[data-theme="aero"] .nav .nav-generator i { --ic: #e0489e; } /* Generador: rosa */
 :root[data-theme="aero"] .nav .nav-sources i { --ic: #c9971d; } /* Fuentes: dorado */
-:root[data-theme="aero"] .nav .nav-settings i { --ic: #d94a3a; } /* IG Ready: coral */
+:root[data-theme="aero"] .nav .nav-settings i { --ic: #d94a3a; } /* Conexión Instagram: coral */
 
 /* Transición suave solo al conmutar el tema (la activa el selector). */
 .theme-anim,
@@ -929,7 +929,7 @@ textarea {
   margin: 20px 0 16px;
 }
 
-/* Vistas sin barra de filtros (Generador, Fuentes, IG Ready): misma separación
+/* Vistas sin barra de filtros (Generador, Fuentes, Conexión Instagram): misma separación
    con el hero que las vistas que sí la tienen. */
 .hero + .view-anim {
   margin-top: 20px;
