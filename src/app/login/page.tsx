@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { browserClient } from "@/lib/supabase/browser";
 
 export default function LoginPage() {
@@ -55,18 +56,30 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="loading-screen">
-      <div style={{ width: "min(420px, 92vw)" }}>
-        <div className="brand" style={{ marginBottom: 22 }}>
-          <div className="mark">C</div>
-          <div>
-            <strong style={{ color: "var(--text)" }}>Content OS</strong>
-            <span>IG Performance Command Center</span>
-          </div>
-        </div>
-        <section className="panel">
-          <p className="eyebrow">Acceso</p>
-          <h2 style={{ marginBottom: 14 }}>Iniciar sesión</h2>
+    <div className="auth-screen">
+      <div className="auth-box">
+        <svg className="auth-logo" viewBox="0 0 64 64" role="img" aria-label="Content OS">
+          <defs>
+            <linearGradient id="auth-g" x1="0" y1="64" x2="64" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stopColor="#feda75" />
+              <stop offset="0.3" stopColor="#fa7e1e" />
+              <stop offset="0.62" stopColor="#d62976" />
+              <stop offset="1" stopColor="#962fbf" />
+            </linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="15" fill="url(#auth-g)" />
+          <path
+            d="M13 36h9l5-13 9 22 6-13h9"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="5.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <h1 className="auth-title">Inicia sesión en Content OS</h1>
+        <p className="auth-sub">Tus métricas, piezas y calendario de Instagram en un solo lugar.</p>
+        <section className="panel auth-card">
           <form className="form-grid" onSubmit={signIn}>
             <label>
               Email
@@ -80,7 +93,12 @@ export default function LoginPage() {
               />
             </label>
             <label>
-              Contraseña
+              <span className="auth-pass-row">
+                Contraseña
+                <button type="button" className="auth-link" disabled={busy} onClick={forgot}>
+                  ¿La olvidaste?
+                </button>
+              </span>
               <input
                 type="password"
                 value={password}
@@ -100,23 +118,12 @@ export default function LoginPage() {
                 <p>{notice}</p>
               </div>
             )}
-            <button className="button primary" type="submit" disabled={busy}>
-              {busy ? "Entrando…" : "Entrar"}
+            <button className="button primary auth-submit" type="submit" disabled={busy}>
+              {busy && <Loader2 size={15} className="spin" />} {busy ? "Entrando…" : "Entrar"}
             </button>
           </form>
-          <button
-            type="button"
-            className="button small"
-            style={{ marginTop: 10 }}
-            disabled={busy}
-            onClick={forgot}
-          >
-            Olvidé mi contraseña
-          </button>
-          <p style={{ color: "var(--muted)", fontSize: 12, marginTop: 14, marginBottom: 0, lineHeight: 1.5 }}>
-            ¿Eres cliente y no tienes acceso? Pide tus credenciales al equipo.
-          </p>
         </section>
+        <p className="auth-foot">¿Eres cliente y aún no tienes acceso? Pide tus credenciales al equipo.</p>
       </div>
     </div>
   );
