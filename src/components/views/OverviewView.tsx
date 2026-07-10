@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store-context";
-import { Piece } from "@/lib/types";
+import { FORMATS, Piece, PieceFormat } from "@/lib/types";
 import { relativeTime } from "@/lib/utils";
 import PostCard from "@/components/PostCard";
 import { Donut, LineChart } from "@/components/charts";
@@ -110,9 +110,15 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
     ];
   }, [pieces]);
 
+  const [winFormat, setWinFormat] = useState<PieceFormat | "all">("all");
   const winners = useMemo(
-    () => pieces.slice().sort((a, b) => b.score - a.score).slice(0, 4),
-    [pieces],
+    () =>
+      pieces
+        .filter((p) => winFormat === "all" || p.format === winFormat)
+        .slice()
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 4),
+    [pieces, winFormat],
   );
   const alerts = useMemo(() => pieces.filter((p) => p.score < 75), [pieces]);
 
@@ -584,11 +590,25 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
               <h2>Contenido con más señal comercial</h2>
             </div>
           </div>
+          <div className="filters" role="group" aria-label="Filtrar ganadoras por formato" style={{ marginBottom: 12 }}>
+            <button className={`chip${winFormat === "all" ? " active" : ""}`} onClick={() => setWinFormat("all")}>
+              Todo
+            </button>
+            {FORMATS.map((f) => (
+              <button
+                key={f}
+                className={`chip${winFormat === f ? " active" : ""}`}
+                onClick={() => setWinFormat(f)}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
           <div className="content-list">
             {winners.length ? (
               winners.map((p, i) => <PostCard key={p.id} piece={p} index={i} />)
             ) : (
-              <div className="no-results">Sin piezas para este filtro.</div>
+              <div className="no-results">Sin piezas de este formato.</div>
             )}
           </div>
         </section>

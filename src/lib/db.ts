@@ -11,9 +11,11 @@ import {
 /* ── row ↔ type mappers ─────────────────────────────────────── */
 
 type AccountRow = { id: string; name: string; handle: string; kind: string; color: string };
+type PieceScript = { angle?: string; problema?: string; solucion?: string; pruebaSocial?: string };
 type PieceRow = {
   id: string; account_id: string; format: string; status: string; owner: string;
   day: string; time: string; objective: string; hook: string; summary: string; cta: string; score: number;
+  script?: PieceScript | null;
 };
 type SourceRow = { id: string; account_id: string; name: string; type: string; summary: string; tags: string[] };
 type MetricsRow = { account_id: string; data: Omit<AccountMetrics, "accountId" | "updatedAt">; updated_at: string };
@@ -31,20 +33,30 @@ const toAccount = (r: AccountRow): Account => ({
   color: r.color,
 });
 
-const toPiece = (r: PieceRow): Piece => ({
-  id: r.id,
-  accountId: r.account_id,
-  format: r.format as Piece["format"],
-  status: r.status as Piece["status"],
-  owner: r.owner,
-  day: r.day as Piece["day"],
-  time: r.time,
-  objective: r.objective as Piece["objective"],
-  hook: r.hook,
-  summary: r.summary,
-  cta: r.cta,
-  score: r.score,
-});
+const toPiece = (r: PieceRow): Piece => {
+  const s = r.script ?? {};
+  const angle = (["Problema", "Solución", "Producto", "Mentalidad"].includes(s.angle ?? "")
+    ? s.angle
+    : "Problema") as Piece["angle"];
+  return {
+    id: r.id,
+    accountId: r.account_id,
+    format: r.format as Piece["format"],
+    status: r.status as Piece["status"],
+    owner: r.owner,
+    day: r.day as Piece["day"],
+    time: r.time,
+    objective: r.objective as Piece["objective"],
+    angle,
+    hook: r.hook,
+    problema: s.problema ?? "",
+    solucion: s.solucion ?? "",
+    pruebaSocial: s.pruebaSocial ?? "",
+    cta: r.cta,
+    summary: r.summary,
+    score: r.score,
+  };
+};
 
 const toSource = (r: SourceRow): Source => ({
   id: r.id,
@@ -154,8 +166,20 @@ export async function deleteAccountRow(id: string): Promise<void> {
 
 /* ── pieces ─────────────────────────────────────────────────── */
 
+const scriptOf = (p: Partial<Piece>): PieceScript => ({
+  angle: p.angle,
+  problema: p.problema,
+  solucion: p.solucion,
+  pruebaSocial: p.pruebaSocial,
+});
+/** ¿El error es porque la columna `script` aún no existe (falta la migración)? */
+const missingScriptColumn = (e: unknown): boolean =>
+  !!e && typeof (e as { message?: string }).message === "string" &&
+  /script/.test((e as { message: string }).message) &&
+  /(column|does not exist|schema cache)/i.test((e as { message: string }).message);
+
 export async function insertPiece(piece: Piece): Promise<Piece> {
-  const { error } = await adminClient().from("pieces").insert({
+  const base = {
     id: piece.id,
     account_id: piece.accountId,
     format: piece.format,
@@ -168,7 +192,10 @@ export async function insertPiece(piece: Piece): Promise<Piece> {
     summary: piece.summary,
     cta: piece.cta,
     score: piece.score,
-  });
+  };
+  let { error } = await adminClient().from("pieces").insert({ ...base, script: scriptOf(piece) });
+  // Sin migración todavía: guardar igual, sin los bloques de guion, para no romper.
+  if (error && missingScriptColumn(error)) ({ error } = await adminClient().from("pieces").insert(base));
   if (error) fail("insertPiece", error);
   return piece;
 }
@@ -181,9 +208,16 @@ export async function updatePieceRow(id: string, patch: Partial<Piece>): Promise
   ];
   for (const [key, col] of map) if (patch[key] !== undefined) row[col] = patch[key];
   if (patch.score !== undefined) row.score = Math.max(0, Math.min(100, Number(patch.score) || 0));
-  const { data, error } = await adminClient().from("pieces").update(row).eq("id", id).select().maybeSingle();
-  if (error) fail("updatePiece", error);
-  return data ? toPiece(data as PieceRow) : null;
+  // Solo tocar la columna script si el patch trae algún bloque de guion.
+  const touchesScript = ["angle", "problema", "solucion", "pruebaSocial"].some((k) => k in patch);
+  const withScript = touchesScript ? { ...row, script: scriptOf(patch) } : row;
+
+  let res = await adminClient().from("pieces").update(withScript).eq("id", id).select().maybeSingle();
+  if (res.error && touchesScript && missingScriptColumn(res.error)) {
+    res = await adminClient().from("pieces").update(row).eq("id", id).select().maybeSingle();
+  }
+  if (res.error) fail("updatePiece", res.error);
+  return res.data ? toPiece(res.data as PieceRow) : null;
 }
 
 export async function deletePieceRow(id: string): Promise<void> {

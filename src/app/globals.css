@@ -1306,6 +1306,65 @@ textarea {
   margin-top: 9px;
 }
 
+/* Selector de ángulo con código de color (problema/solución/producto/mentalidad). */
+.angle-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.angle-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--soft);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 7px 13px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+}
+
+.angle-chip .angle-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 4px;
+  background: var(--angle);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--angle) 70%, transparent);
+}
+
+.angle-chip:hover {
+  border-color: var(--line-2);
+  color: var(--text);
+}
+
+.angle-chip.active {
+  color: var(--text);
+  border-color: var(--angle);
+  background: color-mix(in srgb, var(--angle) 16%, transparent);
+}
+
+/* Insignia de ángulo en la tarjeta de pieza. */
+.badge.angle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: color-mix(in srgb, var(--angle) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--angle) 45%, var(--line));
+  color: var(--text);
+}
+
+.badge.angle::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--angle);
+}
+
 .ret-legend {
   display: flex;
   flex-wrap: wrap;

@@ -1,4 +1,4 @@
-import { AccountMetrics, Db, Piece, Source } from "./types";
+import { AccountMetrics, ANGLES, Db, Piece, Source } from "./types";
 
 function defaultMetrics(accountId: string, scale = 1): AccountMetrics {
   const s = (n: number) => Math.round(n * scale);
@@ -66,7 +66,7 @@ function defaultMetrics(accountId: string, scale = 1): AccountMetrics {
   };
 }
 
-const piecesSeed: Omit<Piece, "id" | "accountId">[] = [
+const piecesSeed: Omit<Piece, "id" | "accountId" | "angle" | "problema" | "solucion" | "pruebaSocial">[] = [
   { format: "Reel", status: "Aprobado", owner: "Abrahan", day: "Lun", time: "10:00", objective: "DM", hook: "Tu contenido no vende porque está educando demasiado.", summary: "Pieza dura contra el contenido tibio que explica mucho y no genera deseo.", cta: "Comenta SISTEMA", score: 94 },
   { format: "Carrusel", status: "Guion", owner: "Abrahan", day: "Lun", time: "13:30", objective: "Agenda", hook: "Si dependes de referidos, no tienes negocio: tienes suerte.", summary: "Carrusel de 8 slides para romper la dependencia y empujar el sistema.", cta: "Manda ESCALA", score: 82 },
   { format: "Historias", status: "Programado", owner: "Equipo", day: "Mar", time: "18:00", objective: "DM", hook: "¿Quieres que te diga por qué tu perfil no agenda?", summary: "Secuencia de 6 stories con encuesta, prueba social y CTA a conversación.", cta: "Responder PERFIL", score: 88 },
@@ -150,7 +150,17 @@ export function buildSeed(): Db {
   const pieces: Piece[] = [];
   const sources: Source[] = [];
   for (const account of accounts) {
-    for (const piece of piecesSeed) pieces.push({ ...piece, id: newId("pz"), accountId: account.id });
+    piecesSeed.forEach((piece, i) =>
+      pieces.push({
+        ...piece,
+        angle: ANGLES[i % ANGLES.length],
+        problema: piece.summary,
+        solucion: "",
+        pruebaSocial: "",
+        id: newId("pz"),
+        accountId: account.id,
+      }),
+    );
     for (const source of sourcesSeed) sources.push({ ...source, id: newId("src"), accountId: account.id });
   }
   return {

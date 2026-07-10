@@ -11,10 +11,20 @@ export interface Account {
 export type PieceFormat = "Reel" | "Carrusel" | "Historias" | "Ad";
 export type PieceStatus = "Idea" | "Guion" | "Grabado" | "Editado" | "Aprobado" | "Programado";
 export type PieceObjective = "DM" | "Agenda" | "Registro" | "Venta" | "Tráfico a perfil";
+/** Tipo de ángulo de la pieza, con código de color fijo. */
+export type PieceAngle = "Problema" | "Solución" | "Producto" | "Mentalidad";
 
 export const STATUSES: PieceStatus[] = ["Idea", "Guion", "Grabado", "Editado", "Aprobado", "Programado"];
 export const FORMATS: PieceFormat[] = ["Reel", "Carrusel", "Historias", "Ad"];
 export const OBJECTIVES: PieceObjective[] = ["DM", "Agenda", "Registro", "Venta", "Tráfico a perfil"];
+export const ANGLES: PieceAngle[] = ["Problema", "Solución", "Producto", "Mentalidad"];
+/** Código de color del ángulo: problema rojo, solución verde, producto azul, mentalidad amarillo. */
+export const ANGLE_COLORS: Record<PieceAngle, string> = {
+  Problema: "#ff5d51",
+  Solución: "#80ffb5",
+  Producto: "#7a8cff",
+  Mentalidad: "#feda75",
+};
 export const DAYS = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"] as const;
 export type Day = (typeof DAYS)[number];
 
@@ -27,9 +37,15 @@ export interface Piece {
   day: Day;
   time: string;
   objective: PieceObjective;
+  angle: PieceAngle;
   hook: string;
-  summary: string;
+  /** Bloques del guion, en orden después del hook. */
+  problema: string;
+  solucion: string;
+  pruebaSocial: string;
   cta: string;
+  /** Resumen corto para la tarjeta (se deriva del guion si queda vacío). */
+  summary: string;
   score: number;
 }
 

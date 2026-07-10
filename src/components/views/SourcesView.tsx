@@ -6,8 +6,12 @@ import { Source } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
 import ModalPortal from "@/components/ModalPortal";
 
+// Formatos de texto plano aceptados (livianos, no ocupan casi almacenamiento).
+const TEXT_EXT = [".txt", ".md", ".csv", ".srt", ".vtt", ".text"];
+const MAX_TEXT = 500_000; // ~500 KB de texto por fuente
+
 export default function SourcesView() {
-  const { accountSources, createSource, updateSource, deleteSource } = useStore();
+  const { accountSources, createSource, updateSource, deleteSource, notify } = useStore();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Source | null>(null);
   const [name, setName] = useState("");
@@ -15,6 +19,27 @@ export default function SourcesView() {
   const [summary, setSummary] = useState("");
   const [tags, setTags] = useState("");
   const [invalid, setInvalid] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+
+  const importFile = async (file: File | undefined) => {
+    setFileError(null);
+    if (!file) return;
+    const lower = file.name.toLowerCase();
+    if (!TEXT_EXT.some((ext) => lower.endsWith(ext)) && !file.type.startsWith("text/")) {
+      setFileError("Solo archivos de texto (.txt, .md, .csv, .srt, .vtt). Word/Excel: expórtalos a texto o pega el contenido.");
+      return;
+    }
+    if (file.size > MAX_TEXT) {
+      setFileError("El archivo es muy grande. Máximo ~500 KB de texto por fuente.");
+      return;
+    }
+    const text = await file.text();
+    // Nunca se guarda el archivo, solo su texto: cero costo de almacenamiento.
+    setSummary((prev) => (prev.trim() ? `${prev}\n\n${text}` : text));
+    if (!name.trim()) setName(file.name.replace(/\.[^.]+$/, ""));
+    if (!type.trim()) setType("Documento");
+    notify(`Texto importado de ${file.name}`);
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -23,6 +48,7 @@ export default function SourcesView() {
     setSummary("");
     setTags("");
     setInvalid(false);
+    setFileError(null);
     setOpen(true);
   };
 
@@ -102,8 +128,8 @@ export default function SourcesView() {
             <p className="eyebrow">{editing ? "Editar fuente" : "Nueva fuente"}</p>
             <h2>{editing ? editing.name : "Cargar materia prima"}</h2>
             <p className="modal-sub">
-              Pega el contenido real de tu fuente (una transcripción, un DM, comentarios…). Entre más real
-              sea, mejores piezas genera.
+              Sube un archivo de texto o pega el contenido real de tu fuente (una transcripción, un DM,
+              comentarios…). Entre más real sea, mejores piezas genera.
             </p>
             <div className="form-grid">
               <label>
@@ -120,8 +146,32 @@ export default function SourcesView() {
                 <input value={type} onChange={(e) => setType(e.target.value)} placeholder="Transcripciones" />
               </label>
               <label>
-                Resumen
-                <textarea value={summary} onChange={(e) => setSummary(e.target.value)} style={{ minHeight: 80 }} />
+                Importar archivo de texto
+                <input
+                  type="file"
+                  accept=".txt,.md,.csv,.srt,.vtt,.text,text/plain"
+                  onChange={(e) => {
+                    importFile(e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
+                />
+                <span style={{ color: "var(--muted)", fontSize: 11, marginTop: 4 }}>
+                  .txt, .md, .csv, .srt, .vtt. Se guarda solo el texto, no el archivo.
+                </span>
+              </label>
+              {fileError && (
+                <div className="alert" style={{ ["--accent" as string]: "var(--coral)" }}>
+                  <p>{fileError}</p>
+                </div>
+              )}
+              <label>
+                Contenido
+                <textarea
+                  value={summary}
+                  onChange={(e) => setSummary(e.target.value)}
+                  style={{ minHeight: 120 }}
+                  placeholder="Pega aquí la transcripción, los DMs o los comentarios…"
+                />
               </label>
               <label>
                 Tags (separados por coma)

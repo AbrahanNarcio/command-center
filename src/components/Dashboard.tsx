@@ -103,7 +103,9 @@ export default function Dashboard() {
     return <div className="loading-screen">Cargando command center…</div>;
   }
 
-  const usesFilters = view === "overview" || view === "pipeline" || view === "calendar";
+  // El filtro global de piezas solo tiene sentido donde TODA la vista son piezas.
+  // En Control las piezas viven solo en "ganadoras", que trae su propio filtro.
+  const usesFilters = view === "pipeline" || view === "calendar";
 
   return (
     <div className="app">
@@ -242,7 +244,7 @@ export default function Dashboard() {
         )}
 
         <div className="view-anim" key={`${view}-${activeAccount?.id ?? ""}`}>
-          {view === "overview" && <OverviewView pieces={filtered} />}
+          {view === "overview" && <OverviewView pieces={accountPieces} />}
           {view === "pipeline" && <PipelineView pieces={filtered} />}
           {view === "calendar" && <CalendarView pieces={filtered} />}
           {view === "reports" && <ReportsView />}

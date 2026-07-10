@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import {
+  ANGLES,
+  ANGLE_COLORS,
   DAYS,
   FORMATS,
   OBJECTIVES,
   Piece,
+  PieceAngle,
   PieceFormat,
   PieceObjective,
   PieceStatus,
@@ -28,9 +31,13 @@ const EMPTY: PieceDraft = {
   day: "Lun",
   time: "10:00",
   objective: "DM",
+  angle: "Problema",
   hook: "",
-  summary: "",
+  problema: "",
+  solucion: "",
+  pruebaSocial: "",
   cta: "",
+  summary: "",
   score: 70,
 };
 
@@ -56,15 +63,18 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
   const invalid = (field: string) => missing.includes(field);
 
   const save = () => {
-    // Hook, tensión (resumen) y acción (CTA): sin las tres no hay pieza.
+    // El esqueleto mínimo de un guion: hook, problema, solución y CTA.
     const faltantes: string[] = [];
     if (!draft.hook.trim()) faltantes.push("Hook");
-    if (!draft.summary.trim()) faltantes.push("Resumen");
+    if (!draft.problema.trim()) faltantes.push("Problema");
+    if (!draft.solucion.trim()) faltantes.push("Solución");
     if (!draft.cta.trim()) faltantes.push("CTA");
     if (!draft.time.trim()) faltantes.push("Hora");
     setMissing(faltantes);
     if (faltantes.length) return;
-    onSave(draft);
+    // Resumen para la tarjeta: el problema es la mejor síntesis de un vistazo.
+    const summary = draft.problema.trim() || draft.solucion.trim() || draft.hook.trim();
+    onSave({ ...draft, summary });
   };
 
   return (
@@ -74,27 +84,73 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
         <p className="eyebrow">{initial ? "Editar pieza" : "Nueva pieza"}</p>
         <h2>Ficha de contenido</h2>
         <p className="modal-sub">
-          Hook, tensión y acción esperada. Una pieza no debería aprobarse sin las tres.
+          El guion, en orden: hook, problema, solución, prueba social y CTA. El ángulo define desde dónde
+          lo cuentas.
         </p>
         <div className="form-grid">
           <label>
-            Hook *
+            Ángulo
+            <div className="angle-picker" role="group" aria-label="Ángulo de la pieza">
+              {ANGLES.map((a) => (
+                <button
+                  type="button"
+                  key={a}
+                  className={`angle-chip${draft.angle === a ? " active" : ""}`}
+                  style={{ ["--angle" as string]: ANGLE_COLORS[a] }}
+                  onClick={() => set("angle", a as PieceAngle)}
+                >
+                  <span className="angle-dot" />
+                  {a}
+                </button>
+              ))}
+            </div>
+          </label>
+          <label>
+            1 · Hook *
             <textarea
               value={draft.hook}
               onChange={(e) => set("hook", e.target.value)}
               placeholder="La frase que frena el scroll..."
-              style={{ minHeight: 70 }}
+              style={{ minHeight: 60 }}
               className={invalid("Hook") ? "invalid" : undefined}
             />
           </label>
           <label>
-            Resumen / ángulo *
+            2 · Problema *
             <textarea
-              value={draft.summary}
-              onChange={(e) => set("summary", e.target.value)}
-              placeholder="Qué desarrolla la pieza y por qué mueve al negocio..."
-              style={{ minHeight: 70 }}
-              className={invalid("Resumen") ? "invalid" : undefined}
+              value={draft.problema}
+              onChange={(e) => set("problema", e.target.value)}
+              placeholder="El dolor o la tensión que vive tu audiencia..."
+              style={{ minHeight: 60 }}
+              className={invalid("Problema") ? "invalid" : undefined}
+            />
+          </label>
+          <label>
+            3 · Solución *
+            <textarea
+              value={draft.solucion}
+              onChange={(e) => set("solucion", e.target.value)}
+              placeholder="El giro o la respuesta que propones..."
+              style={{ minHeight: 60 }}
+              className={invalid("Solución") ? "invalid" : undefined}
+            />
+          </label>
+          <label>
+            4 · Prueba social
+            <textarea
+              value={draft.pruebaSocial}
+              onChange={(e) => set("pruebaSocial", e.target.value)}
+              placeholder="Un caso, testimonio o dato que lo respalde (opcional)..."
+              style={{ minHeight: 60 }}
+            />
+          </label>
+          <label>
+            5 · CTA *
+            <input
+              value={draft.cta}
+              onChange={(e) => set("cta", e.target.value)}
+              placeholder="Comenta SISTEMA"
+              className={invalid("CTA") ? "invalid" : undefined}
             />
           </label>
           <div className="form-grid two">
@@ -144,15 +200,6 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
                 value={draft.time}
                 onChange={(e) => set("time", e.target.value)}
                 className={invalid("Hora") ? "invalid" : undefined}
-              />
-            </label>
-            <label>
-              CTA *
-              <input
-                value={draft.cta}
-                onChange={(e) => set("cta", e.target.value)}
-                placeholder="Comenta SISTEMA"
-                className={invalid("CTA") ? "invalid" : undefined}
               />
             </label>
             <label>

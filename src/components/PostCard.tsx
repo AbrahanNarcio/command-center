@@ -1,7 +1,7 @@
 "use client";
 
 import { Pencil, Trash2 } from "lucide-react";
-import { Piece } from "@/lib/types";
+import { ANGLE_COLORS, Piece } from "@/lib/types";
 import { PALETTE, formatSlug, scoreColor } from "@/lib/utils";
 
 interface Props {
@@ -34,6 +34,11 @@ export default function PostCard({
       <div className="card-body">
         <div className="card-top">
           <span className={`badge ${formatSlug(piece.format)}`}>{piece.format}</span>
+          {piece.angle && (
+            <span className="badge angle" style={{ ["--angle" as string]: ANGLE_COLORS[piece.angle] }}>
+              {piece.angle}
+            </span>
+          )}
           <span className="badge status">{piece.status}</span>
         </div>
         <h3>{piece.hook}</h3>

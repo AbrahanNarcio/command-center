@@ -144,9 +144,13 @@ export default function GeneratorView() {
                   objective,
                   status: "Guion",
                   owner: "Generador",
+                  angle: "Problema",
                   hook: script.hook,
-                  summary: script.lines[2].text,
+                  problema: script.lines[1].text,
+                  solucion: script.lines[2].text,
+                  pruebaSocial: script.lines[3].text,
                   cta: script.lines[4].text,
+                  summary: script.lines[1].text,
                   score,
                 });
                 notify("Guion enviado al pipeline");
