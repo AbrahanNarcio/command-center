@@ -446,10 +446,10 @@ textarea {
 /* Primario sobrio para acciones normales (guardar, crear, generar reporte…).
    Azul sólido, claro y con intención, sin el degradado de Instagram. */
 .button.primary {
-  color: #0b0d14;
+  color: #fff;
   border-color: transparent;
-  background: linear-gradient(180deg, #97a3ff, #7a8cff);
-  box-shadow: 0 8px 24px rgba(122, 140, 255, 0.22);
+  background: linear-gradient(180deg, #6675f5, #545fe8);
+  box-shadow: 0 8px 24px rgba(84, 95, 232, 0.28);
 }
 
 .button.danger {
@@ -464,7 +464,8 @@ textarea {
    .paint = Instagram (cosas de Instagram)   .ai = IA (generación con IA)
    El mecanismo es idéntico a propósito: el color es lo que dice de qué se trata. */
 .button.paint,
-.button.ai {
+.button.ai,
+.button.danger {
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -476,7 +477,8 @@ textarea {
 }
 
 .button.paint::before,
-.button.ai::before {
+.button.ai::before,
+.button.danger::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -488,14 +490,18 @@ textarea {
 .button.paint:hover:not(:disabled)::before,
 .button.paint:focus-visible::before,
 .button.ai:hover:not(:disabled)::before,
-.button.ai:focus-visible::before {
+.button.ai:focus-visible::before,
+.button.danger:hover:not(:disabled)::before,
+.button.danger:focus-visible::before {
   transform: translateX(0);
 }
 
 .button.paint:hover:not(:disabled),
 .button.paint:focus-visible,
 .button.ai:hover:not(:disabled),
-.button.ai:focus-visible {
+.button.ai:focus-visible,
+.button.danger:hover:not(:disabled),
+.button.danger:focus-visible {
   color: #fff;
   border-color: transparent;
 }
@@ -532,9 +538,20 @@ textarea {
   box-shadow: 0 12px 38px rgba(176, 92, 230, 0.38);
 }
 
+/* Desconectar/eliminar: base roja tenue, barrido rojo SÓLIDO al hover. */
+.button.danger::before {
+  background: #e5484d;
+}
+
+.button.danger:hover:not(:disabled),
+.button.danger:focus-visible {
+  box-shadow: 0 12px 38px rgba(229, 72, 77, 0.36);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .button.paint::before,
-  .button.ai::before {
+  .button.ai::before,
+  .button.danger::before {
     transition: none;
   }
 }
@@ -2317,8 +2334,8 @@ input[type="range"] {
 }
 
 .button.primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #a6b0ff, #869bff);
-  box-shadow: 0 14px 40px rgba(122, 140, 255, 0.34);
+  background: linear-gradient(180deg, #7683ff, #616df3);
+  box-shadow: 0 14px 40px rgba(84, 95, 232, 0.4);
 }
 
 /* ── Todo reacciona al mouse ── */
