@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { FORMATS, OBJECTIVES, PieceFormat, PieceObjective } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
 
@@ -103,8 +104,8 @@ export default function GeneratorView() {
             Nivel de filo: {edge}
             <input type="range" min={1} max={5} value={edge} onChange={(e) => setEdge(Number(e.target.value))} />
           </label>
-          <button className="button primary" onClick={() => setSeed((s) => s + 1)}>
-            Generar guion
+          <button className="button ai" onClick={() => setSeed((s) => s + 1)}>
+            <Sparkles size={15} /> Generar guion
           </button>
         </div>
       </section>

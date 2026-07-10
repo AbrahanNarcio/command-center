@@ -351,7 +351,7 @@ export default function SettingsView() {
             )}
             <div className="hero-actions" style={{ marginTop: 0 }}>
               <button
-                className="button primary"
+                className="button paint"
                 disabled={busy}
                 onClick={async () => {
                   setBusy(true);

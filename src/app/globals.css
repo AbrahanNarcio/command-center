@@ -443,11 +443,30 @@ textarea {
   font-weight: 850;
 }
 
+/* Primario sobrio para acciones normales (guardar, crear, generar reporte…).
+   Azul sólido, claro y con intención, sin el degradado de Instagram. */
 .button.primary {
+  color: #0b0d14;
+  border-color: transparent;
+  background: linear-gradient(180deg, #97a3ff, #7a8cff);
+  box-shadow: 0 8px 24px rgba(122, 140, 255, 0.22);
+}
+
+/* Acento de IA (solo para acciones de generación con IA): azul → violeta. */
+.button.ai {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   color: #fff;
   border-color: transparent;
-  background: linear-gradient(45deg, #fa7e1e, #d62976 55%, #962fbf);
-  box-shadow: 0 12px 38px rgba(214, 41, 118, 0.24);
+  background: linear-gradient(135deg, #7a8cff, #b05ce6);
+  box-shadow: 0 10px 30px rgba(176, 92, 230, 0.26);
+}
+
+.button.ai:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 38px rgba(176, 92, 230, 0.4);
 }
 
 .button.danger {
@@ -2279,7 +2298,8 @@ input[type="range"] {
 }
 
 .button.primary:hover:not(:disabled) {
-  box-shadow: 0 14px 44px rgba(214, 41, 118, 0.38);
+  background: linear-gradient(180deg, #a6b0ff, #869bff);
+  box-shadow: 0 14px 40px rgba(122, 140, 255, 0.34);
 }
 
 /* ── Todo reacciona al mouse ── */

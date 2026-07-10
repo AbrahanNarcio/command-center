@@ -149,7 +149,7 @@ export default function Dashboard() {
               </div>
               <div className="hero-actions">
                 {canEdit && (
-                  <button className="button paint" onClick={() => setView("generator")}>
+                  <button className="button primary" onClick={() => setView("generator")}>
                     <Sparkles size={15} /> Crear pieza
                   </button>
                 )}
