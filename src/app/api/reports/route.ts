@@ -43,6 +43,10 @@ export async function POST(request: Request) {
   if (body.restore && typeof body.restore === "object") {
     const r = body.restore as Report;
     if (!r.id || !r.accountId || !r.data) return NextResponse.json({ error: "restore inválido" }, { status: 400 });
+    // Tope de tamaño: evita inflar el almacenamiento con un payload gigante.
+    if (JSON.stringify(r.data).length > 200_000) {
+      return NextResponse.json({ error: "El reporte a restablecer es demasiado grande." }, { status: 413 });
+    }
     const restoreGate = await accountGate(String(r.accountId));
     if (restoreGate.response) return restoreGate.response;
     const restored: Report = {

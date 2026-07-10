@@ -7,6 +7,7 @@ import { useStore } from "@/lib/store-context";
 /** Cambio de contraseña del usuario logueado (cualquier rol). */
 export default function PasswordModal({ onClose }: { onClose: () => void }) {
   const { notify } = useStore();
+  const [current, setCurrent] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -14,8 +15,12 @@ export default function PasswordModal({ onClose }: { onClose: () => void }) {
 
   const save = async () => {
     setError(null);
-    if (password.length < 8) {
-      setError("Mínimo 8 caracteres.");
+    if (!current) {
+      setError("Escribe tu contraseña actual.");
+      return;
+    }
+    if (password.length < 12) {
+      setError("La nueva debe tener al menos 12 caracteres.");
       return;
     }
     if (password !== confirm) {
@@ -27,7 +32,7 @@ export default function PasswordModal({ onClose }: { onClose: () => void }) {
       const res = await fetch("/api/password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ current, password }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -49,7 +54,16 @@ export default function PasswordModal({ onClose }: { onClose: () => void }) {
           <h2>Cambiar contraseña</h2>
           <div className="form-grid" style={{ marginTop: 12 }}>
             <label>
-              Nueva contraseña (mín. 8)
+              Contraseña actual
+              <input
+                type="password"
+                value={current}
+                onChange={(e) => setCurrent(e.target.value)}
+                autoComplete="current-password"
+              />
+            </label>
+            <label>
+              Nueva contraseña (mín. 12)
               <input
                 type="password"
                 value={password}

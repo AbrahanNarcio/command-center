@@ -1,19 +1,40 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { serverClient } from "@/lib/supabase/server";
+import { crossOriginResponse, passwordProblem, rateLimited, sameOriginOk, tooManyResponse } from "@/lib/security";
 
-/** Cambio de contraseña del usuario logueado (cualquier rol). */
+/** Cambio de contraseña del usuario logueado (cualquier rol). Exige la actual. */
 export async function POST(request: Request) {
+  if (!(await sameOriginOk())) return crossOriginResponse();
+  if (await rateLimited("password", 5, 15 * 60_000)) return tooManyResponse();
+
   const body = await request.json().catch(() => ({}));
+  const current = String(body.current || "");
   const password = String(body.password || "");
-  if (password.length < 8) {
-    return NextResponse.json({ error: "La contraseña debe tener al menos 8 caracteres" }, { status: 400 });
-  }
+
+  const strength = await passwordProblem(password);
+  if (strength) return NextResponse.json({ error: strength }, { status: 400 });
 
   const supabase = await serverClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user || !user.email) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  // Reautenticación: verificar la contraseña actual en un cliente aparte (sin tocar
+  // las cookies de sesión). Así una sesión robada no basta para cambiar la clave.
+  const verifier = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+  const { error: badCurrent } = await verifier.auth.signInWithPassword({
+    email: user.email,
+    password: current,
+  });
+  if (badCurrent) {
+    return NextResponse.json({ error: "La contraseña actual no es correcta." }, { status: 400 });
+  }
 
   const { error } = await supabase.auth.updateUser({ password });
   if (error) {

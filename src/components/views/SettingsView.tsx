@@ -93,8 +93,8 @@ function ClientAccessPanel() {
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cliente@email.com" />
         </label>
         <label>
-          Contraseña (mín. 8)
-          <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="contraseña temporal" />
+          Contraseña (mín. 12)
+          <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="contraseña temporal fuerte" />
         </label>
         <label>
           Nivel de acceso

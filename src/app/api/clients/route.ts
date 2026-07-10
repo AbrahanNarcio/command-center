@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { adminGate } from "@/lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
+import { passwordProblem, rateLimited, tooManyResponse } from "@/lib/security";
 
 export async function POST(request: Request) {
   const gate = await adminGate();
   if (gate.response) return gate.response;
+  if (await rateLimited("clients", 10, 10 * 60_000)) return tooManyResponse();
 
   const body = await request.json();
   const email = String(body.email || "").trim().toLowerCase();
@@ -14,7 +16,8 @@ export async function POST(request: Request) {
   const role = body.role === "editor" ? "editor" : "client";
 
   if (!email.includes("@")) return NextResponse.json({ error: "Email inválido" }, { status: 400 });
-  if (password.length < 8) return NextResponse.json({ error: "La contraseña debe tener al menos 8 caracteres" }, { status: 400 });
+  const weak = await passwordProblem(password);
+  if (weak) return NextResponse.json({ error: weak }, { status: 400 });
   if (!accountId) return NextResponse.json({ error: "Falta la cuenta a vincular" }, { status: 400 });
 
   const supabase = adminClient();

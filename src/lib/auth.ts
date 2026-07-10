@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminClient, supabaseConfigured } from "./supabase/admin";
 import { serverClient } from "./supabase/server";
+import { crossOriginResponse, sameOriginOk } from "./security";
 
 /**
  * Roles:
@@ -68,9 +69,11 @@ export type AdminGate =
 
 /**
  * Guard para rutas de admin: 401 sin sesión (el cliente redirige a /login),
- * 403 con sesión sin permisos. No mezclar ambos en un solo 403.
+ * 403 con sesión sin permisos. Todas las que usan este gate son mutaciones,
+ * así que también se verifica el origen (defensa CSRF).
  */
 export async function adminGate(): Promise<AdminGate> {
+  if (!(await sameOriginOk())) return { session: null, response: crossOriginResponse() };
   const session = await getSessionProfile();
   if (!session) {
     return { session: null, response: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
@@ -83,9 +86,10 @@ export async function adminGate(): Promise<AdminGate> {
 
 /**
  * Guard para escrituras sobre UNA cuenta: admin siempre; editor solo si es SU
- * cuenta. Los viewers nunca escriben. Mismo contrato 401/403 que adminGate.
+ * cuenta. Los viewers nunca escriben. Verifica origen (CSRF) + sesión + permiso.
  */
 export async function accountGate(accountId: string): Promise<AdminGate> {
+  if (!(await sameOriginOk())) return { session: null, response: crossOriginResponse() };
   const session = await getSessionProfile();
   if (!session) {
     return { session: null, response: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };

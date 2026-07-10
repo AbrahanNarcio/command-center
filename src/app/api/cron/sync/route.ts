@@ -4,6 +4,7 @@ import { isConfigured } from "@/lib/instagram";
 import { syncAccount } from "@/lib/sync";
 import { getMetricsRow, insertReport, listReports } from "@/lib/db";
 import { newId } from "@/lib/seed";
+import { safeEqual } from "@/lib/security";
 
 const TZ = process.env.SYNC_TIMEZONE || "America/Mexico_City";
 
@@ -58,9 +59,9 @@ export const maxDuration = 60;
  * Protegida: solo corre con el CRON_SECRET (Vercel lo manda como Bearer).
  */
 export async function GET(request: Request) {
-  const auth = request.headers.get("authorization");
+  const auth = request.headers.get("authorization") ?? "";
   const secret = process.env.CRON_SECRET;
-  if (!secret || auth !== `Bearer ${secret}`) {
+  if (!secret || !safeEqual(auth, `Bearer ${secret}`)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   if (!supabaseConfigured() || !isConfigured()) {

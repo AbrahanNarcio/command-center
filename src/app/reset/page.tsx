@@ -32,8 +32,8 @@ export default function ResetPage() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (password.length < 8) {
-      setError("Mínimo 8 caracteres.");
+    if (password.length < 12) {
+      setError("Mínimo 12 caracteres.");
       return;
     }
     if (password !== confirm) {
@@ -69,7 +69,7 @@ export default function ResetPage() {
           ) : (
             <form className="form-grid" onSubmit={save}>
               <label>
-                Nueva contraseña (mín. 8)
+                Nueva contraseña (mín. 12)
                 <input
                   type="password"
                   value={password}
