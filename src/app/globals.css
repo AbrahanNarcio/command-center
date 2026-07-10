@@ -1401,11 +1401,11 @@ textarea {
   position: absolute;
   z-index: 3;
   pointer-events: none;
-  background: #12141d;
+  background: var(--elevated);
   border: 1px solid var(--line-2);
   border-radius: 9px;
   padding: 7px 11px;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow);
   white-space: nowrap;
   display: grid;
   gap: 1px;
