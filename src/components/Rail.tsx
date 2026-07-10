@@ -23,16 +23,33 @@ import PasswordModal from "@/components/PasswordModal";
 import ThemeSelector from "@/components/ThemeSelector";
 import { Account } from "@/lib/types";
 
-const NAV: { id: ViewId; icon: React.ReactNode; label: string; adminOnly: boolean }[] = [
-  { id: "summary", icon: <Gauge />, label: "Resumen", adminOnly: false },
-  { id: "plan", icon: <ListChecks />, label: "Planeación", adminOnly: false },
-  { id: "overview", icon: <LayoutDashboard />, label: "Control", adminOnly: false },
-  { id: "pipeline", icon: <SquareKanban />, label: "Pipeline", adminOnly: false },
-  { id: "calendar", icon: <CalendarDays />, label: "Calendario", adminOnly: false },
-  { id: "reports", icon: <FileText />, label: "Reportes", adminOnly: false },
-  { id: "generator", icon: <Sparkles />, label: "Generador", adminOnly: true },
-  { id: "sources", icon: <Database />, label: "Fuentes", adminOnly: true },
-  { id: "settings", icon: <AtSign />, label: "IG Ready", adminOnly: true },
+type NavItem = { id: ViewId; icon: React.ReactNode; label: string };
+
+/* El menú en dos secciones: lo que ve el cliente y lo interno del equipo.
+   El cliente (solo lectura) ve únicamente la primera; editor y admin ven
+   ambas (el editor, acotado a su propia cuenta, como en toda la app). */
+const NAV_GROUPS: { label: string; internal: boolean; items: NavItem[] }[] = [
+  {
+    label: "Vistas para el cliente",
+    internal: false,
+    items: [
+      { id: "summary", icon: <Gauge />, label: "Resumen" },
+      { id: "plan", icon: <ListChecks />, label: "Planeación" },
+      { id: "overview", icon: <LayoutDashboard />, label: "Control" },
+      { id: "reports", icon: <FileText />, label: "Reportes" },
+    ],
+  },
+  {
+    label: "Administración",
+    internal: true,
+    items: [
+      { id: "pipeline", icon: <SquareKanban />, label: "Pipeline" },
+      { id: "calendar", icon: <CalendarDays />, label: "Calendario" },
+      { id: "generator", icon: <Sparkles />, label: "Generador" },
+      { id: "sources", icon: <Database />, label: "Fuentes" },
+      { id: "settings", icon: <AtSign />, label: "IG Ready" },
+    ],
+  },
 ];
 
 export default function Rail({ view, setView }: { view: ViewId; setView: (v: ViewId) => void }) {
@@ -42,7 +59,7 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
   const [modal, setModal] = useState<null | { account?: Account | null }>(null);
   const [passModal, setPassModal] = useState(false);
 
-  const nav = NAV.filter((item) => canEdit || !item.adminOnly);
+  const groups = NAV_GROUPS.filter((g) => canEdit || !g.internal);
 
   return (
     <aside className="rail">
@@ -90,16 +107,21 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
       </div>
 
       <nav className="nav" aria-label="Vistas">
-        {nav.map((item) => (
-          <button
-            key={item.id}
-            className={view === item.id ? "active" : ""}
-            onClick={() => setView(item.id)}
-            title={item.label}
-          >
-            <i>{item.icon}</i>
-            <b>{item.label}</b>
-          </button>
+        {groups.map((group) => (
+          <div className="nav-group" key={group.label}>
+            <p className="eyebrow nav-group-label">{group.label}</p>
+            {group.items.map((item) => (
+              <button
+                key={item.id}
+                className={`nav-${item.id}${view === item.id ? " active" : ""}`}
+                onClick={() => setView(item.id)}
+                title={item.label}
+              >
+                <i>{item.icon}</i>
+                <b>{item.label}</b>
+              </button>
+            ))}
+          </div>
         ))}
       </nav>
 

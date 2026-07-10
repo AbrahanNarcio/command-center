@@ -275,15 +275,15 @@ body {
   box-shadow: inset 0 2px 4px rgba(10, 70, 120, 0.12), 0 0 0 3px rgba(64, 170, 235, 0.3);
 }
 
-:root[data-theme="aero"] .nav button:nth-child(1) i { --ic: #1d9ee6; } /* Resumen: azul cielo */
-:root[data-theme="aero"] .nav button:nth-child(2) i { --ic: #16a45c; } /* Planeación: verde */
-:root[data-theme="aero"] .nav button:nth-child(3) i { --ic: #4a5fd9; } /* Control: índigo */
-:root[data-theme="aero"] .nav button:nth-child(4) i { --ic: #7c53e0; } /* Pipeline: violeta */
-:root[data-theme="aero"] .nav button:nth-child(5) i { --ic: #f08c1a; } /* Calendario: naranja */
-:root[data-theme="aero"] .nav button:nth-child(6) i { --ic: #0fa8b8; } /* Reportes: teal */
-:root[data-theme="aero"] .nav button:nth-child(7) i { --ic: #e0489e; } /* Generador: rosa */
-:root[data-theme="aero"] .nav button:nth-child(8) i { --ic: #c9971d; } /* Fuentes: dorado */
-:root[data-theme="aero"] .nav button:nth-child(9) i { --ic: #d94a3a; } /* IG Ready: coral */
+:root[data-theme="aero"] .nav .nav-summary i { --ic: #1d9ee6; } /* Resumen: azul cielo */
+:root[data-theme="aero"] .nav .nav-plan i { --ic: #16a45c; } /* Planeación: verde */
+:root[data-theme="aero"] .nav .nav-overview i { --ic: #4a5fd9; } /* Control: índigo */
+:root[data-theme="aero"] .nav .nav-reports i { --ic: #0fa8b8; } /* Reportes: teal */
+:root[data-theme="aero"] .nav .nav-pipeline i { --ic: #7c53e0; } /* Pipeline: violeta */
+:root[data-theme="aero"] .nav .nav-calendar i { --ic: #f08c1a; } /* Calendario: naranja */
+:root[data-theme="aero"] .nav .nav-generator i { --ic: #e0489e; } /* Generador: rosa */
+:root[data-theme="aero"] .nav .nav-sources i { --ic: #c9971d; } /* Fuentes: dorado */
+:root[data-theme="aero"] .nav .nav-settings i { --ic: #d94a3a; } /* IG Ready: coral */
 
 /* Transición suave solo al conmutar el tema (la activa el selector). */
 .theme-anim,
@@ -463,7 +463,17 @@ button {
 
 .nav {
   display: grid;
+  gap: 16px;
+}
+
+.nav-group {
+  display: grid;
   gap: 8px;
+}
+
+.nav-group-label {
+  margin: 0 0 2px;
+  padding-left: 11px;
 }
 
 .nav button {

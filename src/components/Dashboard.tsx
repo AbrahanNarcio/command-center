@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AtSign, RotateCcw, Search, Sparkles, SquareKanban } from "lucide-react";
+import { AtSign, ListChecks, RotateCcw, Search, Sparkles, SquareKanban } from "lucide-react";
 import { useStore } from "@/lib/store-context";
 import { FORMATS, PieceFormat } from "@/lib/types";
 import { ViewId } from "@/lib/views";
@@ -169,9 +169,15 @@ export default function Dashboard() {
                     <Sparkles size={15} /> Crear pieza
                   </button>
                 )}
-                <button className="button" onClick={() => setView("pipeline")}>
-                  <SquareKanban size={15} /> Ver pipeline
-                </button>
+                {canEdit ? (
+                  <button className="button" onClick={() => setView("pipeline")}>
+                    <SquareKanban size={15} /> Ver pipeline
+                  </button>
+                ) : (
+                  <button className="button" onClick={() => setView("plan")}>
+                    <ListChecks size={15} /> Ver planeación
+                  </button>
+                )}
                 {canEdit && (
                   <button className="button" onClick={() => setView("settings")}>
                     <AtSign size={15} /> IG Ready
@@ -261,8 +267,8 @@ export default function Dashboard() {
           {view === "summary" && <SummaryView go={setView} />}
           {view === "plan" && <PlanView />}
           {view === "overview" && <OverviewView pieces={accountPieces} />}
-          {view === "pipeline" && <PipelineView pieces={filtered} />}
-          {view === "calendar" && <CalendarView pieces={filtered} />}
+          {view === "pipeline" && canEdit && <PipelineView pieces={filtered} />}
+          {view === "calendar" && canEdit && <CalendarView pieces={filtered} />}
           {view === "reports" && <ReportsView />}
           {view === "generator" && canEdit && <GeneratorView />}
           {view === "sources" && canEdit && <SourcesView />}
