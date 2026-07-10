@@ -18,6 +18,13 @@ const RANGE_OPTIONS: { key: string; label: string }[] = [
   { key: "30", label: "30 días" },
 ];
 
+// Contra qué se compara el cambio (▲▼) en cada rango: el periodo anterior del mismo tamaño.
+const COMPARISON: Record<string, string> = {
+  "1": "vs. ayer",
+  "7": "vs. los 7 días anteriores",
+  "30": "vs. los 30 días anteriores",
+};
+
 const FOLLOWER_SERIES: { key: "total" | "gained" | "lost" | "net"; label: string; color?: string }[] = [
   { key: "total", label: "Totales" },
   { key: "gained", label: "Ganados", color: "#3adf85" },
@@ -119,6 +126,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
           <h2>Métricas · actualizado {relativeTime(activeMetrics.updatedAt)}</h2>
           <p style={{ color: "var(--muted)", fontSize: 12, margin: "6px 0 0" }}>
             Fuente: API oficial de Instagram. Cada tarjeta indica qué mide y de qué periodo.
+            {hasRanges && <> El cambio ▲▼ compara {COMPARISON[range]}.</>}
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -156,7 +164,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
             {kpi.delta ? (
               <div
                 className={`delta${/^[+-]/.test(kpi.delta) ? (kpi.delta.startsWith("-") ? " down" : " up") : ""}`}
-                title="Contra el periodo anterior del mismo tamaño"
+                title={`Cambio ${COMPARISON[range] ?? "vs. el periodo anterior"}`}
               >
                 {kpi.delta.startsWith("-") ? "▼" : kpi.delta.startsWith("+") ? "▲" : ""} {kpi.delta}
               </div>
