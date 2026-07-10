@@ -235,6 +235,38 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 8px 22px rgba(15, 110, 185, 0.38);
 }
 
+/* Iconos del menú al estilo de la época: tiles glossy de color con el trazo
+   en blanco, cada sección con su propio tono (como los sets de iconos de Vista).
+   Solo en aero; en los demás temas los iconos no cambian. */
+:root[data-theme="aero"] .nav i {
+  --ic: #1d9ee6;
+  color: #fff;
+  border-color: color-mix(in srgb, var(--ic) 62%, #063a5e);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.85),
+      rgba(255, 255, 255, 0.3) 46%,
+      rgba(255, 255, 255, 0) 54%,
+      rgba(255, 255, 255, 0.25)
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ic) 80%, #ffffff),
+      var(--ic) 55%,
+      color-mix(in srgb, var(--ic) 72%, #033a63)
+    );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 5px rgba(10, 70, 120, 0.32);
+}
+
+:root[data-theme="aero"] .nav button:nth-child(1) i { --ic: #1d9ee6; } /* Control: azul cielo */
+:root[data-theme="aero"] .nav button:nth-child(2) i { --ic: #7c53e0; } /* Pipeline: violeta */
+:root[data-theme="aero"] .nav button:nth-child(3) i { --ic: #f08c1a; } /* Calendario: naranja */
+:root[data-theme="aero"] .nav button:nth-child(4) i { --ic: #16a45c; } /* Reportes: verde */
+:root[data-theme="aero"] .nav button:nth-child(5) i { --ic: #e0489e; } /* Generador: rosa */
+:root[data-theme="aero"] .nav button:nth-child(6) i { --ic: #0fa8b8; } /* Fuentes: teal */
+:root[data-theme="aero"] .nav button:nth-child(7) i { --ic: #d94a3a; } /* IG Ready: coral */
+
 /* Transición suave solo al conmutar el tema (la activa el selector). */
 .theme-anim,
 .theme-anim * {
