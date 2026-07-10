@@ -137,6 +137,104 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), var(--shadow);
 }
 
+/* ── Tema aero (Frutiger Aero) ───────────────────────────────────
+   Cielo → agua → pasto con sol y burbujas; superficies blancas glossy
+   con el corte de reflejo clásico; esquinas más redondas. Los acentos
+   se profundizan para leerse sobre el gloss, conservando el código de color. */
+:root[data-theme="aero"] {
+  --tint: 10, 58, 98;
+  --radius: 13px;
+  --bg: #7ec3ef;
+  --bg-2: #ffffff;
+  --rail-bg: rgba(255, 255, 255, 0.62);
+  --panel: rgba(255, 255, 255, 0.56);
+  --sunken: rgba(10, 58, 98, 0.07);
+  --sunken-2: rgba(10, 58, 98, 0.09);
+  --edge: rgba(255, 255, 255, 0.95);
+  --elevated: rgba(255, 255, 255, 0.94);
+  --scrim: rgba(18, 88, 148, 0.45);
+  --text: #093a5e;
+  --muted: #35678f;
+  --soft: #124e7a;
+  --text-inverse: #ffffff;
+  --shadow: 0 16px 40px rgba(15, 90, 150, 0.26);
+  --cyan: #0d6bce;
+  --green: #0c9a55;
+  --lime: #c18400;
+  --amber: #e0700d;
+  --coral: #e43a2e;
+  --pink: #d63384;
+  --violet: #8f3fd1;
+}
+
+/* Fondo: sol arriba a la derecha, burbujas con aro y destello, y el
+   degradado clásico cielo → agua → pasto. */
+:root[data-theme="aero"] body {
+  background:
+    radial-gradient(560px 560px at 86% -8%, rgba(255, 252, 214, 0.95), rgba(255, 246, 190, 0.4) 38%, transparent 68%),
+    radial-gradient(circle 46px at 12% 72%, rgba(255, 255, 255, 0) 30px, rgba(255, 255, 255, 0.5) 34px, rgba(255, 255, 255, 0) 39px),
+    radial-gradient(circle 12px at 13% 69.5%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 26px at 30% 22%, rgba(255, 255, 255, 0) 16px, rgba(255, 255, 255, 0.38) 19px, rgba(255, 255, 255, 0) 23px),
+    radial-gradient(circle 60px at 70% 56%, rgba(255, 255, 255, 0) 42px, rgba(255, 255, 255, 0.42) 47px, rgba(255, 255, 255, 0) 53px),
+    radial-gradient(circle 15px at 72.6% 52.8%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 20px at 88% 78%, rgba(255, 255, 255, 0) 12px, rgba(255, 255, 255, 0.38) 14.5px, rgba(255, 255, 255, 0) 18px),
+    radial-gradient(circle 34px at 46% 88%, rgba(255, 255, 255, 0) 24px, rgba(255, 255, 255, 0.4) 27px, rgba(255, 255, 255, 0) 31px),
+    linear-gradient(180deg, #a8ddff 0%, #6cbdf4 34%, #4fc3e8 60%, #5fd8b8 80%, #71d98b 100%);
+  background-attachment: fixed;
+}
+
+/* Superficies glossy: reflejo blanco con el corte clásico a media altura. */
+:root[data-theme="aero"] .panel,
+:root[data-theme="aero"] .hero,
+:root[data-theme="aero"] .metric-card,
+:root[data-theme="aero"] .chart-card,
+:root[data-theme="aero"] .command-card,
+:root[data-theme="aero"] .source-card,
+:root[data-theme="aero"] .mini-card,
+:root[data-theme="aero"] .script-card,
+:root[data-theme="aero"] .report-row,
+:root[data-theme="aero"] .month-cell:not(.empty),
+:root[data-theme="aero"] .day,
+:root[data-theme="aero"] .modal,
+:root[data-theme="aero"] .toast {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.92),
+    rgba(255, 255, 255, 0.5) 45%,
+    rgba(255, 255, 255, 0.26) 55%,
+    rgba(255, 255, 255, 0.52)
+  );
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  border-color: rgba(255, 255, 255, 0.92);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), var(--shadow);
+}
+
+/* Botones y chips glossy (el gloss se pinta encima de su color base). */
+:root[data-theme="aero"] .button,
+:root[data-theme="aero"] .icon-button,
+:root[data-theme="aero"] .chip,
+:root[data-theme="aero"] select {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 255, 255, 0.42) 46%,
+    rgba(255, 255, 255, 0.08) 54%,
+    rgba(255, 255, 255, 0.38)
+  );
+  border-color: rgba(12, 90, 150, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 2px 6px rgba(15, 90, 150, 0.2);
+}
+
+/* Primario aero: el botón aqua glossy clásico, con texto blanco y sombra. */
+:root[data-theme="aero"] .button.primary {
+  background: linear-gradient(180deg, #9fe0ff, #37a9ef 46%, #0f86dd 54%, #54c6f4);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(6, 55, 100, 0.6);
+  border-color: rgba(9, 80, 140, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 8px 22px rgba(15, 110, 185, 0.38);
+}
+
 /* Transición suave solo al conmutar el tema (la activa el selector). */
 .theme-anim,
 .theme-anim * {
@@ -373,7 +471,8 @@ button {
 
 /* Selector de tema (oscuro / claro / glass). */
 .theme-seg {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 5px;
   margin-top: 10px;
 }
@@ -633,7 +732,9 @@ textarea {
 /* Solo en tema claro: el botón de IA lleva texto negro sobre su barrido violeta
    (el blanco no se aprecia bien). El tema oscuro se queda como está. */
 :root[data-theme="light"] .button.ai:hover:not(:disabled),
-:root[data-theme="light"] .button.ai:focus-visible {
+:root[data-theme="light"] .button.ai:focus-visible,
+:root[data-theme="aero"] .button.ai:hover:not(:disabled),
+:root[data-theme="aero"] .button.ai:focus-visible {
   color: #0c0f17;
 }
 
@@ -643,6 +744,14 @@ textarea {
   color: var(--violet);
   border-color: color-mix(in srgb, var(--violet) 55%, var(--line));
   background: color-mix(in srgb, var(--violet) 14%, transparent);
+}
+
+/* Aero: mismo violeta profundo en reposo, pero con background-color (no el
+   shorthand) para conservar el gloss que pinta el tema encima. */
+:root[data-theme="aero"] .button.ai {
+  color: var(--violet);
+  border-color: color-mix(in srgb, var(--violet) 55%, var(--line));
+  background-color: color-mix(in srgb, var(--violet) 14%, transparent);
 }
 
 /* Instagram: base azul, barrido con el degradado de Instagram. */

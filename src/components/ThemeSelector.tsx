@@ -1,23 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GlassWater, Moon, Sun } from "lucide-react";
+import { Droplets, GlassWater, Moon, Sun } from "lucide-react";
 
-type Theme = "dark" | "light" | "glass";
+type Theme = "dark" | "light" | "glass" | "aero";
 
 const THEMES: { id: Theme; label: string; icon: React.ReactNode }[] = [
   { id: "dark", label: "Oscuro", icon: <Moon size={13} /> },
   { id: "light", label: "Claro", icon: <Sun size={13} /> },
   { id: "glass", label: "Glass", icon: <GlassWater size={13} /> },
+  { id: "aero", label: "Aero", icon: <Droplets size={13} /> },
 ];
 
-/** Selector de tema: oscuro (por defecto), claro o glassmorphism. Persiste en localStorage. */
+/** Selector de tema: oscuro (por defecto), claro, glassmorphism o Frutiger Aero. Persiste en localStorage. */
 export default function ThemeSelector() {
   const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
     const t = document.documentElement.getAttribute("data-theme");
-    setTheme(t === "light" || t === "glass" ? t : "dark");
+    setTheme(t === "light" || t === "glass" || t === "aero" ? t : "dark");
   }, []);
 
   const pick = (next: Theme) => {
