@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store-context";
 import { FORMATS, Piece, PieceFormat } from "@/lib/types";
-import { relativeTime } from "@/lib/utils";
+import { accentVar, relativeTime } from "@/lib/utils";
 import PostCard from "@/components/PostCard";
 import { Donut, LineChart } from "@/components/charts";
 
@@ -162,7 +162,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
           <article
             className="metric-card"
             key={`${kpi.label}-${range}`}
-            style={{ ["--accent" as string]: kpi.color, ["--i" as string]: i }}
+            style={{ ["--accent" as string]: accentVar(kpi.color), ["--i" as string]: i }}
           >
             <span>{kpi.label}</span>
             <strong>{kpi.value}</strong>
@@ -235,7 +235,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
                 key={`${fSeries}-${fRange}`}
                 values={followers.series[fSeries]}
                 labels={followers.dates}
-                color={FOLLOWER_SERIES.find((s) => s.key === fSeries)?.color}
+                color={accentVar(FOLLOWER_SERIES.find((s) => s.key === fSeries)?.color)}
               />
             </>
           ) : (
@@ -258,7 +258,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
                 <div
                   className={`legend-row${mixHover === i ? " on" : ""}`}
                   key={m.label}
-                  style={{ ["--accent" as string]: m.color }}
+                  style={{ ["--accent" as string]: accentVar(m.color) }}
                   onMouseEnter={() => setMixHover(i)}
                   onMouseLeave={() => setMixHover(null)}
                 >
@@ -286,7 +286,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
           </div>
           <div className="bars-chart" style={{ ["--count" as string]: activeMetrics.reachByFormat.length }}>
             {activeMetrics.reachByFormat.map((r, i) => (
-              <div className="bar-col" key={r.label} style={{ ["--accent" as string]: r.color, ["--i" as string]: i }}>
+              <div className="bar-col" key={r.label} style={{ ["--accent" as string]: accentVar(r.color), ["--i" as string]: i }}>
                 <div className="bar-stack">
                   <div className="bar-fill" style={{ height: `${r.pct}%` }} />
                 </div>
@@ -318,7 +318,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
                     <span
                       style={{
                         ["--score" as string]: `${p.pct}%`,
-                        ["--meter" as string]: `linear-gradient(90deg, ${p.color}, rgba(255,255,255,.18))`,
+                        ["--meter" as string]: `linear-gradient(90deg, ${accentVar(p.color)}, rgba(var(--tint),.18))`,
                       }}
                     />
                   </div>
@@ -351,7 +351,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
                     <span
                       style={{
                         ["--score" as string]: `${r.pct}%`,
-                        ["--meter" as string]: `linear-gradient(90deg, ${r.color}, rgba(255,255,255,.18))`,
+                        ["--meter" as string]: `linear-gradient(90deg, ${accentVar(r.color)}, rgba(var(--tint),.18))`,
                       }}
                     />
                   </div>
@@ -380,7 +380,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
         <div className="ret-legend" aria-label="Código de colores por segundos">
           {RET_LEGEND.map((l) => (
             <span className="ret-legend-item" key={l.label}>
-              <span className="ret-legend-dot" style={{ background: l.color }} />
+              <span className="ret-legend-dot" style={{ background: accentVar(l.color) }} />
               {l.label}
             </span>
           ))}
@@ -395,7 +395,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
                 target="_blank"
                 rel="noreferrer"
                 title={r.label}
-                style={{ ["--accent" as string]: r.color, ["--i" as string]: i }}
+                style={{ ["--accent" as string]: accentVar(r.color), ["--i" as string]: i }}
               >
                 {r.thumb ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -408,7 +408,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
                   <span
                     style={{
                       ["--score" as string]: `${r.pct}%`,
-                      ["--meter" as string]: `linear-gradient(90deg, ${r.color}, rgba(255,255,255,.18))`,
+                      ["--meter" as string]: `linear-gradient(90deg, ${accentVar(r.color)}, rgba(var(--tint),.18))`,
                     }}
                   />
                 </div>
@@ -493,7 +493,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
                   <span
                     style={{
                       ["--score" as string]: `${f.pct}%`,
-                      ["--meter" as string]: `linear-gradient(90deg, ${f.color}, rgba(255,255,255,.18))`,
+                      ["--meter" as string]: `linear-gradient(90deg, ${accentVar(f.color)}, rgba(var(--tint),.18))`,
                     }}
                   />
                 </div>
@@ -661,7 +661,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
           </div>
           <div className="insights" style={{ marginTop: 10 }}>
             {activeMetrics.insights.map((ins) => (
-              <div className="insight" key={ins.title} style={{ ["--accent" as string]: ins.color }}>
+              <div className="insight" key={ins.title} style={{ ["--accent" as string]: accentVar(ins.color) }}>
                 <strong>{ins.title}</strong>
                 <p>{ins.text}</p>
               </div>

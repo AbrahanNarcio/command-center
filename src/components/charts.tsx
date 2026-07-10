@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { AccountMetrics } from "@/lib/types";
+import { accentVar } from "@/lib/utils";
 
 const fmtNum = (n: number) => n.toLocaleString("es-MX");
 const fmtDate = (iso: string) =>
@@ -142,7 +143,7 @@ export function Donut({
             cy="60"
             r={DONUT_R}
             fill="none"
-            stroke={s.color}
+            stroke={accentVar(s.color)}
             strokeDasharray={`${Math.max(s.len - 1.5, 0.01)} ${DONUT_C - Math.max(s.len - 1.5, 0.01)}`}
             strokeDashoffset={-s.offset}
             onMouseEnter={() => onHover?.(s.index)}

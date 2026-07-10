@@ -9,6 +9,23 @@ export const PALETTE: [string, string][] = [
   ["#b05ce6", "#7a8cff"],
 ];
 
+/** Mapea un hex del palette de acento a su variable de tema, para que el color
+ *  se adapte al tema claro/oscuro. Cualquier otro color se devuelve intacto. */
+const ACCENT_VARS: Record<string, string> = {
+  "#7a8cff": "var(--cyan)",
+  "#80ffb5": "var(--green)",
+  "#feda75": "var(--lime)",
+  "#ffa14e": "var(--amber)",
+  "#ff5d51": "var(--coral)",
+  "#ff5c9c": "var(--pink)",
+  "#b05ce6": "var(--violet)",
+};
+
+export function accentVar(color: string | undefined): string {
+  if (!color) return "var(--cyan)";
+  return ACCENT_VARS[color.toLowerCase()] ?? color;
+}
+
 export function scoreColor(score: number): string {
   if (score >= 86) return "linear-gradient(90deg, var(--green), var(--lime))";
   if (score >= 74) return "linear-gradient(90deg, var(--amber), var(--green))";

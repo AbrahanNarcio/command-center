@@ -8,6 +8,7 @@ import { trackBusy } from "@/lib/busy";
 import { Donut, LineChart } from "@/components/charts";
 import ModalPortal from "@/components/ModalPortal";
 import KpiIcon from "@/components/KpiIcon";
+import { accentVar } from "@/lib/utils";
 
 function stamp(iso: string): string {
   return new Date(iso).toLocaleString("es-MX", {
@@ -198,7 +199,7 @@ export default function ReportsView() {
 
               <div className="metric-grid report-kpis">
                 {open.data.kpis.map((kpi) => (
-                  <article className="metric-card" key={kpi.label} style={{ ["--accent" as string]: kpi.color }}>
+                  <article className="metric-card" key={kpi.label} style={{ ["--accent" as string]: accentVar(kpi.color) }}>
                     <span>{kpi.label}</span>
                     <strong>{kpi.value}</strong>
                     <p>{kpi.detail}</p>
@@ -231,7 +232,7 @@ export default function ReportsView() {
                     <Donut metrics={open.data} />
                     <div className="legend">
                       {open.data.engagementMix.map((m) => (
-                        <div className="legend-row" key={m.label} style={{ ["--accent" as string]: m.color }}>
+                        <div className="legend-row" key={m.label} style={{ ["--accent" as string]: accentVar(m.color) }}>
                           <span className="legend-dot" />
                           <span>{m.label}</span>
                           <b>{m.value}</b>
@@ -262,7 +263,7 @@ export default function ReportsView() {
                             <span
                               style={{
                                 ["--score" as string]: `${p.pct}%`,
-                                ["--meter" as string]: `linear-gradient(90deg, ${p.color}, rgba(255,255,255,.18))`,
+                                ["--meter" as string]: `linear-gradient(90deg, ${accentVar(p.color)}, rgba(var(--tint),.18))`,
                               }}
                             />
                           </div>
@@ -293,7 +294,7 @@ export default function ReportsView() {
                             <span
                               style={{
                                 ["--score" as string]: `${r.pct}%`,
-                                ["--meter" as string]: `linear-gradient(90deg, ${r.color}, rgba(255,255,255,.18))`,
+                                ["--meter" as string]: `linear-gradient(90deg, ${accentVar(r.color)}, rgba(var(--tint),.18))`,
                               }}
                             />
                           </div>
@@ -323,7 +324,7 @@ export default function ReportsView() {
                           <span
                             style={{
                               ["--score" as string]: `${f.pct}%`,
-                              ["--meter" as string]: `linear-gradient(90deg, ${f.color}, rgba(255,255,255,.18))`,
+                              ["--meter" as string]: `linear-gradient(90deg, ${accentVar(f.color)}, rgba(var(--tint),.18))`,
                             }}
                           />
                         </div>

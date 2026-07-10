@@ -18,12 +18,13 @@ export const STATUSES: PieceStatus[] = ["Idea", "Guion", "Grabado", "Editado", "
 export const FORMATS: PieceFormat[] = ["Reel", "Carrusel", "Historias", "Ad"];
 export const OBJECTIVES: PieceObjective[] = ["DM", "Agenda", "Registro", "Venta", "Tráfico a perfil"];
 export const ANGLES: PieceAngle[] = ["Problema", "Solución", "Producto", "Mentalidad"];
-/** Código de color del ángulo: problema rojo, solución verde, producto azul, mentalidad amarillo. */
+/** Código de color del ángulo: problema rojo, solución verde, producto azul, mentalidad amarillo.
+ *  Referencian variables de tema para que el tono se adapte al modo claro/oscuro. */
 export const ANGLE_COLORS: Record<PieceAngle, string> = {
-  Problema: "#ff5d51",
-  Solución: "#80ffb5",
-  Producto: "#7a8cff",
-  Mentalidad: "#feda75",
+  Problema: "var(--coral)",
+  Solución: "var(--green)",
+  Producto: "var(--cyan)",
+  Mentalidad: "var(--lime)",
 };
 export const DAYS = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"] as const;
 export type Day = (typeof DAYS)[number];
