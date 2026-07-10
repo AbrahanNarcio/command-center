@@ -19,12 +19,15 @@ import {
   Source,
 } from "./types";
 import { browserClient } from "./supabase/browser";
+import { trackBusy } from "./busy";
 
 type ToastAction = { label: string; run: () => void | Promise<void> };
 type Toast = { id: number; text: string; action?: ToastAction };
 
 interface StoreValue {
   loading: boolean;
+  /** Etapa real de la carga inicial, para el splash. */
+  loadingStage: string;
   setupError: string | null;
   accounts: Account[];
   pieces: Piece[];
@@ -68,11 +71,13 @@ interface StoreValue {
 const StoreContext = createContext<StoreValue | null>(null);
 
 async function api<T>(url: string, method: string, body?: unknown): Promise<T> {
-  const res = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  const res = await trackBusy(
+    fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+  );
   if (res.status === 401) {
     window.location.href = "/login";
     throw new Error("No autenticado");
@@ -87,15 +92,18 @@ async function api<T>(url: string, method: string, body?: unknown): Promise<T> {
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [db, setDb] = useState<PublicDb | null>(null);
   const [setupError, setSetupError] = useState<string | null>(null);
+  const [loadingStage, setLoadingStage] = useState("Verificando tu sesión…");
   const [activeId, setActiveId] = useState<string>("");
   const [toast, setToast] = useState<Toast | null>(null);
 
   const load = useCallback(async (selectFirst: boolean) => {
+    if (selectFirst) setLoadingStage("Cargando cuentas y métricas…");
     const res = await fetch("/api/bootstrap");
     if (res.status === 401) {
       window.location.href = "/login";
       return;
     }
+    if (selectFirst) setLoadingStage("Preparando el panel…");
     const data = await res.json();
     if (!res.ok) {
       setSetupError(data?.detail || data?.error || "Error al cargar");
@@ -271,7 +279,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const syncConnection = useCallback(
     async (accountId: string) => {
-      const res = await fetch(`/api/connect/${accountId}/sync?force=1`, { method: "POST" });
+      const res = await trackBusy(fetch(`/api/connect/${accountId}/sync?force=1`, { method: "POST" }));
       const data = await res.json();
       if (!res.ok) {
         notify(data?.error || "No se pudo sincronizar");
@@ -325,6 +333,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const me = db?.me ?? null;
     return {
       loading: db === null && setupError === null,
+      loadingStage,
       setupError,
       accounts,
       pieces,
@@ -365,6 +374,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [
     db,
     setupError,
+    loadingStage,
     activeId,
     toast,
     notify,

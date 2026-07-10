@@ -27,8 +27,8 @@ export default function PipelineView({ pieces }: { pieces: Piece[] }) {
     setDropLane(null);
   };
 
-  const saveEdit = (draft: PieceDraft) => {
-    if (editing) updatePiece(editing.id, draft);
+  const saveEdit = async (draft: PieceDraft) => {
+    if (editing) await updatePiece(editing.id, draft);
     setEditing(null);
   };
 
@@ -105,12 +105,12 @@ export default function PipelineView({ pieces }: { pieces: Piece[] }) {
             setEditing(null);
             setCreating(false);
           }}
-          onSave={(draft) => {
+          onSave={async (draft) => {
             if (creating) {
-              createPiece(draft);
+              await createPiece(draft);
               setCreating(false);
             } else {
-              saveEdit(draft);
+              await saveEdit(draft);
             }
           }}
         />

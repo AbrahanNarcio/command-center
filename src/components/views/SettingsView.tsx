@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dice5, RefreshCw, Unplug } from "lucide-react";
+import { Dice5, Loader2, RefreshCw, Unplug } from "lucide-react";
 import { useStore } from "@/lib/store-context";
 import { relativeTime } from "@/lib/utils";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -155,7 +155,7 @@ function ClientAccessPanel() {
             }
           }}
         >
-          {busy ? "Creando…" : "Crear acceso"}
+          {busy && <Loader2 size={15} className="spin" />} {busy ? "Creando…" : "Crear acceso"}
         </button>
       </div>
 
@@ -362,7 +362,8 @@ export default function SettingsView() {
                   }
                 }}
               >
-                <RefreshCw size={15} /> {busy ? "Sincronizando…" : "Sincronizar ahora"}
+                <RefreshCw size={15} className={busy ? "spin" : undefined} />{" "}
+                {busy ? "Sincronizando…" : "Sincronizar ahora"}
               </button>
               <button
                 className="button danger"

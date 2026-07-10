@@ -13,6 +13,8 @@ import GeneratorView from "@/components/views/GeneratorView";
 import SourcesView from "@/components/views/SourcesView";
 import SettingsView from "@/components/views/SettingsView";
 import ReportsView from "@/components/views/ReportsView";
+import SplashScreen from "@/components/SplashScreen";
+import TopLoader from "@/components/TopLoader";
 
 
 /** "8 jul, 2:32 p.m." en la hora local del dispositivo. */
@@ -39,6 +41,7 @@ function nextSyncLabel(): string {
 export default function Dashboard() {
   const {
     loading,
+    loadingStage,
     setupError,
     activeAccount,
     activeConnection,
@@ -100,7 +103,7 @@ export default function Dashboard() {
   }
 
   if (loading) {
-    return <div className="loading-screen">Cargando command center…</div>;
+    return <SplashScreen stage={loadingStage} />;
   }
 
   // El filtro global de piezas solo tiene sentido donde TODA la vista son piezas.
@@ -109,6 +112,7 @@ export default function Dashboard() {
 
   return (
     <div className="app">
+      <TopLoader />
       <Rail view={view} setView={setView} />
       <main className="main">
         <section className="hero">

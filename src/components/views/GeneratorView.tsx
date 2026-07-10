@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { FORMATS, OBJECTIVES, PieceFormat, PieceObjective } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
 
@@ -35,6 +35,7 @@ export default function GeneratorView() {
   const [objective, setObjective] = useState<PieceObjective>("DM");
   const [edge, setEdge] = useState(4);
   const [seed, setSeed] = useState(0);
+  const [sending, setSending] = useState(false);
 
   const chosenSource = source || accountSources[0]?.name || "Banco de ángulos";
   const score = Math.min(100, 70 + edge * 5);
@@ -138,25 +139,32 @@ export default function GeneratorView() {
           <div className="modal-actions" style={{ justifyContent: "flex-start" }}>
             <button
               className="button primary"
-              onClick={() => {
-                createPiece({
-                  format,
-                  objective,
-                  status: "Guion",
-                  owner: "Generador",
-                  angle: "Problema",
-                  hook: script.hook,
-                  problema: script.lines[1].text,
-                  solucion: script.lines[2].text,
-                  pruebaSocial: script.lines[3].text,
-                  cta: script.lines[4].text,
-                  summary: script.lines[1].text,
-                  score,
-                });
-                notify("Guion enviado al pipeline");
+              disabled={sending}
+              onClick={async () => {
+                setSending(true);
+                try {
+                  await createPiece({
+                    format,
+                    objective,
+                    status: "Guion",
+                    owner: "Generador",
+                    angle: "Problema",
+                    hook: script.hook,
+                    problema: script.lines[1].text,
+                    solucion: script.lines[2].text,
+                    pruebaSocial: script.lines[3].text,
+                    cta: script.lines[4].text,
+                    summary: script.lines[1].text,
+                    score,
+                  });
+                  notify("Guion enviado al pipeline");
+                } finally {
+                  setSending(false);
+                }
               }}
             >
-              Enviar al pipeline
+              {sending && <Loader2 size={15} className="spin" />}{" "}
+              {sending ? "Enviando…" : "Enviar al pipeline"}
             </button>
           </div>
         </div>

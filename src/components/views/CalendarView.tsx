@@ -59,9 +59,9 @@ export default function CalendarView({ pieces }: { pieces: Piece[] }) {
             setEditing(null);
             setCreatingDay(null);
           }}
-          onSave={(draft: PieceDraft) => {
-            if (editing) updatePiece(editing.id, draft);
-            else createPiece({ ...draft, day: creatingDay ?? draft.day });
+          onSave={async (draft: PieceDraft) => {
+            if (editing) await updatePiece(editing.id, draft);
+            else await createPiece({ ...draft, day: creatingDay ?? draft.day });
             setEditing(null);
             setCreatingDay(null);
           }}

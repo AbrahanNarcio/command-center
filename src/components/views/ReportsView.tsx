@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { FileText, Printer, Trash2, X } from "lucide-react";
+import { FileText, Loader2, Printer, Trash2, X } from "lucide-react";
 import { Report } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
+import { trackBusy } from "@/lib/busy";
 import { Donut, LineChart } from "@/components/charts";
 import ModalPortal from "@/components/ModalPortal";
 import KpiIcon from "@/components/KpiIcon";
@@ -56,11 +57,13 @@ export default function ReportsView() {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/reports", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId, note }),
-      });
+      const res = await trackBusy(
+        fetch("/api/reports", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accountId, note }),
+        }),
+      );
       const data = await res.json();
       if (!res.ok) {
         setError(data?.error || "No se pudo generar el reporte.");
@@ -77,17 +80,19 @@ export default function ReportsView() {
 
   const remove = async (id: string) => {
     const removed = reports?.find((r) => r.id === id);
-    await fetch(`/api/reports/${id}`, { method: "DELETE" });
+    await trackBusy(fetch(`/api/reports/${id}`, { method: "DELETE" }));
     notify(
       "Reporte eliminado",
       removed && {
         label: "Restablecer",
         run: async () => {
-          const res = await fetch("/api/reports", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ restore: removed }),
-          });
+          const res = await trackBusy(
+            fetch("/api/reports", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ restore: removed }),
+            }),
+          );
           if (res.ok) notify("Reporte restablecido");
           await load();
         },
@@ -118,7 +123,8 @@ export default function ReportsView() {
               placeholder="Nota opcional (contexto del periodo, campañas activas...)"
             />
             <button className="button primary" disabled={busy || !accountId} onClick={generate}>
-              <FileText size={15} /> {busy ? "Generando…" : "Generar reporte"}
+              {busy ? <Loader2 size={15} className="spin" /> : <FileText size={15} />}{" "}
+              {busy ? "Generando…" : "Generar reporte"}
             </button>
           </div>
         )}

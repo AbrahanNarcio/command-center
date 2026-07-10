@@ -2055,6 +2055,115 @@ input[type="range"] {
   font-weight: 800;
 }
 
+/* ── Splash de carga inicial ─────────────────────────────────── */
+
+.splash {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  animation: splash-in 0.35s ease both;
+}
+
+.splash-ring {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 12px;
+}
+
+.splash-arc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 60deg,
+    rgba(254, 218, 117, 0.35) 90deg,
+    #feda75 150deg,
+    #fa7e1e 210deg,
+    #d62976 265deg,
+    #962fbf 315deg,
+    #4f5bd5 360deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  animation: spin 1.1s linear infinite;
+}
+
+.splash-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  box-shadow: 0 10px 30px rgba(214, 41, 118, 0.3);
+}
+
+.splash-brand {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.splash-stage {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 18px;
+}
+
+@keyframes splash-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Barra de progreso superior (acciones en curso) ──────────── */
+
+.top-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 400;
+  background: linear-gradient(90deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5, #feda75);
+  background-size: 200% 100%;
+  animation:
+    top-loader-slide 1s linear infinite,
+    splash-in 0.2s ease both;
+  pointer-events: none;
+}
+
+@keyframes top-loader-slide {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Icono girando dentro de un botón mientras su acción corre. */
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
 /* ── Reportes ────────────────────────────────────────────────── */
 
 .report-generate {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { Source } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
 import ModalPortal from "@/components/ModalPortal";
@@ -20,6 +20,7 @@ export default function SourcesView() {
   const [tags, setTags] = useState("");
   const [invalid, setInvalid] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const importFile = async (file: File | undefined) => {
     setFileError(null);
@@ -61,7 +62,7 @@ export default function SourcesView() {
     setOpen(true);
   };
 
-  const save = () => {
+  const save = async () => {
     if (!name.trim()) {
       setInvalid(true);
       return;
@@ -76,9 +77,14 @@ export default function SourcesView() {
         .map((t) => t.trim())
         .filter(Boolean),
     };
-    if (editing) updateSource(editing.id, payload);
-    else createSource(payload);
-    setOpen(false);
+    setSaving(true);
+    try {
+      if (editing) await updateSource(editing.id, payload);
+      else await createSource(payload);
+      setOpen(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -187,8 +193,9 @@ export default function SourcesView() {
               <button className="button" onClick={() => setOpen(false)}>
                 Cancelar
               </button>
-              <button className="button primary" onClick={save}>
-                {editing ? "Guardar cambios" : "Agregar fuente"}
+              <button className="button primary" disabled={saving} onClick={save}>
+                {saving && <Loader2 size={15} className="spin" />}{" "}
+                {saving ? "Guardando…" : editing ? "Guardar cambios" : "Agregar fuente"}
               </button>
             </div>
           </div>

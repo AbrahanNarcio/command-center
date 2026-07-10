@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import ModalPortal from "@/components/ModalPortal";
 
 interface Props {
@@ -54,7 +55,7 @@ export default function ConfirmModal({
                 }
               }}
             >
-              {busy ? "Procesando…" : confirmLabel}
+              {busy && <Loader2 size={15} className="spin" />} {busy ? "Procesando…" : confirmLabel}
             </button>
           </div>
         </div>

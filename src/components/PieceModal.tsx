@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import {
   ANGLES,
   ANGLE_COLORS,
@@ -21,7 +22,7 @@ export type PieceDraft = Omit<Piece, "id" | "accountId">;
 interface Props {
   initial?: Piece | null;
   onClose: () => void;
-  onSave: (draft: PieceDraft) => void;
+  onSave: (draft: PieceDraft) => void | Promise<void>;
 }
 
 const EMPTY: PieceDraft = {
@@ -44,6 +45,7 @@ const EMPTY: PieceDraft = {
 export default function PieceModal({ initial, onClose, onSave }: Props) {
   const [draft, setDraft] = useState<PieceDraft>(EMPTY);
   const [missing, setMissing] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (initial) {
@@ -62,7 +64,7 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
 
   const invalid = (field: string) => missing.includes(field);
 
-  const save = () => {
+  const save = async () => {
     // El esqueleto mínimo de un guion: hook, problema, solución y CTA.
     const faltantes: string[] = [];
     if (!draft.hook.trim()) faltantes.push("Hook");
@@ -74,7 +76,12 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
     if (faltantes.length) return;
     // Resumen para la tarjeta: el problema es la mejor síntesis de un vistazo.
     const summary = draft.problema.trim() || draft.solucion.trim() || draft.hook.trim();
-    onSave({ ...draft, summary });
+    setSaving(true);
+    try {
+      await onSave({ ...draft, summary });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -224,8 +231,9 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
           <button className="button" onClick={onClose}>
             Cancelar
           </button>
-          <button className="button primary" onClick={save}>
-            {initial ? "Guardar cambios" : "Crear pieza"}
+          <button className="button primary" disabled={saving} onClick={save}>
+            {saving && <Loader2 size={15} className="spin" />}{" "}
+            {saving ? "Guardando…" : initial ? "Guardar cambios" : "Crear pieza"}
           </button>
         </div>
       </div>
