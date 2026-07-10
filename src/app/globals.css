@@ -456,6 +456,51 @@ textarea {
   background: rgba(255, 93, 81, 0.08);
 }
 
+/* Variante "paint": base azul; al pasar el mouse se pinta con el degradado de
+   Instagram (barrido de izq. a der.) y el texto pasa a blanco. Sin subrayado
+   aunque sea un <a>. */
+.button.paint {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--cyan);
+  text-decoration: none;
+  border: 1px solid color-mix(in srgb, var(--cyan) 55%, var(--line));
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
+}
+
+.button.paint::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(45deg, #feda75, #fa7e1e 30%, #d62976 60%, #962fbf 85%, #4f5bd5);
+  transform: translateX(-101%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.button.paint:hover:not(:disabled)::before,
+.button.paint:focus-visible::before {
+  transform: translateX(0);
+}
+
+.button.paint:hover:not(:disabled),
+.button.paint:focus-visible {
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 12px 38px rgba(214, 41, 118, 0.32);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button.paint::before {
+    transition: none;
+  }
+}
+
 .button.small {
   min-height: 32px;
   padding: 0 10px;

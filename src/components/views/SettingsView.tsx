@@ -317,7 +317,7 @@ export default function SettingsView() {
               Conecta <strong>{activeAccount?.name}</strong> con su cuenta de Instagram Business o Creator. Se
               abre la pantalla oficial de Meta, aceptas permisos, y el token se guarda cifrado en el servidor.
             </p>
-            <a className="button primary" href={`/api/connect/${activeAccount?.id}/start`}>
+            <a className="button paint" href={`/api/connect/${activeAccount?.id}/start`}>
               Conectar Instagram con OAuth
             </a>
           </>
