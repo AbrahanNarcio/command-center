@@ -393,6 +393,21 @@ export interface ClientUser {
   role: string;
 }
 
+/** Correos de todos los usuarios registrados (para el selector de responsable).
+ *  El equipo (admin/editor) primero, luego el resto, ambos por antigüedad. */
+export async function listAssignableEmails(): Promise<string[]> {
+  const { data, error } = await adminClient()
+    .from("profiles")
+    .select("email, role, created_at")
+    .order("created_at");
+  if (error) fail("listAssignableEmails", error);
+  const rows = (data ?? []).filter((r) => r.email);
+  const rank = (role: string | null) => (role === "admin" ? 0 : role === "editor" ? 1 : 2);
+  return rows
+    .sort((a, b) => rank(a.role) - rank(b.role))
+    .map((r) => r.email as string);
+}
+
 export async function listClientUsers(): Promise<ClientUser[]> {
   const { data, error } = await adminClient()
     .from("profiles")

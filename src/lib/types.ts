@@ -201,6 +201,8 @@ export interface PublicDb {
   me: Me;
   /** Admin only: logins de clientes creados (vacío para viewers). */
   clientUsers: ClientUserView[];
+  /** Correos que pueden ser responsables de una pieza (usuarios del sistema). */
+  assignees: string[];
 }
 
 export function toPublicConnection(c: AccountConnection): PublicConnection {

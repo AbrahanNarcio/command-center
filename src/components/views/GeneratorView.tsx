@@ -29,7 +29,7 @@ const HOOK_BANK: Record<PieceObjective, string[]> = {
 };
 
 export default function GeneratorView() {
-  const { accountSources, createPiece, notify } = useStore();
+  const { accountSources, createPiece, notify, me } = useStore();
   const [source, setSource] = useState("");
   const [format, setFormat] = useState<PieceFormat>("Reel");
   const [objective, setObjective] = useState<PieceObjective>("DM");
@@ -147,7 +147,7 @@ export default function GeneratorView() {
                     format,
                     objective,
                     status: "Guion",
-                    owner: "Generador",
+                    owner: me?.email ?? "",
                     angle: "Problema",
                     hook: script.hook,
                     problema: script.lines[1].text,

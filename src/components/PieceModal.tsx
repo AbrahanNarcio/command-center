@@ -16,6 +16,7 @@ import {
   PieceStatus,
   STATUSES,
 } from "@/lib/types";
+import { useStore } from "@/lib/store-context";
 import ModalPortal from "@/components/ModalPortal";
 
 export type PieceDraft = Omit<Piece, "id" | "accountId">;
@@ -47,6 +48,7 @@ const EMPTY: PieceDraft = {
 };
 
 export default function PieceModal({ initial, presetDate, onClose, onSave }: Props) {
+  const { assignees, me } = useStore();
   const [draft, setDraft] = useState<PieceDraft>(EMPTY);
   const [missing, setMissing] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -58,12 +60,19 @@ export default function PieceModal({ initial, presetDate, onClose, onSave }: Pro
       void _accountId;
       setDraft(rest);
     } else if (presetDate) {
-      setDraft({ ...EMPTY, date: presetDate, day: dayFromDate(presetDate) });
+      setDraft({ ...EMPTY, date: presetDate, day: dayFromDate(presetDate), owner: me?.email ?? "" });
     } else {
-      setDraft(EMPTY);
+      // Pieza nueva: responsable = quien la crea, por defecto.
+      setDraft({ ...EMPTY, owner: me?.email ?? "" });
     }
     setMissing([]);
-  }, [initial, presetDate]);
+  }, [initial, presetDate, me]);
+
+  // Opciones del selector: los usuarios del sistema + el responsable actual si es
+  // un valor heredado que ya no está en la lista (para no perderlo al editar).
+  const ownerOptions = Array.from(
+    new Set([draft.owner, ...assignees].filter(Boolean)),
+  );
 
   const set = <K extends keyof PieceDraft>(key: K, value: PieceDraft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
@@ -196,7 +205,14 @@ export default function PieceModal({ initial, presetDate, onClose, onSave }: Pro
             </label>
             <label>
               Responsable
-              <input value={draft.owner} onChange={(e) => set("owner", e.target.value)} placeholder="Nombre" />
+              <select value={draft.owner} onChange={(e) => set("owner", e.target.value)}>
+                <option value="">Sin asignar</option>
+                {ownerOptions.map((email) => (
+                  <option key={email} value={email}>
+                    {email}
+                  </option>
+                ))}
+              </select>
             </label>
             <label>
               Fecha

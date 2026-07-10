@@ -35,6 +35,7 @@ interface StoreValue {
   metrics: AccountMetrics[];
   connections: PublicConnection[];
   clientUsers: ClientUserView[];
+  assignees: string[];
   igConfigured: boolean;
   me: Me | null;
   /** admin o editor: puede mover su(s) cuenta(s). */
@@ -341,6 +342,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       metrics,
       connections,
       clientUsers: db?.clientUsers ?? [],
+      assignees: db?.assignees ?? [],
       igConfigured: db?.igConfigured ?? false,
       me,
       canEdit: me?.role === "admin" || me?.role === "editor",

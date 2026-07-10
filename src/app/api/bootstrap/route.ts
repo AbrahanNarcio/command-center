@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth";
-import { getFullData, listClientUsers } from "@/lib/db";
+import { getFullData, listAssignableEmails, listClientUsers } from "@/lib/db";
 import { supabaseConfigured } from "@/lib/supabase/admin";
 import { PublicDb, toPublicConnection } from "@/lib/types";
 import { isConfigured } from "@/lib/instagram";
@@ -28,6 +28,9 @@ export async function GET() {
 
   const data = await getFullData(isAdmin ? undefined : session.accountId!);
   const clientUsers = isAdmin ? await listClientUsers() : [];
+  // Admin elige responsable entre todos los usuarios; el editor (aislado a su
+  // cuenta) solo puede asignarse a sí mismo.
+  const assignees = isAdmin ? await listAssignableEmails() : [session.email];
 
   const payload: PublicDb = {
     accounts: data.accounts,
@@ -38,6 +41,7 @@ export async function GET() {
     igConfigured: isConfigured(),
     me: { email: session.email, role: session.role },
     clientUsers,
+    assignees,
   };
   return NextResponse.json(payload);
 }
