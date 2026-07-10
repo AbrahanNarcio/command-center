@@ -1858,10 +1858,13 @@ textarea {
 }
 
 .month-add {
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 20px;
   height: 20px;
+  padding: 0;
+  line-height: 0;
   border-radius: 6px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.05);
@@ -1869,6 +1872,10 @@ textarea {
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.month-add svg {
+  display: block;
 }
 
 .month-cell:hover .month-add {
@@ -2000,12 +2007,54 @@ textarea {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-label {
+label,
+.field {
   display: grid;
   gap: 6px;
   color: var(--soft);
   font-size: 12px;
   font-weight: 800;
+}
+
+/* Selector de archivo propio (reemplaza al input file nativo del navegador). */
+.file-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.file-picker .button.small {
+  flex: none;
+}
+
+.file-name {
+  min-width: 0;
+  flex: 1;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.field-hint {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 input[type="range"] {

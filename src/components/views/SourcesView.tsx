@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { Loader2, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { Source } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
 import ModalPortal from "@/components/ModalPortal";
@@ -20,7 +20,9 @@ export default function SourcesView() {
   const [tags, setTags] = useState("");
   const [invalid, setInvalid] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [fileName, setFileName] = useState("");
   const [saving, setSaving] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const importFile = async (file: File | undefined) => {
     setFileError(null);
@@ -50,6 +52,7 @@ export default function SourcesView() {
     setTags("");
     setInvalid(false);
     setFileError(null);
+    setFileName("");
     setOpen(true);
   };
 
@@ -59,6 +62,8 @@ export default function SourcesView() {
     setType(source.type);
     setSummary(source.summary);
     setTags(source.tags.join(", "));
+    setFileError(null);
+    setFileName("");
     setOpen(true);
   };
 
@@ -151,20 +156,30 @@ export default function SourcesView() {
                 Tipo
                 <input value={type} onChange={(e) => setType(e.target.value)} placeholder="Transcripciones" />
               </label>
-              <label>
-                Importar archivo de texto
-                <input
-                  type="file"
-                  accept=".txt,.md,.csv,.srt,.vtt,.text,text/plain"
-                  onChange={(e) => {
-                    importFile(e.target.files?.[0]);
-                    e.target.value = "";
-                  }}
-                />
-                <span style={{ color: "var(--muted)", fontSize: 11, marginTop: 4 }}>
+              <div className="field">
+                <span>Importar archivo de texto</span>
+                <div className="file-picker">
+                  <button type="button" className="button small" onClick={() => fileRef.current?.click()}>
+                    <Upload size={14} /> Elegir archivo
+                  </button>
+                  <span className="file-name">{fileName || "Ningún archivo seleccionado"}</span>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    className="sr-only"
+                    accept=".txt,.md,.csv,.srt,.vtt,.text,text/plain"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      importFile(f);
+                      if (f) setFileName(f.name);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+                <span className="field-hint">
                   .txt, .md, .csv, .srt, .vtt. Se guarda solo el texto, no el archivo.
                 </span>
-              </label>
+              </div>
               {fileError && (
                 <div className="alert" style={{ ["--accent" as string]: "var(--coral)" }}>
                   <p>{fileError}</p>
