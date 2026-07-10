@@ -18,6 +18,7 @@ import { useStore } from "@/lib/store-context";
 import { ViewId } from "@/lib/views";
 import AccountModal from "@/components/AccountModal";
 import PasswordModal from "@/components/PasswordModal";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Account } from "@/lib/types";
 
 const NAV: { id: ViewId; icon: React.ReactNode; label: string; adminOnly: boolean }[] = [
@@ -102,7 +103,8 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
         <div className="signal">{isAdmin ? "ADMIN" : canEdit ? "EDITOR" : "CLIENTE"}</div>
         <strong>{me?.email ?? ""}</strong>
         <span>{isAdmin ? "Acceso total al command center." : canEdit ? "Puedes mover todo lo de tu cuenta." : "Vista de solo lectura de tu cuenta."}</span>
-        <button className="button small" style={{ marginTop: 10, width: "100%" }} onClick={() => setPassModal(true)}>
+        <ThemeToggle />
+        <button className="button small" style={{ marginTop: 7, width: "100%" }} onClick={() => setPassModal(true)}>
           <KeyRound size={13} /> Cambiar contraseña
         </button>
         <button className="button small" style={{ marginTop: 7, width: "100%" }} onClick={signOut}>

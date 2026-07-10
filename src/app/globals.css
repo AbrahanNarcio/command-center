@@ -1,14 +1,24 @@
 :root {
+  /* Superficies (cambian con el tema). --tint es el color del velo sobre las
+     superficies: blanco en oscuro, gris oscuro en claro; casi todo se deriva de él. */
+  --tint: 255, 255, 255;
   --bg: #07080d;
   --bg-2: #10131c;
+  --bg-grad: linear-gradient(135deg, #07080d 0%, #10131c 38%, #111926 68%, #090a10 100%);
+  --rail-bg: rgba(5, 7, 12, 0.84);
   --panel: rgba(18, 22, 32, 0.88);
-  --panel-2: rgba(255, 255, 255, 0.055);
-  --panel-3: rgba(255, 255, 255, 0.085);
-  --line: rgba(255, 255, 255, 0.12);
-  --line-2: rgba(255, 255, 255, 0.22);
+  --panel-2: rgba(var(--tint), 0.055);
+  --panel-3: rgba(var(--tint), 0.085);
+  --line: rgba(var(--tint), 0.12);
+  --line-2: rgba(var(--tint), 0.22);
+  --sunken: rgba(0, 0, 0, 0.22);
+  --sunken-2: rgba(0, 0, 0, 0.28);
+  --edge: #0b0d14;
   --text: #f6f7fb;
   --muted: #9aa3b8;
   --soft: #cad0df;
+  --text-inverse: #061014;
+  /* Acentos: idénticos en ambos temas (el código de color debe respetarse). */
   --cyan: #7a8cff;
   --green: #80ffb5;
   --lime: #feda75;
@@ -18,6 +28,24 @@
   --pink: #ff5c9c;
   --shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
   --radius: 8px;
+}
+
+/* Tema claro: se invierten las superficies; los acentos se conservan. */
+:root[data-theme="light"] {
+  --tint: 24, 32, 52;
+  --bg: #eef0f6;
+  --bg-2: #ffffff;
+  --bg-grad: linear-gradient(135deg, #f7f8fc 0%, #eef0f7 42%, #e9ecf5 70%, #f3f4f9 100%);
+  --rail-bg: rgba(247, 248, 252, 0.88);
+  --panel: rgba(255, 255, 255, 0.9);
+  --sunken: rgba(24, 32, 52, 0.05);
+  --sunken-2: rgba(24, 32, 52, 0.06);
+  --edge: #e3e6ef;
+  --text: #131722;
+  --muted: #5a6478;
+  --soft: #2a3040;
+  --text-inverse: #f6f7fb;
+  --shadow: 0 20px 50px rgba(24, 32, 52, 0.12);
 }
 
 * {
@@ -37,10 +65,17 @@ body {
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   letter-spacing: 0;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(135deg, #07080d 0%, #10131c 38%, #111926 68%, #090a10 100%);
+    linear-gradient(rgba(var(--tint), 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--tint), 0.035) 1px, transparent 1px),
+    var(--bg-grad);
   background-size: 38px 38px, 38px 38px, auto;
+}
+
+/* Transición suave solo al conmutar el tema (la activa el toggle). */
+.theme-anim,
+.theme-anim * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease,
+    box-shadow 0.3s ease !important;
 }
 
 button,
@@ -66,7 +101,7 @@ button {
   height: 100vh;
   padding: 18px;
   border-right: 1px solid var(--line);
-  background: rgba(5, 7, 12, 0.84);
+  background: var(--rail-bg);
   backdrop-filter: blur(18px);
   display: flex;
   flex-direction: column;
@@ -144,7 +179,7 @@ button {
   height: 100%;
   border-radius: 999px;
   object-fit: cover;
-  border: 2px solid #0a0c12;
+  border: 2px solid var(--edge);
   display: block;
 }
 
@@ -258,7 +293,7 @@ button {
   font-style: normal;
   font-size: 12px;
   font-weight: 900;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--tint), 0.08);
   border: 1px solid var(--line);
 }
 
@@ -301,7 +336,7 @@ button {
   background:
     linear-gradient(110deg, rgba(122, 140, 255, 0.16), transparent 36%),
     linear-gradient(250deg, rgba(214, 41, 118, 0.2), transparent 34%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035));
+    linear-gradient(135deg, rgba(var(--tint), 0.1), rgba(var(--tint), 0.035));
   box-shadow: var(--shadow);
   overflow: hidden;
   position: relative;
@@ -312,8 +347,8 @@ button {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(90deg, rgba(var(--tint), 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(var(--tint), 0.04) 1px, transparent 1px);
   background-size: 54px 54px;
   mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
   pointer-events: none;
@@ -432,7 +467,7 @@ input,
 textarea {
   border-radius: var(--radius);
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(var(--tint), 0.07);
   color: var(--text);
 }
 
@@ -587,7 +622,7 @@ textarea {
 .command-card {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--sunken);
   padding: 13px;
 }
 
@@ -603,7 +638,7 @@ textarea {
 .pulse-bar {
   height: 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--tint), 0.08);
   overflow: hidden;
 }
 
@@ -640,7 +675,7 @@ textarea {
 }
 
 .chip.active {
-  color: #061014;
+  color: var(--text-inverse);
   background: var(--text);
 }
 
@@ -731,7 +766,7 @@ textarea {
   grid-template-columns: 96px 1fr;
   gap: 12px;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.055);
+  background: rgba(var(--tint), 0.055);
   box-shadow: none;
 }
 
@@ -740,8 +775,8 @@ textarea {
   border-radius: var(--radius);
   background:
     linear-gradient(145deg, var(--a), transparent 58%),
-    linear-gradient(35deg, var(--b), rgba(255, 255, 255, 0.08));
-  border: 1px solid rgba(255, 255, 255, 0.12);
+    linear-gradient(35deg, var(--b), rgba(var(--tint), 0.08));
+  border: 1px solid rgba(var(--tint), 0.12);
   position: relative;
   overflow: hidden;
 }
@@ -750,7 +785,7 @@ textarea {
   content: "";
   position: absolute;
   inset: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(var(--tint), 0.22);
   border-radius: 6px;
 }
 
@@ -771,7 +806,7 @@ textarea {
   min-height: 24px;
   border-radius: 999px;
   padding: 0 8px;
-  color: #061014;
+  color: var(--text-inverse);
   background: var(--soft);
   font-size: 11px;
   font-weight: 900;
@@ -818,7 +853,7 @@ textarea {
 
 .status {
   color: var(--soft);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--tint), 0.08);
   border: 1px solid var(--line);
 }
 
@@ -854,7 +889,7 @@ textarea {
   flex: 1;
   height: 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(var(--tint), 0.09);
   overflow: hidden;
 }
 
@@ -885,7 +920,7 @@ textarea {
   min-height: 28px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--tint), 0.06);
   color: var(--soft);
   font-size: 11px;
   font-weight: 800;
@@ -907,7 +942,7 @@ textarea {
   border: 1px solid var(--line);
   border-left: 3px solid var(--accent);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.055);
+  background: rgba(var(--tint), 0.055);
   padding: 12px;
 }
 
@@ -942,7 +977,7 @@ textarea {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035)),
+    linear-gradient(145deg, rgba(var(--tint), 0.1), rgba(var(--tint), 0.035)),
     var(--panel);
   box-shadow: var(--shadow);
   padding: 14px;
@@ -1093,7 +1128,7 @@ textarea {
 .bar-fill {
   min-height: 10px;
   border-radius: 7px 7px 0 0;
-  background: linear-gradient(180deg, var(--accent), rgba(255, 255, 255, 0.1));
+  background: linear-gradient(180deg, var(--accent), rgba(var(--tint), 0.1));
   box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
@@ -1120,8 +1155,8 @@ textarea {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
-    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    linear-gradient(rgba(var(--tint), 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--tint), 0.035) 1px, transparent 1px);
   background-size: 100% 25%, 12.5% 100%;
   overflow: hidden;
 }
@@ -1142,9 +1177,9 @@ textarea {
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  border: 2px solid #0b0d14;
+  border: 2px solid var(--edge);
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 14px rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 14px rgba(var(--tint), 0.35);
   pointer-events: none;
   z-index: 2;
 }
@@ -1211,7 +1246,7 @@ textarea {
 .donut-seg:hover,
 .donut-seg.on {
   stroke-width: 22;
-  filter: brightness(1.12) drop-shadow(0 0 8px rgba(255, 255, 255, 0.22));
+  filter: brightness(1.12) drop-shadow(0 0 8px rgba(var(--tint), 0.22));
 }
 
 .donut-seg.off {
@@ -1225,7 +1260,7 @@ textarea {
   display: grid;
   place-items: center;
   color: var(--text);
-  background: #0b0d14;
+  background: var(--edge);
   border: 1px solid var(--line);
   font-weight: 900;
 }
@@ -1250,7 +1285,7 @@ textarea {
 
 .legend-row:hover,
 .legend-row.on {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(var(--tint), 0.07);
   color: var(--text);
   transform: translateX(2px);
 }
@@ -1278,7 +1313,7 @@ textarea {
 .mini-metric {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.055);
+  background: rgba(var(--tint), 0.055);
   padding: 12px;
 }
 
@@ -1313,7 +1348,7 @@ textarea {
 .funnel-step {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.055);
+  background: rgba(var(--tint), 0.055);
   padding: 11px;
 }
 
@@ -1343,7 +1378,7 @@ textarea {
   gap: 7px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(var(--tint), 0.05);
   color: var(--soft);
   font-size: 13px;
   font-weight: 800;
@@ -1425,7 +1460,7 @@ textarea {
   gap: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.045);
+  background: rgba(var(--tint), 0.045);
   padding: 8px 14px 8px 8px;
   color: var(--soft);
   font-size: 13px;
@@ -1434,7 +1469,7 @@ textarea {
 
 .reel-ret-row:hover {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
-  background: rgba(255, 255, 255, 0.085);
+  background: rgba(var(--tint), 0.085);
   transform: translateY(-1px);
   box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 12%, transparent);
 }
@@ -1446,7 +1481,7 @@ textarea {
   border-radius: 8px;
   border: 1px solid var(--line);
   display: block;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--tint), 0.06);
 }
 
 .reel-ret-caption {
@@ -1482,7 +1517,7 @@ textarea {
   white-space: nowrap;
   border: 1px solid var(--line-2);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--tint), 0.06);
   color: var(--soft);
   font-size: 12px;
   font-weight: 800;
@@ -1509,7 +1544,7 @@ textarea {
   min-width: 0;
   overflow-x: auto;
   white-space: nowrap;
-  background: rgba(0, 0, 0, 0.28);
+  background: var(--sunken-2);
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 7px 10px;
@@ -1530,14 +1565,14 @@ textarea {
   gap: 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.045);
+  background: rgba(var(--tint), 0.045);
   padding: 11px 14px;
   transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
 }
 
 .health-row:hover {
   border-color: var(--line-2);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--tint), 0.08);
   transform: translateY(-1px);
 }
 
@@ -1593,7 +1628,7 @@ textarea {
   gap: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.045);
+  background: rgba(var(--tint), 0.045);
   padding: 10px 14px;
   color: var(--soft);
   font-size: 13px;
@@ -1602,7 +1637,7 @@ textarea {
 
 .story-row:hover {
   border-color: var(--line-2);
-  background: rgba(255, 255, 255, 0.085);
+  background: rgba(var(--tint), 0.085);
   transform: translateY(-1px);
 }
 
@@ -1653,7 +1688,7 @@ textarea {
   min-height: 54px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--cyan) calc(var(--heat) * 1%), rgba(255, 255, 255, 0.045));
+  background: color-mix(in srgb, var(--cyan) calc(var(--heat) * 1%), rgba(var(--tint), 0.045));
   display: grid;
   align-content: center;
   justify-items: center;
@@ -1690,7 +1725,7 @@ textarea {
   border-radius: var(--radius);
   overflow: hidden;
   display: block;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(var(--tint), 0.05);
 }
 
 .post-thumb img {
@@ -1740,7 +1775,7 @@ textarea {
 .lane {
   min-height: 620px;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.045);
+  background: rgba(var(--tint), 0.045);
   box-shadow: none;
 }
 
@@ -1818,7 +1853,7 @@ textarea {
   min-height: 116px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(var(--tint), 0.03);
   padding: 7px;
   display: flex;
   flex-direction: column;
@@ -1867,7 +1902,7 @@ textarea {
   line-height: 0;
   border-radius: 6px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(var(--tint), 0.05);
   color: var(--muted);
   cursor: pointer;
   opacity: 0;
@@ -1903,7 +1938,7 @@ textarea {
   border: none;
   border-left: 3px solid var(--angle, var(--cyan));
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--tint), 0.06);
   padding: 4px 7px;
   cursor: pointer;
   min-width: 0;
@@ -1911,7 +1946,7 @@ textarea {
 }
 
 .month-chip:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(var(--tint), 0.12);
   transform: translateX(1px);
 }
 
@@ -1956,7 +1991,7 @@ textarea {
 .day {
   min-height: 540px;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.045);
+  background: rgba(var(--tint), 0.045);
   box-shadow: none;
 }
 
@@ -1968,7 +2003,7 @@ textarea {
 .calendar-item {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(var(--tint), 0.07);
   padding: 10px;
   margin-bottom: 9px;
   cursor: pointer;
@@ -2070,7 +2105,7 @@ input[type="range"] {
 .script-card {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.055);
+  background: rgba(var(--tint), 0.055);
   padding: 16px;
 }
 
@@ -2087,7 +2122,7 @@ input[type="range"] {
 .source-card {
   padding: 16px;
   min-height: 210px;
-  background: rgba(255, 255, 255, 0.055);
+  background: rgba(var(--tint), 0.055);
   box-shadow: none;
   position: relative;
 }
@@ -2152,7 +2187,7 @@ input[type="range"] {
   min-height: 42px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.055);
+  background: rgba(var(--tint), 0.055);
   padding: 0 10px;
   color: var(--soft);
 }
@@ -2520,7 +2555,7 @@ input[type="range"] {
 .report-row {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.055);
+  background: rgba(var(--tint), 0.055);
   padding: 12px 14px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
@@ -2696,7 +2731,7 @@ input[type="range"] {
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(var(--tint), 0.05);
 }
 
 /* ── Animaciones ─────────────────────────────────────────────── */
@@ -2918,7 +2953,7 @@ input[type="range"] {
 .funnel-step:hover,
 .mini-metric:hover {
   border-color: var(--line-2);
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(var(--tint), 0.09);
   transform: translateY(-1px);
 }
 
@@ -2944,7 +2979,7 @@ input[type="range"] {
 .insight:hover {
   transform: translateX(3px);
   border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--tint), 0.08);
 }
 
 .post-card:hover,

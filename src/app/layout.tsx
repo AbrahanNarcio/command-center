@@ -19,7 +19,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={inter.variable}>
+    <html lang="es" className={inter.variable} suppressHydrationWarning>
+      <head>
+        {/* Aplica el tema guardado antes de pintar, para no parpadear. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}",
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );
