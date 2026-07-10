@@ -6,6 +6,7 @@ import {
   ANGLES,
   ANGLE_COLORS,
   DAYS,
+  dayFromDate,
   FORMATS,
   OBJECTIVES,
   Piece,
@@ -21,6 +22,8 @@ export type PieceDraft = Omit<Piece, "id" | "accountId">;
 
 interface Props {
   initial?: Piece | null;
+  /** Fecha YYYY-MM-DD para precargar al CREAR desde el calendario mensual. */
+  presetDate?: string;
   onClose: () => void;
   onSave: (draft: PieceDraft) => void | Promise<void>;
 }
@@ -32,6 +35,7 @@ const EMPTY: PieceDraft = {
   day: "Lun",
   time: "10:00",
   objective: "DM",
+  date: "",
   angle: "Problema",
   hook: "",
   problema: "",
@@ -42,7 +46,7 @@ const EMPTY: PieceDraft = {
   score: 70,
 };
 
-export default function PieceModal({ initial, onClose, onSave }: Props) {
+export default function PieceModal({ initial, presetDate, onClose, onSave }: Props) {
   const [draft, setDraft] = useState<PieceDraft>(EMPTY);
   const [missing, setMissing] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -53,11 +57,13 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
       void _id;
       void _accountId;
       setDraft(rest);
+    } else if (presetDate) {
+      setDraft({ ...EMPTY, date: presetDate, day: dayFromDate(presetDate) });
     } else {
       setDraft(EMPTY);
     }
     setMissing([]);
-  }, [initial]);
+  }, [initial, presetDate]);
 
   const set = <K extends keyof PieceDraft>(key: K, value: PieceDraft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
@@ -193,12 +199,36 @@ export default function PieceModal({ initial, onClose, onSave }: Props) {
               <input value={draft.owner} onChange={(e) => set("owner", e.target.value)} placeholder="Nombre" />
             </label>
             <label>
+              Fecha
+              <input
+                type="date"
+                value={draft.date ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  // Con fecha, el día de la semana se deriva solo (coherencia con el calendario).
+                  setDraft((d) => ({ ...d, date: v, day: v ? dayFromDate(v) : d.day }));
+                }}
+              />
+              <span style={{ color: "var(--muted)", fontSize: 11, fontWeight: 600 }}>
+                {draft.date ? `Cae en ${draft.day}. La ubica en el calendario mensual.` : "Opcional. Sin fecha, solo vive en la semana."}
+              </span>
+            </label>
+            <label>
               Día
-              <select value={draft.day} onChange={(e) => set("day", e.target.value as (typeof DAYS)[number])}>
+              <select
+                value={draft.day}
+                disabled={!!draft.date}
+                onChange={(e) => set("day", e.target.value as (typeof DAYS)[number])}
+              >
                 {DAYS.map((d) => (
                   <option key={d}>{d}</option>
                 ))}
               </select>
+              {draft.date && (
+                <span style={{ color: "var(--muted)", fontSize: 11, fontWeight: 600 }}>
+                  Se toma de la fecha.
+                </span>
+              )}
             </label>
             <label>
               Hora *

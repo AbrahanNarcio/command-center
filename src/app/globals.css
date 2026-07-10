@@ -759,8 +759,9 @@ textarea {
 }
 
 .card-top {
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 7px;
   margin-bottom: 9px;
 }
 
@@ -776,20 +777,43 @@ textarea {
   font-weight: 900;
 }
 
+/* Badges de formato: mismo lenguaje que el de ángulo (punto de color +
+   fondo tenue + texto claro), en vez de texto negro sobre color sólido. */
+.badge.reel,
+.badge.carrusel,
+.badge.historias,
+.badge.ad {
+  gap: 6px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--fmt) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fmt) 45%, var(--line));
+}
+
 .badge.reel {
-  background: var(--cyan);
+  --fmt: var(--cyan);
 }
 
 .badge.carrusel {
-  background: var(--lime);
+  --fmt: var(--lime);
 }
 
 .badge.historias {
-  background: var(--pink);
+  --fmt: var(--pink);
 }
 
 .badge.ad {
-  background: var(--amber);
+  --fmt: var(--amber);
+}
+
+.badge.reel::before,
+.badge.carrusel::before,
+.badge.historias::before,
+.badge.ad::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--fmt);
 }
 
 .status {
@@ -1746,6 +1770,172 @@ textarea {
 
 .lane .thumb {
   min-height: 74px;
+}
+
+/* ── Calendario: conmutador y vista mensual ──────────────────── */
+
+.cal-mode {
+  display: flex;
+  gap: 6px;
+}
+
+.cal-mode .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cal-monthbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.cal-monthlabel {
+  min-width: 168px;
+  text-align: center;
+  font-size: 15px;
+  text-transform: capitalize;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.month-dow {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 4px 4px;
+}
+
+.month-cell {
+  min-height: 116px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  overflow: hidden;
+}
+
+.month-cell.empty {
+  border-color: transparent;
+  background: transparent;
+}
+
+.month-cell.has {
+  background: rgba(122, 140, 255, 0.06);
+  border-color: var(--line-2);
+}
+
+.month-cell.today {
+  border-color: var(--cyan);
+  box-shadow: inset 0 0 0 1px rgba(122, 140, 255, 0.4);
+}
+
+.month-cell-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.month-daynum {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--soft);
+}
+
+.month-cell.today .month-daynum {
+  color: var(--cyan);
+}
+
+.month-add {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.month-cell:hover .month-add {
+  opacity: 1;
+}
+
+.month-add:hover {
+  background: rgba(122, 140, 255, 0.2);
+  color: var(--text);
+}
+
+.month-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.month-chip {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-left: 3px solid var(--angle, var(--cyan));
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 7px;
+  cursor: pointer;
+  min-width: 0;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.month-chip:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateX(1px);
+}
+
+.month-chip-time {
+  flex: none;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 900;
+}
+
+.month-chip-hook {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cal-undated {
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.cal-undated-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 6px;
 }
 
 .calendar {

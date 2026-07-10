@@ -28,6 +28,14 @@ export const ANGLE_COLORS: Record<PieceAngle, string> = {
 export const DAYS = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"] as const;
 export type Day = (typeof DAYS)[number];
 
+/** Día de la semana (abreviado) que corresponde a una fecha YYYY-MM-DD, en hora local. */
+export function dayFromDate(date: string): Day {
+  const [y, m, d] = date.split("-").map(Number);
+  // getDay(): 0=domingo … 6=sábado. Reordenado a Lun-primero.
+  const idx = [6, 0, 1, 2, 3, 4, 5][new Date(y, m - 1, d).getDay()];
+  return DAYS[idx];
+}
+
 export interface Piece {
   id: string;
   accountId: string;
@@ -37,6 +45,8 @@ export interface Piece {
   day: Day;
   time: string;
   objective: PieceObjective;
+  /** Fecha programada YYYY-MM-DD (opcional). Ubica la pieza en el calendario mensual. */
+  date?: string;
   angle: PieceAngle;
   hook: string;
   /** Bloques del guion, en orden después del hook. */

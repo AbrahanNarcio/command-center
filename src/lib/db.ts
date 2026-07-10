@@ -15,7 +15,7 @@ type PieceScript = { angle?: string; problema?: string; solucion?: string; prueb
 type PieceRow = {
   id: string; account_id: string; format: string; status: string; owner: string;
   day: string; time: string; objective: string; hook: string; summary: string; cta: string; score: number;
-  script?: PieceScript | null;
+  script?: PieceScript | null; date?: string | null;
 };
 type SourceRow = { id: string; account_id: string; name: string; type: string; summary: string; tags: string[] };
 type MetricsRow = { account_id: string; data: Omit<AccountMetrics, "accountId" | "updatedAt">; updated_at: string };
@@ -47,6 +47,7 @@ const toPiece = (r: PieceRow): Piece => {
     day: r.day as Piece["day"],
     time: r.time,
     objective: r.objective as Piece["objective"],
+    date: r.date ?? undefined,
     angle,
     hook: r.hook,
     problema: s.problema ?? "",
@@ -172,11 +173,31 @@ const scriptOf = (p: Partial<Piece>): PieceScript => ({
   solucion: p.solucion,
   pruebaSocial: p.pruebaSocial,
 });
-/** ¿El error es porque la columna `script` aún no existe (falta la migración)? */
-const missingScriptColumn = (e: unknown): boolean =>
+/** ¿El error es porque a la tabla le falta la columna opcional `col` (falta esa migración)? */
+const missingColumn = (e: unknown, col: string): boolean =>
   !!e && typeof (e as { message?: string }).message === "string" &&
-  /script/.test((e as { message: string }).message) &&
+  new RegExp(`\\b${col}\\b`).test((e as { message: string }).message) &&
   /(column|does not exist|schema cache)/i.test((e as { message: string }).message);
+
+type OpResult = { error: { message: string } | null; data?: unknown };
+
+/** Intenta la operación; si falla por una columna opcional ausente, la quita y reintenta. */
+async function withOptionalColumns(
+  obj: Record<string, unknown>,
+  run: (o: Record<string, unknown>) => PromiseLike<OpResult>,
+): Promise<OpResult> {
+  let current = obj;
+  for (let i = 0; i < 3; i++) {
+    const res = await run(current);
+    if (!res.error) return res;
+    const drop = (["date", "script"] as const).find((c) => c in current && missingColumn(res.error, c));
+    if (!drop) return res;
+    const { [drop]: _omit, ...rest } = current;
+    void _omit;
+    current = rest;
+  }
+  return run(current);
+}
 
 export async function insertPiece(piece: Piece): Promise<Piece> {
   const base = {
@@ -192,10 +213,10 @@ export async function insertPiece(piece: Piece): Promise<Piece> {
     summary: piece.summary,
     cta: piece.cta,
     score: piece.score,
+    script: scriptOf(piece),
+    date: piece.date || null,
   };
-  let { error } = await adminClient().from("pieces").insert({ ...base, script: scriptOf(piece) });
-  // Sin migración todavía: guardar igual, sin los bloques de guion, para no romper.
-  if (error && missingScriptColumn(error)) ({ error } = await adminClient().from("pieces").insert(base));
+  const { error } = await withOptionalColumns(base, (o) => adminClient().from("pieces").insert(o));
   if (error) fail("insertPiece", error);
   return piece;
 }
@@ -208,14 +229,13 @@ export async function updatePieceRow(id: string, patch: Partial<Piece>): Promise
   ];
   for (const [key, col] of map) if (patch[key] !== undefined) row[col] = patch[key];
   if (patch.score !== undefined) row.score = Math.max(0, Math.min(100, Number(patch.score) || 0));
+  if (patch.date !== undefined) row.date = patch.date || null;
   // Solo tocar la columna script si el patch trae algún bloque de guion.
-  const touchesScript = ["angle", "problema", "solucion", "pruebaSocial"].some((k) => k in patch);
-  const withScript = touchesScript ? { ...row, script: scriptOf(patch) } : row;
+  if (["angle", "problema", "solucion", "pruebaSocial"].some((k) => k in patch)) row.script = scriptOf(patch);
 
-  let res = await adminClient().from("pieces").update(withScript).eq("id", id).select().maybeSingle();
-  if (res.error && touchesScript && missingScriptColumn(res.error)) {
-    res = await adminClient().from("pieces").update(row).eq("id", id).select().maybeSingle();
-  }
+  const res = await withOptionalColumns(row, (o) =>
+    adminClient().from("pieces").update(o).eq("id", id).select().maybeSingle(),
+  );
   if (res.error) fail("updatePiece", res.error);
   return res.data ? toPiece(res.data as PieceRow) : null;
 }

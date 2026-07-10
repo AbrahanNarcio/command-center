@@ -25,6 +25,8 @@ create table if not exists pieces (
   cta text not null default '',
   -- Bloques del guion + ángulo: { angle, problema, solucion, pruebaSocial }
   script jsonb not null default '{}',
+  -- Fecha programada (YYYY-MM-DD) para el calendario mensual. Null = solo en la semana.
+  date date,
   score int not null default 70,
   created_at timestamptz not null default now()
 );
@@ -32,6 +34,8 @@ create index if not exists pieces_account_idx on pieces(account_id);
 
 -- MIGRACIÓN (bases creadas antes del guion estructurado): corre esta línea una vez.
 -- alter table pieces add column if not exists script jsonb not null default '{}';
+-- MIGRACIÓN (calendario mensual): corre esta línea una vez.
+-- alter table pieces add column if not exists date date;
 
 create table if not exists sources (
   id text primary key,
