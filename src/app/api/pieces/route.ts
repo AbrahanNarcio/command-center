@@ -29,11 +29,9 @@ export async function POST(request: Request) {
     date,
     angle,
     hook: String(body.hook || ""),
-    problema: String(body.problema || ""),
-    solucion: String(body.solucion || ""),
-    pruebaSocial: String(body.pruebaSocial || ""),
+    cuerpo: String(body.cuerpo || ""),
     cta: String(body.cta || ""),
-    summary: String(body.summary || body.problema || ""),
+    summary: String(body.summary || body.cuerpo || ""),
     score: Math.max(0, Math.min(100, Number(body.score) || 70)),
   };
   await insertPiece(piece);

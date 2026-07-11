@@ -11,7 +11,16 @@ import {
 /* ── row ↔ type mappers ─────────────────────────────────────── */
 
 type AccountRow = { id: string; name: string; handle: string; kind: string; color: string };
-type PieceScript = { angle?: string; problema?: string; solucion?: string; pruebaSocial?: string };
+/** Guion guardado en jsonb. `cuerpo` es el modelo actual; los campos viejos
+ *  (problema/solucion/pruebaSocial) se conservan opcionales solo para leer piezas
+ *  anteriores y fundirlas en `cuerpo`. */
+type PieceScript = {
+  angle?: string;
+  cuerpo?: string;
+  problema?: string;
+  solucion?: string;
+  pruebaSocial?: string;
+};
 type PieceRow = {
   id: string; account_id: string; format: string; status: string; owner: string;
   day: string; time: string; objective: string; hook: string; summary: string; cta: string; score: number;
@@ -50,9 +59,10 @@ const toPiece = (r: PieceRow): Piece => {
     date: r.date ?? undefined,
     angle,
     hook: r.hook,
-    problema: s.problema ?? "",
-    solucion: s.solucion ?? "",
-    pruebaSocial: s.pruebaSocial ?? "",
+    // Piezas nuevas traen `cuerpo`; las viejas se reconstruyen uniendo sus bloques.
+    cuerpo:
+      s.cuerpo ??
+      [s.problema, s.solucion, s.pruebaSocial].map((b) => (b ?? "").trim()).filter(Boolean).join("\n\n"),
     cta: r.cta,
     summary: r.summary,
     score: r.score,
@@ -169,9 +179,7 @@ export async function deleteAccountRow(id: string): Promise<void> {
 
 const scriptOf = (p: Partial<Piece>): PieceScript => ({
   angle: p.angle,
-  problema: p.problema,
-  solucion: p.solucion,
-  pruebaSocial: p.pruebaSocial,
+  cuerpo: p.cuerpo,
 });
 /** ¿El error es porque a la tabla le falta la columna opcional `col` (falta esa migración)? */
 const missingColumn = (e: unknown, col: string): boolean =>
@@ -230,8 +238,8 @@ export async function updatePieceRow(id: string, patch: Partial<Piece>): Promise
   for (const [key, col] of map) if (patch[key] !== undefined) row[col] = patch[key];
   if (patch.score !== undefined) row.score = Math.max(0, Math.min(100, Number(patch.score) || 0));
   if (patch.date !== undefined) row.date = patch.date || null;
-  // Solo tocar la columna script si el patch trae algún bloque de guion.
-  if (["angle", "problema", "solucion", "pruebaSocial"].some((k) => k in patch)) row.script = scriptOf(patch);
+  // Solo tocar la columna script si el patch trae ángulo o cuerpo del guion.
+  if (["angle", "cuerpo"].some((k) => k in patch)) row.script = scriptOf(patch);
 
   const res = await withOptionalColumns(row, (o) =>
     adminClient().from("pieces").update(o).eq("id", id).select().maybeSingle(),

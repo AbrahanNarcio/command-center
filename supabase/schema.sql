@@ -23,7 +23,7 @@ create table if not exists pieces (
   hook text not null default '',
   summary text not null default '',
   cta text not null default '',
-  -- Bloques del guion + ángulo: { angle, problema, solucion, pruebaSocial }
+  -- Guion + ángulo: { angle, cuerpo }. Piezas viejas: { angle, problema, solucion, pruebaSocial } (se leen fundiendo en cuerpo).
   script jsonb not null default '{}',
   -- Fecha programada (YYYY-MM-DD) para el calendario mensual. Null = solo en la semana.
   date date,

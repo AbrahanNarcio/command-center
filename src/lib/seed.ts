@@ -66,7 +66,7 @@ function defaultMetrics(accountId: string, scale = 1): AccountMetrics {
   };
 }
 
-const piecesSeed: Omit<Piece, "id" | "accountId" | "angle" | "problema" | "solucion" | "pruebaSocial">[] = [
+const piecesSeed: Omit<Piece, "id" | "accountId" | "angle" | "cuerpo">[] = [
   { format: "Reel", status: "Aprobado", owner: "Abrahan", day: "Lun", time: "10:00", objective: "DM", hook: "Tu contenido no vende porque está educando demasiado.", summary: "Pieza dura contra el contenido tibio que explica mucho y no genera deseo.", cta: "Comenta SISTEMA", score: 94 },
   { format: "Carrusel", status: "Guion", owner: "Abrahan", day: "Lun", time: "13:30", objective: "Agenda", hook: "Si dependes de referidos, no tienes negocio: tienes suerte.", summary: "Carrusel de 8 slides para romper la dependencia y empujar el sistema.", cta: "Manda ESCALA", score: 82 },
   { format: "Historias", status: "Programado", owner: "Equipo", day: "Mar", time: "18:00", objective: "DM", hook: "¿Quieres que te diga por qué tu perfil no agenda?", summary: "Secuencia de 6 stories con encuesta, prueba social y CTA a conversación.", cta: "Responder PERFIL", score: 88 },
@@ -154,9 +154,7 @@ export function buildSeed(): Db {
       pieces.push({
         ...piece,
         angle: ANGLES[i % ANGLES.length],
-        problema: piece.summary,
-        solucion: "",
-        pruebaSocial: "",
+        cuerpo: piece.summary,
         id: newId("pz"),
         accountId: account.id,
       }),

@@ -50,10 +50,8 @@ export interface Piece {
   date?: string;
   angle: PieceAngle;
   hook: string;
-  /** Bloques del guion, en orden después del hook. */
-  problema: string;
-  solucion: string;
-  pruebaSocial: string;
+  /** Cuerpo del guion (desarrollo entre el hook y el CTA). */
+  cuerpo: string;
   cta: string;
   /** Resumen corto para la tarjeta (se deriva del guion si queda vacío). */
   summary: string;

@@ -150,10 +150,12 @@ export default function GeneratorView() {
                     owner: me?.email ?? "",
                     angle: "Problema",
                     hook: script.hook,
-                    problema: script.lines[1].text,
-                    solucion: script.lines[2].text,
-                    pruebaSocial: script.lines[3].text,
-                    cta: script.lines[4].text,
+                    // El cuerpo junta los bloques intermedios (entre hook y CTA).
+                    cuerpo: script.lines
+                      .slice(1, -1)
+                      .map((l) => l.text)
+                      .join("\n\n"),
+                    cta: script.lines[script.lines.length - 1].text,
                     summary: script.lines[1].text,
                     score,
                   });

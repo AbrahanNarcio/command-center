@@ -16,12 +16,15 @@ La pieza de contenido. Columnas planas: `format`, `status`, `owner` (email del r
 `day` (Lun..Dom), `"time"`, `objective`, `hook`, `summary`, `cta`, `score` + dos columnas
 especiales:
 
-- **`script` (jsonb)** — el guion estructurado: `{ angle, problema, solucion, pruebaSocial }`.
-  `hook` y `cta` viven como columnas propias por razones históricas; el resto del guion va aquí.
+- **`script` (jsonb)** — el guion: `{ angle, cuerpo }`. `hook` y `cta` viven como columnas propias
+  por razones históricas; el cuerpo (desarrollo entre hook y CTA) va aquí. **Retrocompat:** piezas
+  viejas guardaban `{ angle, problema, solucion, pruebaSocial }`; al leerlas, `toPiece` funde esos
+  tres bloques en `cuerpo` (unidos por línea en blanco). Al guardar siempre se escribe el modelo
+  nuevo `{ angle, cuerpo }`.
 - **`date` (date, nullable)** — fecha real programada. **Semántica día/fecha**: si `date` existe,
   `day` SIEMPRE se deriva de ella (el server la recalcula en POST/PATCH con `dayFromDate`); sin
   `date`, la pieza vive solo en la vista semanal. `summary` se deriva del guion si queda vacío
-  (problema > solución > hook).
+  (primera línea del cuerpo > hook).
 
 ### `sources`
 Materia prima por cuenta: `name`, `type`, `summary` (el TEXTO importado o pegado; nunca se

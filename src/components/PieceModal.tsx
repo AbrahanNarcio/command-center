@@ -39,9 +39,7 @@ const EMPTY: PieceDraft = {
   date: "",
   angle: "Problema",
   hook: "",
-  problema: "",
-  solucion: "",
-  pruebaSocial: "",
+  cuerpo: "",
   cta: "",
   summary: "",
   score: 70,
@@ -80,17 +78,16 @@ export default function PieceModal({ initial, presetDate, onClose, onSave }: Pro
   const invalid = (field: string) => missing.includes(field);
 
   const save = async () => {
-    // El esqueleto mínimo de un guion: hook, problema, solución y CTA.
+    // El esqueleto mínimo de un guion: hook, cuerpo y CTA.
     const faltantes: string[] = [];
     if (!draft.hook.trim()) faltantes.push("Hook");
-    if (!draft.problema.trim()) faltantes.push("Problema");
-    if (!draft.solucion.trim()) faltantes.push("Solución");
+    if (!draft.cuerpo.trim()) faltantes.push("Cuerpo");
     if (!draft.cta.trim()) faltantes.push("CTA");
     if (!draft.time.trim()) faltantes.push("Hora");
     setMissing(faltantes);
     if (faltantes.length) return;
-    // Resumen para la tarjeta: el problema es la mejor síntesis de un vistazo.
-    const summary = draft.problema.trim() || draft.solucion.trim() || draft.hook.trim();
+    // Resumen para la tarjeta: la primera línea del cuerpo sintetiza de un vistazo.
+    const summary = draft.cuerpo.trim().split("\n")[0] || draft.hook.trim();
     setSaving(true);
     try {
       await onSave({ ...draft, summary });
@@ -106,8 +103,7 @@ export default function PieceModal({ initial, presetDate, onClose, onSave }: Pro
         <p className="eyebrow">{initial ? "Editar pieza" : "Nueva pieza"}</p>
         <h2>Ficha de contenido</h2>
         <p className="modal-sub">
-          El guion, en orden: hook, problema, solución, prueba social y CTA. El ángulo define desde dónde
-          lo cuentas.
+          El guion, en orden: hook, cuerpo y CTA. El ángulo define desde dónde lo cuentas.
         </p>
         <div className="form-grid">
           <label>
@@ -138,36 +134,17 @@ export default function PieceModal({ initial, presetDate, onClose, onSave }: Pro
             />
           </label>
           <label>
-            2 · Problema *
+            2 · Cuerpo *
             <textarea
-              value={draft.problema}
-              onChange={(e) => set("problema", e.target.value)}
-              placeholder="El dolor o la tensión que vive tu audiencia..."
-              style={{ minHeight: 60 }}
-              className={invalid("Problema") ? "invalid" : undefined}
+              value={draft.cuerpo}
+              onChange={(e) => set("cuerpo", e.target.value)}
+              placeholder="El desarrollo del guion: el problema, tu solución y la prueba que lo respalda..."
+              style={{ minHeight: 150 }}
+              className={invalid("Cuerpo") ? "invalid" : undefined}
             />
           </label>
           <label>
-            3 · Solución *
-            <textarea
-              value={draft.solucion}
-              onChange={(e) => set("solucion", e.target.value)}
-              placeholder="El giro o la respuesta que propones..."
-              style={{ minHeight: 60 }}
-              className={invalid("Solución") ? "invalid" : undefined}
-            />
-          </label>
-          <label>
-            4 · Prueba social
-            <textarea
-              value={draft.pruebaSocial}
-              onChange={(e) => set("pruebaSocial", e.target.value)}
-              placeholder="Un caso, testimonio o dato que lo respalde (opcional)..."
-              style={{ minHeight: 60 }}
-            />
-          </label>
-          <label>
-            5 · CTA *
+            3 · CTA *
             <input
               value={draft.cta}
               onChange={(e) => set("cta", e.target.value)}
