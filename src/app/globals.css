@@ -4017,6 +4017,20 @@ input[type="range"] {
     flex-wrap: wrap;
   }
 
+  /* Conexión IG: la salud de la conexión y el campo contraseña+dado caben. */
+  .health-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .health-row b,
+  .health-row small {
+    overflow-wrap: anywhere;
+  }
+
+  .input-with-action {
+    flex-wrap: wrap;
+  }
+
   .toolbar {
     max-width: 100%;
   }
