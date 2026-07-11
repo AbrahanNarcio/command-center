@@ -31,7 +31,8 @@ export async function POST(request: Request) {
     hook: String(body.hook || ""),
     cuerpo: String(body.cuerpo || ""),
     cta: String(body.cta || ""),
-    summary: String(body.summary || body.cuerpo || ""),
+    // Resumen de la tarjeta: la primera línea del cuerpo (no el cuerpo entero).
+    summary: String(body.summary || String(body.cuerpo || "").split("\n")[0] || ""),
     score: Math.max(0, Math.min(100, Number(body.score) || 70)),
   };
   await insertPiece(piece);
