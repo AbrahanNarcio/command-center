@@ -4011,6 +4011,21 @@ input[type="range"] {
     padding: 14px;
   }
 
+  /* Toolbars y cabeceras de panel envuelven en vez de desbordar la pantalla. */
+  .toolbar,
+  .panel-head {
+    flex-wrap: wrap;
+  }
+
+  .toolbar {
+    max-width: 100%;
+  }
+
+  .toolbar select,
+  .search-wrap {
+    max-width: 100%;
+  }
+
   /* La etiqueta de semana se libera para que la barra envuelva sin desbordar. */
   .cal-weeklabel {
     min-width: 0;
