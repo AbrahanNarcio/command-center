@@ -61,6 +61,7 @@ export default function AccountModal({ account, onClose }: { account?: Account |
               {COLORS.map((c) => (
                 <button
                   key={c}
+                  className="color-swatch"
                   onClick={() => setColor(c)}
                   style={{
                     width: 28,

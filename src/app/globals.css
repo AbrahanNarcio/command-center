@@ -3054,6 +3054,81 @@ input[type="range"] {
   cursor: default;
 }
 
+/* ── Páginas legales (públicas: privacidad, eliminación de datos) ── */
+.legal {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  padding: 48px 20px 80px;
+}
+
+.legal-inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.legal-eyebrow {
+  color: var(--cyan);
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+
+.legal h1 {
+  font-size: 30px;
+  line-height: 1.15;
+  margin: 0 0 6px;
+}
+
+.legal-updated {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 28px;
+}
+
+.legal section {
+  margin-bottom: 22px;
+}
+
+.legal h2 {
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+
+.legal p {
+  color: var(--soft);
+  line-height: 1.65;
+  margin: 0 0 10px;
+}
+
+.legal ul {
+  margin: 0 0 10px;
+  padding-left: 20px;
+}
+
+.legal li {
+  color: var(--soft);
+  line-height: 1.6;
+  margin-bottom: 7px;
+}
+
+.legal a {
+  color: var(--cyan);
+  font-weight: 700;
+  transition: opacity 0.15s ease;
+}
+
+.legal a:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+.legal strong {
+  color: var(--text);
+}
+
 .auth-submit {
   width: 100%;
   display: inline-flex;
@@ -3446,7 +3521,20 @@ input[type="range"] {
 .reel-ret-row,
 .alert,
 .insight,
-.heat-cell {
+.heat-cell,
+.report-row,
+.summary-card,
+.summary-week-day,
+.plan-day,
+.plan-item,
+.plan-chip,
+.plan-legend-item,
+.kpi-editor-row,
+.color-swatch,
+.story-row,
+.health-row,
+.month-cell,
+.angle-chip {
   transition:
     border-color 0.18s ease,
     background-color 0.18s ease,
@@ -3550,9 +3638,81 @@ input[type="range"] {
   border-color: var(--line-2);
 }
 
+/* Cuenta en el rail: sube y marca el acento de la cuenta (excepto la activa). */
+.account-btn:hover:not(.active) {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent, var(--cyan)) 55%, var(--line));
+  background: var(--panel-3);
+  color: var(--text);
+}
+
+/* Fila de reporte en el histórico (clic abre el detalle). */
+.report-row:hover {
+  transform: translateX(3px);
+  border-color: var(--line-2);
+  background: rgba(var(--tint), 0.09);
+}
+
+/* Tarjetas de la vista Resumen del cliente. */
+.summary-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-2);
+  background: var(--panel-3);
+}
+
+.summary-week-day:hover > strong {
+  color: var(--cyan);
+}
+
+/* Planeación: día, pieza y chip de ángulo reaccionan al mouse. */
+.plan-day:hover {
+  border-color: var(--line-2);
+  transform: translateY(-1px);
+}
+
+.plan-item:hover {
+  background: rgba(var(--tint), 0.1);
+  transform: translateX(2px);
+}
+
+.plan-chip:hover {
+  filter: brightness(1.12);
+}
+
+.plan-legend-item:hover {
+  color: var(--text);
+}
+
+.plan-legend-item:hover svg {
+  transform: scale(1.15);
+  transition: transform 0.18s ease;
+}
+
+/* Fila editable de KPIs (editor de métricas). */
+.kpi-editor-row {
+  border-radius: 8px;
+  padding: 4px 6px;
+  margin: 0 -6px;
+}
+
+.kpi-editor-row:hover {
+  background: rgba(var(--tint), 0.06);
+}
+
+/* Muestras de color en el modal de cuenta. */
+.color-swatch {
+  cursor: pointer;
+}
+
+.color-swatch:hover {
+  transform: scale(1.18);
+  box-shadow: 0 0 0 3px rgba(var(--tint), 0.18);
+}
+
 .chip:active,
-.button:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
+.button:active:not(:disabled),
+.color-swatch:active {
+  transform: translateY(0) scale(0.96);
 }
 
 @media (prefers-reduced-motion: reduce) {

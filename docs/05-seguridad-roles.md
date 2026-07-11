@@ -48,6 +48,15 @@ POST/PATCH/DELETE externo debe mandar `Origin: https://ig-command-center-drab.ve
   supabase-js separado (sin tocar cookies), rate limit 5/15min por IP.
 - Olvido: flujo de email de Supabase → `/reset` (requiere configurar Site URL y Redirect URLs en
   Supabase Auth).
+
+## Rutas públicas (sin sesión)
+
+`proxy.ts` deja pasar sin cookie de sesión: `/login`, `/reset`, `/api/*`, y las páginas legales
+`/privacidad` y `/eliminar-datos`. Estas dos últimas DEBEN seguir siendo públicas e indexables:
+Meta exige que la política de privacidad y las instrucciones de eliminación de datos sean
+accesibles sin login y para sus rastreadores (se registran en el panel de la app de Meta). Su
+contenido vive en `src/app/privacidad/page.tsx` y `src/app/eliminar-datos/page.tsx`; el correo de
+contacto está como constante `CONTACT` en cada una.
 - Generador de contraseñas (`password-gen.ts`): CSPRNG, 16 chars, una de cada clase garantizada,
   sin ambiguos (l/o/I/O/0/1), shuffle Fisher-Yates seguro. Botón de dado al crear accesos.
 

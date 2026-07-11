@@ -8,8 +8,16 @@ import { NextRequest, NextResponse } from "next/server";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // /reset es pública: llega desde el enlace de recuperación del correo.
-  if (pathname.startsWith("/login") || pathname.startsWith("/reset") || pathname.startsWith("/api")) {
+  // Rutas públicas: /login, /reset (enlace de recuperación) y las páginas legales
+  // (Meta exige que la política de privacidad y la eliminación de datos sean
+  // accesibles sin sesión y para sus rastreadores).
+  if (
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/reset") ||
+    pathname.startsWith("/privacidad") ||
+    pathname.startsWith("/eliminar-datos") ||
+    pathname.startsWith("/api")
+  ) {
     return NextResponse.next();
   }
 
