@@ -255,6 +255,18 @@ export async function deletePieceRow(id: string): Promise<void> {
 
 /* ── sources ────────────────────────────────────────────────── */
 
+/** Una fuente por id, verificando que pertenezca a la cuenta (para el generador). */
+export async function getSourceForAccount(id: string, accountId: string): Promise<Source | null> {
+  const { data, error } = await adminClient()
+    .from("sources")
+    .select("*")
+    .eq("id", id)
+    .eq("account_id", accountId)
+    .maybeSingle();
+  if (error) fail("getSource", error);
+  return data ? toSource(data as SourceRow) : null;
+}
+
 export async function insertSource(source: Source): Promise<Source> {
   const { error } = await adminClient().from("sources").insert({
     id: source.id,

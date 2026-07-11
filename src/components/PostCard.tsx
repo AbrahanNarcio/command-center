@@ -1,7 +1,7 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
-import { ANGLE_COLORS, Piece } from "@/lib/types";
+import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { ANGLE_COLORS, Piece, STATUSES } from "@/lib/types";
 import { PALETTE, formatSlug, scoreColor } from "@/lib/utils";
 
 interface Props {
@@ -12,6 +12,9 @@ interface Props {
   onDelete?: (piece: Piece) => void;
   draggable?: boolean;
   onDragStart?: (piece: Piece) => void;
+  /** Mover la pieza al estado anterior/siguiente del pipeline. Necesario en
+   *  touch: el drag de HTML5 no existe en pantallas táctiles. */
+  onMove?: (piece: Piece, dir: -1 | 1) => void;
 }
 
 export default function PostCard({
@@ -22,7 +25,9 @@ export default function PostCard({
   onDelete,
   draggable = false,
   onDragStart,
+  onMove,
 }: Props) {
+  const statusIdx = STATUSES.indexOf(piece.status);
   const [a, b] = PALETTE[index % PALETTE.length];
   return (
     <article
@@ -59,8 +64,28 @@ export default function PostCard({
           </div>
           <div className="score">{piece.score}</div>
         </div>
-        {(onEdit || onDelete) && (
+        {(onEdit || onDelete || onMove) && (
           <div className="card-actions">
+            {onMove && (
+              <button
+                disabled={statusIdx <= 0}
+                title={statusIdx > 0 ? `Mover a ${STATUSES[statusIdx - 1]}` : undefined}
+                aria-label="Mover al estado anterior"
+                onClick={() => onMove(piece, -1)}
+              >
+                <ChevronLeft size={11} />
+              </button>
+            )}
+            {onMove && (
+              <button
+                disabled={statusIdx < 0 || statusIdx >= STATUSES.length - 1}
+                title={statusIdx < STATUSES.length - 1 ? `Mover a ${STATUSES[statusIdx + 1]}` : undefined}
+                aria-label="Mover al estado siguiente"
+                onClick={() => onMove(piece, 1)}
+              >
+                <ChevronRight size={11} />
+              </button>
+            )}
             {onEdit && (
               <button onClick={() => onEdit(piece)}>
                 <Pencil size={11} /> Editar

@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   ListChecks,
   LogOut,
+  Pencil,
   Plus,
   Sparkles,
   SquareKanban,
@@ -94,16 +95,24 @@ export default function Rail({ view, setView, open = false, onClose }: RailProps
       <div className="account-switch">
         <p className="eyebrow">{canEdit ? "Cuentas" : "Tu cuenta"}</p>
         {accounts.map((account) => (
-          <button
+          <div
             key={account.id}
+            role="button"
+            tabIndex={0}
             className={`account-btn${account.id === activeId ? " active" : ""}`}
             style={{ ["--accent" as string]: account.color }}
             onClick={() => {
               setActiveId(account.id);
               onClose?.();
             }}
-            onDoubleClick={isAdmin ? () => setModal({ account }) : undefined}
-            title={isAdmin ? "Doble clic para editar" : account.handle}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setActiveId(account.id);
+                onClose?.();
+              }
+            }}
+            title={account.handle}
           >
             {avatarOf(account.id) ? (
               <span className="avatar-ring">
@@ -117,8 +126,22 @@ export default function Rail({ view, setView, open = false, onClose }: RailProps
               <b>{account.name}</b>
               <small>{account.handle}</small>
             </span>
-            <span className="kind">{account.kind === "propia" ? "Yo" : "Cli"}</span>
-          </button>
+            {isAdmin ? (
+              <button
+                className="account-edit"
+                title={`Editar ${account.handle}`}
+                aria-label={`Editar ${account.handle}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setModal({ account });
+                }}
+              >
+                <Pencil size={12} />
+              </button>
+            ) : (
+              <span className="kind">{account.kind === "propia" ? "Yo" : "Cli"}</span>
+            )}
+          </div>
         ))}
         {isAdmin && (
           <button className="add-account" onClick={() => setModal({ account: null })}>

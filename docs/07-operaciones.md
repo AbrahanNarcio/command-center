@@ -23,6 +23,8 @@
 | `TOKEN_ENC_KEY` | server | 32 bytes hex (`openssl rand -hex 32`) para AES-256-GCM |
 | `CRON_SECRET` | server | bearer del cron de Vercel |
 | `SYNC_TIMEZONE` | server | zona horaria para "día 1" del reporte mensual |
+| `ANTHROPIC_API_KEY` | **server** | key de la API de Claude para el Generador (sin ella el generador responde 503) |
+| `ANTHROPIC_MODEL` | server | opcional; modelo para generar guiones (default `claude-sonnet-5`) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | solo `npm run setup` | crear el admin inicial |
 
 `.env.example` documenta cada una; `.env.local` jamás se commitea.
@@ -85,6 +87,7 @@ Gotchas de QA conocidos:
 
 - **App Review de Meta** (Fase 4): hoy solo conectan cuentas invitadas como testers.
 - Publicación en IG con aprobación manual: backlog.
-- Generador con IA real (Claude API): backlog.
+- ~~Generador con IA real (Claude API)~~: hecho (2026-07-11). Requiere `ANTHROPIC_API_KEY` en
+  Vercel; opcional `ANTHROPIC_MODEL` (default `claude-sonnet-5`).
 - Rate limiting en memoria (no compartido entre instancias): suficiente por ahora, ver
   `05-seguridad-roles.md`.

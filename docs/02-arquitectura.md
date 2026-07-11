@@ -102,6 +102,7 @@ Puntos clave del store (`store-context.tsx`):
 | `/api/sources` · `/api/sources/[id]` | POST · PATCH, DELETE | accountGate |
 | `/api/metrics/[accountId]` | PUT | accountGate |
 | `/api/reports` · `/api/reports/[id]` | GET, POST · DELETE | GET sesión de la cuenta · POST generar accountMemberGate (cualquier usuario de SU cuenta, incluido viewer; acepta `period` "7"/"30" y `sections`) · restore/DELETE accountGate |
+| `/api/generate` | POST | accountGate → Claude API server-side (guion hook/cuerpo/CTA; valida que la fuente sea de la cuenta; 503 sin `ANTHROPIC_API_KEY`) |
 | `/api/clients` · `/api/clients/[userId]` | POST · DELETE | admin (crear/borrar accesos) |
 | `/api/password` | POST | sesión + reauth con contraseña actual + rate limit |
 | `/api/connect/[accountId]/start` | GET | accountGate → redirige a Meta |

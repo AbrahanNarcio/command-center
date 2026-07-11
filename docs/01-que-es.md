@@ -35,7 +35,7 @@ El menú lateral está dividido en dos secciones con título:
 | --- | --- | --- |
 | Pipeline | `pipeline` | Kanban por estado (Idea → Guion → Grabado → Editado → Aprobado → Programado), drag & drop, filtro por responsable. |
 | Calendario | `calendar` | Piezas por semana o por mes. La vista Semana usa fechas REALES (misma regla que Planeación, `lib/plan.ts`): navegable ‹ ›, piezas con fecha solo en su semana; sin fecha solo en la semana en curso. El "+"/Agregar crea la pieza ya fechada en ese día. |
-| Generador | `generator` | Genera borradores de guion (hoy con un banco de hooks local, NO IA real todavía) y los envía al pipeline como pieza estructurada. |
+| Generador | `generator` | Genera borradores de guion con **IA real** (Claude API vía `/api/generate`): usa la fuente elegida (materia prima), formato, objetivo y nivel de filo; devuelve ángulo + hook + cuerpo + CTA y lo envía al pipeline. Requiere `ANTHROPIC_API_KEY`; sin ella responde 503 con mensaje claro (nunca finge generar). |
 | Fuentes | `sources` | Banco de materia prima por cuenta. Importa archivos de texto (.txt/.md/.csv/.srt/.vtt, máx ~500 KB); **guarda solo el texto, nunca el archivo**. |
 | Conexión IG | `settings` | OAuth con Meta, sincronizar ahora, desconectar (con confirmación), crear/borrar accesos de clientes (con generador de contraseñas fuertes), panel de salud (admin). |
 
@@ -71,5 +71,6 @@ Una **pieza** es la unidad editorial. Tiene:
 ## Qué NO es (todavía)
 
 - No publica en Instagram (la "Fase 4" de publicación con aprobación manual está en backlog).
-- El Generador no usa IA real todavía (banco de hooks local); integrar Claude API está en backlog.
+- El Generador usa la Claude API desde 2026-07-11; el prompt prohíbe inventar cifras, testimonios
+  y casos (invariante de no fabricar datos aplicado también a la IA).
 - No hay app móvil; es una web responsive.

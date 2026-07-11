@@ -88,6 +88,14 @@ export default function PipelineView({ pieces }: { pieces: Piece[] }) {
                     onDragStart={canEdit ? () => setDragId(piece.id) : undefined}
                     onEdit={canEdit ? setEditing : undefined}
                     onDelete={canEdit ? (p) => deletePiece(p.id) : undefined}
+                    onMove={
+                      canEdit
+                        ? (p, dir) => {
+                            const next = STATUSES[STATUSES.indexOf(p.status) + dir];
+                            if (next) updatePiece(p.id, { status: next });
+                          }
+                        : undefined
+                    }
                   />
                 ))
               ) : (

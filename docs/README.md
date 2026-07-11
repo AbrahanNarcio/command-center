@@ -21,6 +21,8 @@ vive cada cosa y qué reglas no se deben romper al modificarla o fusionarla con 
    Playwright, migraciones manuales.
 8. **[08-fusion.md](08-fusion.md)** — Si vas a fusionar esta app con otra, este es tu documento
    principal: qué es acoplado, qué es portable, y el checklist de fusión.
+9. **[09-hallazgos.md](09-hallazgos.md)** — Bugs encontrados en auditorías (con su evidencia y su
+   fix) y el protocolo para auditar sin suposiciones.
 
 ## Reglas de mantenimiento de esta documentación
 

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -6,6 +6,11 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
+
+/** Color de la barra del navegador en móvil (coincide con --bg del tema oscuro). */
+export const viewport: Viewport = {
+  themeColor: "#07080d",
+};
 
 export const metadata: Metadata = {
   title: "Content OS",
