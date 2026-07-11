@@ -11,6 +11,10 @@ Tres roles en `profiles.role`: `admin`, `editor`, `client` (=viewer, nombre hist
 - **`adminGate()`** — solo admin. Usado en cuentas y accesos de clientes.
 - **`accountGate(accountId)`** — admin O editor cuya `account_id` sea exactamente esa cuenta.
   Usado en todo lo demás que muta (piezas, fuentes, métricas, reportes, conexión, sync).
+- **`accountMemberGate(accountId)`** — admin O cualquier usuario (editor Y viewer) cuya
+  `account_id` sea esa cuenta. Es la ÚNICA escritura permitida al viewer y hoy solo la usa
+  POST `/api/reports` (generar un reporte de su propia cuenta). Eliminar/restaurar reportes
+  sigue bajo `accountGate`. No reutilizarlo para otras mutaciones sin pensarlo dos veces.
 - Ambos gates ejecutan PRIMERO `sameOriginOk()` (anti-CSRF, ver abajo) y devuelven
   `{ session, response }`: si `response` existe, la ruta lo retorna tal cual (401/403).
 - En PATCH/DELETE la cuenta dueña de la fila se resuelve server-side con `rowAccountId(tabla, id)`

@@ -99,3 +99,22 @@ export async function accountGate(accountId: string): Promise<AdminGate> {
   }
   return { session, response: null };
 }
+
+/**
+ * Guard para acciones que CUALQUIER usuario de la cuenta puede hacer, incluido
+ * el viewer (hoy: generar reportes de su propia cuenta). Admin siempre; editor
+ * y viewer solo sobre SU cuenta. Verifica origen (CSRF) + sesión + pertenencia.
+ * No abre ninguna otra escritura: los datos que toca siguen aislados a la cuenta.
+ */
+export async function accountMemberGate(accountId: string): Promise<AdminGate> {
+  if (!(await sameOriginOk())) return { session: null, response: crossOriginResponse() };
+  const session = await getSessionProfile();
+  if (!session) {
+    return { session: null, response: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
+  }
+  const member = session.role === "admin" || (!!session.accountId && session.accountId === accountId);
+  if (!accountId || !member) {
+    return { session: null, response: NextResponse.json({ error: "forbidden" }, { status: 403 }) };
+  }
+  return { session, response: null };
+}

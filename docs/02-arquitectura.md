@@ -101,7 +101,7 @@ Puntos clave del store (`store-context.tsx`):
 | `/api/pieces` · `/api/pieces/[id]` | POST · PATCH, DELETE | accountGate (admin o editor de ESA cuenta) |
 | `/api/sources` · `/api/sources/[id]` | POST · PATCH, DELETE | accountGate |
 | `/api/metrics/[accountId]` | PUT | accountGate |
-| `/api/reports` · `/api/reports/[id]` | GET, POST · DELETE | sesión de la cuenta / accountGate |
+| `/api/reports` · `/api/reports/[id]` | GET, POST · DELETE | GET sesión de la cuenta · POST generar accountMemberGate (cualquier usuario de SU cuenta, incluido viewer; acepta `period` "7"/"30" y `sections`) · restore/DELETE accountGate |
 | `/api/clients` · `/api/clients/[userId]` | POST · DELETE | admin (crear/borrar accesos) |
 | `/api/password` | POST | sesión + reauth con contraseña actual + rate limit |
 | `/api/connect/[accountId]/start` | GET | accountGate → redirige a Meta |

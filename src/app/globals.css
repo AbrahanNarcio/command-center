@@ -3072,6 +3072,36 @@ input[type="range"] {
 
 /* ── Reportes ────────────────────────────────────────────────── */
 
+/* Configuración del reporte: periodo + secciones a incluir + nota/generar. */
+.report-config {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  background: rgba(var(--tint), 0.03);
+}
+
+.report-config-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.report-config-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  min-width: 52px;
+}
+
+.report-config .report-generate {
+  margin-bottom: 0;
+}
+
 .report-generate {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

@@ -125,6 +125,21 @@ export interface AccountMetrics {
   followersTotal?: number;
 }
 
+/** Secciones que un reporte puede incluir (elegidas al generarlo). */
+export type ReportSection = "kpis" | "growth" | "mix" | "topPosts" | "retention" | "funnel";
+
+/** Parámetros con los que se generó un reporte. Viaja DENTRO de data (jsonb),
+ *  así no requiere migración y sobrevive al restore. Ausente en reportes viejos
+ *  = snapshot completo sin periodo. */
+export type ReportMeta = {
+  /** Clave del periodo ("7" | "30" días). */
+  period?: string;
+  /** Etiqueta legible del periodo ("Últimos 30 días"). */
+  periodLabel?: string;
+  /** Secciones incluidas. Ausente = todas las disponibles. */
+  sections?: ReportSection[];
+};
+
 /** Snapshot congelado de métricas, para histórico y PDF. */
 export interface Report {
   id: string;
@@ -132,7 +147,7 @@ export interface Report {
   title: string;
   note: string;
   createdAt: string;
-  data: AccountMetrics;
+  data: AccountMetrics & { reportMeta?: ReportMeta };
 }
 
 export type ConnectionStatus = "connected" | "error" | "expired";

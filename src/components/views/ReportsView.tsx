@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileText, Loader2, Printer, Trash2, X } from "lucide-react";
-import { Report } from "@/lib/types";
+import { Report, ReportSection } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
 import { trackBusy } from "@/lib/busy";
 import { Donut, LineChart } from "@/components/charts";
@@ -21,15 +21,69 @@ function stamp(iso: string): string {
   });
 }
 
+/** Periodos ofrecidos: solo los que tienen KPIs reales por rango (sync). */
+const PERIOD_OPTIONS: { key: string; label: string }[] = [
+  { key: "7", label: "7 días" },
+  { key: "30", label: "30 días" },
+  { key: "all", label: "Todo" },
+];
+
+const SECTION_OPTIONS: { key: ReportSection; label: string }[] = [
+  { key: "kpis", label: "KPIs" },
+  { key: "growth", label: "Seguidores" },
+  { key: "mix", label: "Mix engagement" },
+  { key: "topPosts", label: "Top publicaciones" },
+  { key: "retention", label: "Retención reels" },
+  { key: "funnel", label: "Ruta a la acción" },
+];
+
 export default function ReportsView() {
-  const { activeAccount, canEdit, notify } = useStore();
+  const { activeAccount, activeMetrics, canEdit, notify } = useStore();
   const [reports, setReports] = useState<Report[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<Report | null>(null);
+  const [period, setPeriod] = useState("30");
+  const [sections, setSections] = useState<ReportSection[]>(SECTION_OPTIONS.map((s) => s.key));
 
   const accountId = activeAccount?.id;
+
+  // Solo se ofrecen secciones que tienen datos en las métricas actuales.
+  const available = useMemo(() => {
+    const m = activeMetrics;
+    const has: Record<ReportSection, boolean> = {
+      kpis: Boolean(m?.kpis?.length),
+      growth: Boolean(m?.followersDaily?.length || m?.growth?.length),
+      mix: Boolean(m?.engagementMix?.length),
+      topPosts: Boolean(m?.topPosts?.length),
+      retention: Boolean(m?.reelsRetention?.length),
+      funnel: Boolean(m?.funnel?.length),
+    };
+    return SECTION_OPTIONS.filter((s) => has[s.key]);
+  }, [activeMetrics]);
+
+  // Periodos con respaldo real: KPIs por rango o serie diaria de seguidores.
+  const periodChoices = useMemo(() => {
+    const m = activeMetrics;
+    const backed = PERIOD_OPTIONS.filter(
+      (o) => o.key !== "all" && (m?.kpiRanges?.[o.key] || m?.followersDaily?.length),
+    );
+    return backed.length ? [...backed, PERIOD_OPTIONS[PERIOD_OPTIONS.length - 1]] : [];
+  }, [activeMetrics]);
+
+  // Al cambiar de cuenta: todas las secciones disponibles y el periodo por defecto.
+  useEffect(() => {
+    setSections(available.map((s) => s.key));
+    setPeriod(periodChoices.some((o) => o.key === "30") ? "30" : periodChoices[0]?.key ?? "all");
+  }, [accountId, available, periodChoices]);
+
+  const toggleSection = (key: ReportSection) =>
+    setSections((prev) => (prev.includes(key) ? prev.filter((s) => s !== key) : [...prev, key]));
+
+  // Reportes viejos (sin reportMeta.sections) muestran todo, como siempre.
+  const inReport = (r: Report, key: ReportSection) =>
+    !r.data.reportMeta?.sections || r.data.reportMeta.sections.includes(key);
 
   const load = useCallback(async () => {
     if (!accountId) return;
@@ -62,7 +116,12 @@ export default function ReportsView() {
         fetch("/api/reports", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ accountId, note }),
+          body: JSON.stringify({
+            accountId,
+            note,
+            ...(period !== "all" ? { period } : {}),
+            sections: sections.filter((s) => available.some((a) => a.key === s)),
+          }),
         }),
       );
       const data = await res.json();
@@ -110,25 +169,70 @@ export default function ReportsView() {
             <p className="eyebrow">Histórico · {activeAccount?.handle}</p>
             <h2>Reportes</h2>
             <p style={{ color: "var(--muted)", fontSize: 13, margin: "6px 0 0" }}>
-              Guarda una foto de tus métricas de hoy para ver cómo evolucionas con el tiempo y compartir
-              resultados en PDF con tu cliente.
+              Elige el periodo y qué secciones incluir, y guarda una foto de tus métricas para ver cómo
+              evolucionas con el tiempo y compartir resultados en PDF.
             </p>
           </div>
         </div>
 
-        {canEdit && (
+        <div className="report-config">
+          {periodChoices.length > 0 && (
+            <div className="report-config-row">
+              <span className="report-config-label">Periodo</span>
+              <div className="filters" role="group" aria-label="Periodo del reporte">
+                {periodChoices.map((o) => (
+                  <button
+                    key={o.key}
+                    type="button"
+                    className={`chip${period === o.key ? " active" : ""}`}
+                    onClick={() => setPeriod(o.key)}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {available.length > 0 && (
+            <div className="report-config-row">
+              <span className="report-config-label">Incluir</span>
+              <div className="filters" role="group" aria-label="Secciones del reporte">
+                {available.map((s) => (
+                  <button
+                    key={s.key}
+                    type="button"
+                    className={`chip${sections.includes(s.key) ? " active" : ""}`}
+                    aria-pressed={sections.includes(s.key)}
+                    onClick={() => toggleSection(s.key)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="report-generate">
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Nota opcional (contexto del periodo, campañas activas...)"
             />
-            <button className="button primary" disabled={busy || !accountId} onClick={generate}>
+            <button
+              className="button primary"
+              disabled={busy || !accountId || sections.length === 0}
+              onClick={generate}
+              title={sections.length === 0 ? "Elige al menos una sección" : undefined}
+            >
               {busy ? <Loader2 size={15} className="spin" /> : <FileText size={15} />}{" "}
               {busy ? "Generando…" : "Generar reporte"}
             </button>
           </div>
-        )}
+          {sections.length === 0 && (
+            <p className="field-hint" style={{ margin: 0 }}>
+              Elige al menos una sección para poder generar el reporte.
+            </p>
+          )}
+        </div>
 
         {error && (
           <div className="alert" style={{ ["--accent" as string]: "var(--coral)", marginBottom: 12 }}>
@@ -150,6 +254,7 @@ export default function ReportsView() {
                   <strong>{r.title}</strong>
                   <span>
                     {stamp(r.createdAt)}
+                    {r.data.reportMeta?.periodLabel ? ` · ${r.data.reportMeta.periodLabel}` : ""}
                     {r.note ? ` · ${r.note.slice(0, 60)}` : ""}
                   </span>
                 </div>
@@ -184,6 +289,7 @@ export default function ReportsView() {
                   <h2>{open.title}</h2>
                   <p className="modal-sub" style={{ marginBottom: 0 }}>
                     Generado: {stamp(open.createdAt)} · Datos al {stamp(open.data.updatedAt)}
+                    {open.data.reportMeta?.periodLabel ? ` · Periodo: ${open.data.reportMeta.periodLabel}` : ""}
                     {open.note ? ` · ${open.note}` : ""}
                   </p>
                 </div>
@@ -197,54 +303,62 @@ export default function ReportsView() {
                 </div>
               </div>
 
-              <div className="metric-grid report-kpis">
-                {open.data.kpis.map((kpi) => (
-                  <article className="metric-card" key={kpi.label} style={{ ["--accent" as string]: accentVar(kpi.color) }}>
-                    <span>{kpi.label}</span>
-                    <strong>{kpi.value}</strong>
-                    <p>{kpi.detail}</p>
-                    <KpiIcon label={kpi.label} />
-                  </article>
-                ))}
-              </div>
+              {inReport(open, "kpis") && (
+                <div className="metric-grid report-kpis">
+                  {open.data.kpis.map((kpi) => (
+                    <article className="metric-card" key={kpi.label} style={{ ["--accent" as string]: accentVar(kpi.color) }}>
+                      <span>{kpi.label}</span>
+                      <strong>{kpi.value}</strong>
+                      <p>{kpi.detail}</p>
+                      <KpiIcon label={kpi.label} />
+                    </article>
+                  ))}
+                </div>
+              )}
 
-              <div className="report-charts">
-                <section className="chart-card">
-                  <div className="chart-top">
-                    <div>
-                      <p className="eyebrow">Crecimiento</p>
-                      <h2>Seguidores</h2>
-                    </div>
-                    <div className="chart-value">
-                      <strong>{open.data.growthNet}</strong>netos
-                    </div>
-                  </div>
-                  <LineChart values={open.data.growth} />
-                </section>
-                <section className="chart-card">
-                  <div className="chart-top">
-                    <div>
-                      <p className="eyebrow">Mix engagement</p>
-                      <h2>Qué generó acción</h2>
-                    </div>
-                  </div>
-                  <div className="donut-wrap">
-                    <Donut metrics={open.data} />
-                    <div className="legend">
-                      {open.data.engagementMix.map((m) => (
-                        <div className="legend-row" key={m.label} style={{ ["--accent" as string]: accentVar(m.color) }}>
-                          <span className="legend-dot" />
-                          <span>{m.label}</span>
-                          <b>{m.value}</b>
+              {(inReport(open, "growth") || inReport(open, "mix")) && (
+                <div className="report-charts">
+                  {inReport(open, "growth") && (
+                    <section className="chart-card">
+                      <div className="chart-top">
+                        <div>
+                          <p className="eyebrow">Crecimiento</p>
+                          <h2>Seguidores</h2>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </section>
-              </div>
+                        <div className="chart-value">
+                          <strong>{open.data.growthNet}</strong>netos
+                        </div>
+                      </div>
+                      <LineChart values={open.data.growth} />
+                    </section>
+                  )}
+                  {inReport(open, "mix") && (
+                    <section className="chart-card">
+                      <div className="chart-top">
+                        <div>
+                          <p className="eyebrow">Mix engagement</p>
+                          <h2>Qué generó acción</h2>
+                        </div>
+                      </div>
+                      <div className="donut-wrap">
+                        <Donut metrics={open.data} />
+                        <div className="legend">
+                          {open.data.engagementMix.map((m) => (
+                            <div className="legend-row" key={m.label} style={{ ["--accent" as string]: accentVar(m.color) }}>
+                              <span className="legend-dot" />
+                              <span>{m.label}</span>
+                              <b>{m.value}</b>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </section>
+                  )}
+                </div>
+              )}
 
               <div className="report-charts">
-                {open.data.topPosts?.length ? (
+                {inReport(open, "topPosts") && open.data.topPosts?.length ? (
                   <section className="chart-card">
                     <div className="chart-top">
                       <div>
@@ -272,7 +386,7 @@ export default function ReportsView() {
                     </div>
                   </section>
                 ) : null}
-                {open.data.reelsRetention?.length ? (
+                {inReport(open, "retention") && open.data.reelsRetention?.length ? (
                   <section className="chart-card">
                     <div className="chart-top">
                       <div>
@@ -303,6 +417,7 @@ export default function ReportsView() {
                     </div>
                   </section>
                 ) : null}
+                {inReport(open, "funnel") && (
                 <section className="chart-card">
                   <div className="chart-top">
                     <div>
@@ -332,6 +447,7 @@ export default function ReportsView() {
                     ))}
                   </div>
                 </section>
+                )}
               </div>
             </div>
           </div>

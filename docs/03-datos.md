@@ -66,6 +66,12 @@ Snapshots congelados: `title`, `note`, `data` (el `AccountMetrics` completo en e
 `created_at`. El cron genera uno mensual el día 1 (dedupe por título:
 `Reporte mensual {handle} · {mes anterior}`).
 
+Dentro de `data` viaja `reportMeta` (tipo `ReportMeta` en types.ts): `period`/`periodLabel`
+(periodo elegido al generar; los KPIs del snapshot ya son los de ese rango y `growth`/`growthNet`
+van recortados a esos días) y `sections` (qué secciones se incluyeron; la vista solo renderiza
+esas). Va dentro del jsonb a propósito: no requiere migración y sobrevive al restore del deshacer.
+Reportes viejos sin `reportMeta` = snapshot completo con todas las secciones.
+
 ## Reglas transversales de la capa de datos
 
 - **RLS activado sin políticas** en todas las tablas: nadie lee nada con la anon key; el único
