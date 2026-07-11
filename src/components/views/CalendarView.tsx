@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, LayoutGrid, Plus } from "lucide-react";
 import { ANGLE_COLORS, DAYS, Piece } from "@/lib/types";
+import { piecesForDate, sameWeek, weekDays } from "@/lib/plan";
 import { useStore } from "@/lib/store-context";
 import PieceModal, { PieceDraft } from "@/components/PieceModal";
 
@@ -26,10 +27,17 @@ export default function CalendarView({ pieces }: { pieces: Piece[] }) {
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [editing, setEditing] = useState<Piece | null>(null);
-  const [creatingDay, setCreatingDay] = useState<(typeof DAYS)[number] | null>(null);
   const [creatingDate, setCreatingDate] = useState<string | null>(null);
+  const [weekRef, setWeekRef] = useState(() => new Date());
 
   const todayIso = iso(new Date());
+
+  // Semana visible (Lun-Dom). Las piezas sin fecha solo aparecen en la semana en curso.
+  const week = weekDays(weekRef);
+  const currentWeek = sameWeek(weekRef, new Date());
+  const shiftWeek = (delta: number) =>
+    setWeekRef((c) => new Date(c.getFullYear(), c.getMonth(), c.getDate() + delta * 7));
+  const weekLabel = `Semana del ${week[0].getDate()} de ${MONTHS[week[0].getMonth()]} al ${week[6].getDate()} de ${MONTHS[week[6].getMonth()]}`;
 
   // Semanas del mes en curso (matriz de fechas, semana de Lun a Dom).
   const weeks = useMemo(() => {
@@ -71,11 +79,10 @@ export default function CalendarView({ pieces }: { pieces: Piece[] }) {
 
   const closeModal = () => {
     setEditing(null);
-    setCreatingDay(null);
     setCreatingDate(null);
   };
 
-  const modalOpen = editing || creatingDay || creatingDate;
+  const modalOpen = editing || creatingDate;
 
   return (
     <div className="panel">
@@ -189,36 +196,57 @@ export default function CalendarView({ pieces }: { pieces: Piece[] }) {
           )}
         </>
       ) : (
-        <div className="calendar">
-          {DAYS.map((day) => {
-            const dayItems = pieces
-              .filter((p) => p.day === day)
-              .sort((a, b) => a.time.localeCompare(b.time));
-            return (
-              <section className="day" key={day}>
-                <strong>{day}</strong>
-                {dayItems.map((item) => (
-                  <div
-                    className="calendar-item"
-                    key={item.id}
-                    onClick={canEdit ? () => setEditing(item) : undefined}
-                    style={canEdit ? undefined : { cursor: "default" }}
-                  >
-                    <span>
-                      {item.time} · {item.format}
-                    </span>
-                    <p>{item.hook}</p>
-                  </div>
-                ))}
-                {canEdit && (
-                  <button className="add-account" style={{ width: "100%" }} onClick={() => setCreatingDay(day)}>
-                    <Plus size={14} /> Agregar
-                  </button>
-                )}
-              </section>
-            );
-          })}
-        </div>
+        <>
+          <div className="cal-monthbar">
+            <button className="icon-button" title="Semana anterior" onClick={() => shiftWeek(-1)}>
+              <ChevronLeft size={16} />
+            </button>
+            <strong className="cal-monthlabel" style={{ textTransform: "none" }}>
+              {weekLabel}
+            </strong>
+            <button className="icon-button" title="Semana siguiente" onClick={() => shiftWeek(1)}>
+              <ChevronRight size={16} />
+            </button>
+            <button className="button small" onClick={() => setWeekRef(new Date())} style={{ marginLeft: 6 }}>
+              Esta semana
+            </button>
+          </div>
+
+          <div className="calendar">
+            {week.map((date) => {
+              const key = iso(date);
+              // Misma regla que Planeación: con fecha solo en su semana real;
+              // sin fecha, por día de la semana solo en la semana en curso.
+              const dayItems = piecesForDate(pieces, date, currentWeek);
+              return (
+                <section className={`day${key === todayIso ? " today" : ""}`} key={key}>
+                  <strong>
+                    {DAYS[(date.getDay() + 6) % 7]} {date.getDate()}
+                  </strong>
+                  {dayItems.map((item) => (
+                    <div
+                      className="calendar-item"
+                      key={item.id}
+                      onClick={canEdit ? () => setEditing(item) : undefined}
+                      style={canEdit ? undefined : { cursor: "default" }}
+                    >
+                      <span>
+                        {item.time} · {item.format}
+                        {!item.date && " · sin fecha"}
+                      </span>
+                      <p>{item.hook}</p>
+                    </div>
+                  ))}
+                  {canEdit && (
+                    <button className="add-account" style={{ width: "100%" }} onClick={() => setCreatingDate(key)}>
+                      <Plus size={14} /> Agregar
+                    </button>
+                  )}
+                </section>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {modalOpen && (
@@ -228,8 +256,7 @@ export default function CalendarView({ pieces }: { pieces: Piece[] }) {
           onClose={closeModal}
           onSave={async (draft: PieceDraft) => {
             if (editing) await updatePiece(editing.id, draft);
-            else if (creatingDate) await createPiece(draft);
-            else await createPiece({ ...draft, day: creatingDay ?? draft.day });
+            else await createPiece(draft);
             closeModal();
           }}
         />

@@ -91,6 +91,8 @@ export default function PieceModal({ initial, presetDate, onClose, onSave }: Pro
     setSaving(true);
     try {
       await onSave({ ...draft, summary });
+    } catch {
+      // El toast de error global ya avisó; el modal queda abierto con lo escrito.
     } finally {
       setSaving(false);
     }

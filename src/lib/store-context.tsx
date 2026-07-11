@@ -20,9 +20,10 @@ import {
 } from "./types";
 import { browserClient } from "./supabase/browser";
 import { trackBusy } from "./busy";
+import { onApiError, reportApiError } from "./errors";
 
 type ToastAction = { label: string; run: () => void | Promise<void> };
-type Toast = { id: number; text: string; action?: ToastAction };
+type Toast = { id: number; text: string; action?: ToastAction; tone?: "error" };
 
 interface StoreValue {
   loading: boolean;
@@ -72,20 +73,29 @@ interface StoreValue {
 const StoreContext = createContext<StoreValue | null>(null);
 
 async function api<T>(url: string, method: string, body?: unknown): Promise<T> {
-  const res = await trackBusy(
-    fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: body ? JSON.stringify(body) : undefined,
-    }),
-  );
+  let res: Response;
+  try {
+    res = await trackBusy(
+      fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined,
+      }),
+    );
+  } catch (err) {
+    // Sin red / servidor caído: que el usuario lo vea, no un fallo mudo.
+    reportApiError("Sin conexión con el servidor. Revisa tu internet e inténtalo de nuevo.");
+    throw err;
+  }
   if (res.status === 401) {
     window.location.href = "/login";
     throw new Error("No autenticado");
   }
   if (!res.ok) {
     const data = await res.json().catch(() => null);
-    throw new Error(data?.error || `${method} ${url} -> ${res.status}`);
+    const message = data?.error || `Error ${res.status} al guardar los cambios.`;
+    reportApiError(message);
+    throw new Error(message);
   }
   return res.json();
 }
@@ -128,6 +138,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setToast({ id, text, action });
     // Con acción de deshacer, el toast dura más para dar tiempo de tocarla.
     setTimeout(() => setToast((t) => (t && t.id === id ? null : t)), action ? 6500 : 2400);
+  }, []);
+
+  // Cualquier mutación fallida (bus de errores de api()) se muestra como toast
+  // de error: nada falla en silencio. Dura más para alcanzar a leerlo.
+  useEffect(() => {
+    return onApiError((message) => {
+      const id = Date.now();
+      setToast({ id, text: message, tone: "error" });
+      setTimeout(() => setToast((t) => (t && t.id === id ? null : t)), 6000);
+    });
   }, []);
 
   const signOut = useCallback(async () => {

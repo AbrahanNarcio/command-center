@@ -87,6 +87,8 @@ export default function SourcesView() {
       if (editing) await updateSource(editing.id, payload);
       else await createSource(payload);
       setOpen(false);
+    } catch {
+      // El toast de error global ya avisó; el modal queda abierto con lo escrito.
     } finally {
       setSaving(false);
     }

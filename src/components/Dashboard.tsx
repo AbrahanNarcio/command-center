@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AtSign, ListChecks, RotateCcw, Search, Sparkles, SquareKanban } from "lucide-react";
+import { Activity, AtSign, ListChecks, Menu, RotateCcw, Search, Sparkles, SquareKanban } from "lucide-react";
 import { useStore } from "@/lib/store-context";
 import { FORMATS, PieceFormat } from "@/lib/types";
 import { ViewId } from "@/lib/views";
@@ -57,6 +57,16 @@ export default function Dashboard() {
   const [view, setView] = useState<ViewId>("overview");
   const [format, setFormat] = useState<PieceFormat | "all">("all");
   const [search, setSearch] = useState("");
+  // Drawer del menú en móvil (en escritorio el rail es fijo y esto no aplica).
+  const [railOpen, setRailOpen] = useState(false);
+
+  // Con el drawer abierto, la página de atrás no debe hacer scroll.
+  useEffect(() => {
+    document.body.style.overflow = railOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [railOpen]);
 
   // El cliente (solo lectura) aterriza en el Resumen; el equipo, en Control.
   const landed = useRef(false);
@@ -84,7 +94,9 @@ export default function Dashboard() {
     const term = search.trim().toLowerCase();
     return accountPieces.filter((p) => {
       const formatOk = format === "all" || p.format === format;
-      const haystack = [p.hook, p.summary, p.cta, p.owner, p.status, p.objective].join(" ").toLowerCase();
+      const haystack = [p.hook, p.cuerpo, p.summary, p.cta, p.owner, p.status, p.objective]
+        .join(" ")
+        .toLowerCase();
       return formatOk && (!term || haystack.includes(term));
     });
   }, [accountPieces, format, search]);
@@ -123,7 +135,40 @@ export default function Dashboard() {
   return (
     <div className="app">
       <TopLoader />
-      <Rail view={view} setView={setView} />
+
+      {/* Barra superior SOLO móvil: menú a la izquierda, cuenta activa a la derecha. */}
+      <header className="mobile-topbar">
+        <button className="topbar-menu" onClick={() => setRailOpen(true)} aria-label="Abrir menú" title="Abrir menú">
+          <Menu size={20} />
+        </button>
+        <div className="topbar-brand">
+          <span className="mark">
+            <Activity size={16} strokeWidth={2.8} />
+          </span>
+          <strong>Content OS</strong>
+        </div>
+        {activeAccount && (
+          <button
+            className="topbar-account"
+            onClick={() => setRailOpen(true)}
+            title="Cambiar de cuenta"
+            aria-label={`Cuenta activa: ${activeAccount.handle}. Abrir menú para cambiar.`}
+          >
+            {activeMetrics?.avatarUrl ? (
+              <span className="avatar-ring">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="avatar" src={activeMetrics.avatarUrl} alt="" loading="lazy" />
+              </span>
+            ) : (
+              <span className="dot" style={{ ["--accent" as string]: activeAccount.color }} />
+            )}
+            <span className="topbar-handle">{activeAccount.handle}</span>
+          </button>
+        )}
+      </header>
+
+      {railOpen && <div className="rail-backdrop" onClick={() => setRailOpen(false)} aria-hidden />}
+      <Rail view={view} setView={setView} open={railOpen} onClose={() => setRailOpen(false)} />
       <main className="main">
         <section className="hero">
           <div className="hero-inner">
@@ -277,7 +322,7 @@ export default function Dashboard() {
       </main>
 
       {toast && (
-        <div className="toast">
+        <div className={`toast${toast.tone === "error" ? " error" : ""}`}>
           {toast.text}
           {toast.action && (
             <button className="toast-undo" onClick={() => toast.action?.run()}>

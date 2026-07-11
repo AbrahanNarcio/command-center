@@ -160,6 +160,8 @@ export default function GeneratorView() {
                     score,
                   });
                   notify("Guion enviado al pipeline");
+                } catch {
+                  // El toast de error global ya avisó.
                 } finally {
                   setSending(false);
                 }

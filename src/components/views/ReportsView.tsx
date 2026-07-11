@@ -268,7 +268,7 @@ export default function ReportsView() {
                 <div className="card-actions" style={{ marginTop: 0 }}>
                   <button onClick={() => setOpen(r)}>Ver</button>
                   {canEdit && (
-                    <button className="warn" onClick={() => remove(r.id)}>
+                    <button className="warn" onClick={() => remove(r.id)} title="Eliminar reporte" aria-label="Eliminar reporte">
                       <Trash2 size={11} />
                     </button>
                   )}

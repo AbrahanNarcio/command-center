@@ -15,6 +15,7 @@ import {
   Plus,
   Sparkles,
   SquareKanban,
+  X,
 } from "lucide-react";
 import { useStore } from "@/lib/store-context";
 import { ViewId } from "@/lib/views";
@@ -52,7 +53,16 @@ const NAV_GROUPS: { label: string; internal: boolean; items: NavItem[] }[] = [
   },
 ];
 
-export default function Rail({ view, setView }: { view: ViewId; setView: (v: ViewId) => void }) {
+interface RailProps {
+  view: ViewId;
+  setView: (v: ViewId) => void;
+  /** En móvil el rail es un drawer: `open` lo muestra y `onClose` lo cierra
+   *  (al elegir vista/cuenta o con la X). En escritorio no cambia nada. */
+  open?: boolean;
+  onClose?: () => void;
+}
+
+export default function Rail({ view, setView, open = false, onClose }: RailProps) {
   const { accounts, metrics, activeId, setActiveId, canEdit, isAdmin, me, signOut } = useStore();
 
   const avatarOf = (accountId: string) => metrics.find((m) => m.accountId === accountId)?.avatarUrl;
@@ -61,8 +71,13 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
 
   const groups = NAV_GROUPS.filter((g) => canEdit || !g.internal);
 
+  const pick = (id: ViewId) => {
+    setView(id);
+    onClose?.();
+  };
+
   return (
-    <aside className="rail">
+    <aside className={`rail${open ? " open" : ""}`}>
       <div className="brand">
         <div className="mark">
           <Activity size={22} strokeWidth={2.6} />
@@ -71,6 +86,9 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
           <strong>Content OS</strong>
           <span>Command Center</span>
         </div>
+        <button className="rail-close" onClick={onClose} aria-label="Cerrar menú" title="Cerrar menú">
+          <X size={17} />
+        </button>
       </div>
 
       <div className="account-switch">
@@ -80,7 +98,10 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
             key={account.id}
             className={`account-btn${account.id === activeId ? " active" : ""}`}
             style={{ ["--accent" as string]: account.color }}
-            onClick={() => setActiveId(account.id)}
+            onClick={() => {
+              setActiveId(account.id);
+              onClose?.();
+            }}
             onDoubleClick={isAdmin ? () => setModal({ account }) : undefined}
             title={isAdmin ? "Doble clic para editar" : account.handle}
           >
@@ -114,7 +135,7 @@ export default function Rail({ view, setView }: { view: ViewId; setView: (v: Vie
               <button
                 key={item.id}
                 className={`nav-${item.id}${view === item.id ? " active" : ""}`}
-                onClick={() => setView(item.id)}
+                onClick={() => pick(item.id)}
                 title={item.label}
               >
                 <i>{item.icon}</i>
