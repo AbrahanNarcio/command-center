@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store-context";
 import { FORMATS, Piece, PieceFormat } from "@/lib/types";
-import { accentVar, relativeTime } from "@/lib/utils";
+import { accentVar, hideOnImgError, relativeTime } from "@/lib/utils";
 import PostCard from "@/components/PostCard";
 import { Donut, LineChart } from "@/components/charts";
 
@@ -399,7 +399,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
               >
                 {r.thumb ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img className="reel-ret-thumb" src={r.thumb} alt="" loading="lazy" />
+                  <img className="reel-ret-thumb" src={r.thumb} alt="" loading="lazy" onError={hideOnImgError} />
                 ) : (
                   <span className="reel-ret-thumb reel-ret-ph" />
                 )}
@@ -567,7 +567,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
                 style={{ ["--i" as string]: i }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={post.thumb} alt={post.caption || post.format} loading="lazy" />
+                <img src={post.thumb} alt={post.caption || post.format} loading="lazy" onError={hideOnImgError} />
                 <span className="post-overlay">
                   <b>{post.format}</b>
                   <span>

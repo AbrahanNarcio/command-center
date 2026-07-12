@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { useStore } from "@/lib/store-context";
+import { hideOnImgError } from "@/lib/utils";
 import { ViewId } from "@/lib/views";
 import AccountModal from "@/components/AccountModal";
 import PasswordModal from "@/components/PasswordModal";
@@ -117,7 +118,7 @@ export default function Rail({ view, setView, open = false, onClose }: RailProps
             {avatarOf(account.id) ? (
               <span className="avatar-ring">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="avatar" src={avatarOf(account.id)} alt="" loading="lazy" />
+                <img className="avatar" src={avatarOf(account.id)} alt="" loading="lazy" onError={hideOnImgError} />
               </span>
             ) : (
               <span className="dot" />

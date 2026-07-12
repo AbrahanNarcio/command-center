@@ -51,3 +51,10 @@ export function relativeTime(iso: string): string {
   const days = Math.round(hours / 24);
   return fmt(`${days} días`);
 }
+
+/** Las URLs de imagen de Meta caducan entre syncs: si una falla, se oculta
+ *  (con su anillo, si es un avatar) en vez de mostrar el icono de imagen rota. */
+export function hideOnImgError(e: { currentTarget: HTMLImageElement }) {
+  const ring = e.currentTarget.closest(".avatar-ring") as HTMLElement | null;
+  (ring ?? e.currentTarget).style.display = "none";
+}

@@ -53,6 +53,46 @@ suposiciones — solo entra aquí lo comprobado.
 ### (Ronda anterior, mismo día) Semana del calendario ignoraba fechas; fallos de guardado mudos; búsqueda sin cuerpo
 Documentados y corregidos en la ronda anterior: ver commits `f387814`…`b2073a3` y `docs/06-ui.md`.
 
+## Ronda 2 (2026-07-11, misma fecha)
+
+### 7. `/api/generate` sin rate limit (riesgo de costo)
+- **Evidencia:** `/api/clients` (10/10min) y `/api/password` (5/15min) usan `rateLimited`; la ruta
+  nueva de IA — que cuesta dinero por llamada — no lo tenía.
+- **Fix:** `rateLimited("generate", 10, 10*60_000)` tras el gate.
+
+### 8. 404 y errores fatales salían en inglés
+- **Evidencia:** no existían `src/app/not-found.tsx` ni `src/app/error.tsx`; Next muestra sus
+  páginas por defecto en inglés ("This page could not be found"), rompiendo el invariante de
+  español neutro.
+- **Fix:** `not-found.tsx` y `error.tsx` propios, en español, con botón de regreso/reintento.
+
+### 9. El drawer móvil no respondía a Escape ni gestionaba el foco
+- **Evidencia:** cero manejadores de `keydown`/`focus` en Dashboard/Rail (grep vacío).
+- **Fix:** Escape cierra el drawer; al abrir, el foco va a la X; al cerrar con Escape vuelve a la
+  hamburguesa; `aria-expanded` en el botón de menú.
+
+### 10. Una pestaña abierta mostraba datos viejos para siempre
+- **Evidencia:** el bootstrap se cargaba UNA vez al montar (`useEffect` en store-context); el sync
+  diario corre a las 13:00 UTC y la pestaña nunca se enteraba.
+- **Fix:** al volver a la pestaña (`visibilitychange`), si pasaron >5 min desde la última carga,
+  se refresca en silencio.
+
+### 11. Imágenes de IG rotas si el sync falla unos días
+- **Evidencia:** las URLs de imagen de Meta caducan (trampa documentada en `04-instagram.md`); los
+  5 `<img>` del app (avatares en rail/hero/topbar, miniaturas de reels y publicaciones) no tenían
+  `onError` → icono de imagen rota.
+- **Fix:** helper `hideOnImgError` (utils.ts): oculta la imagen (y su anillo si es avatar).
+
+### 12. El login no enlazaba la política de privacidad
+- **Evidencia:** la página de login no tenía ningún enlace legal; Meta pide que la política sea
+  accesible desde el diálogo de inicio de sesión ("Política de privacidad del cuadro de diálogo de
+  inicio de sesión" en la configuración de la app).
+- **Fix:** footer del login con enlaces a `/privacidad` y `/eliminar-datos`.
+
+### Descartado con datos (no era problema)
+- **Tamaño del bundle:** 215KB de JS transferidos (747KB descomprimidos) medidos en producción —
+  razonable para un dashboard; no amerita code-splitting todavía.
+
 ## Deuda conocida (no bugs, decisiones)
 
 - El drag & drop sigue siendo solo de escritorio; en touch se usan ◀ ▶ (suficiente y estándar).

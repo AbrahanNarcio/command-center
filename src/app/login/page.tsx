@@ -124,6 +124,9 @@ export default function LoginPage() {
           </form>
         </section>
         <p className="auth-foot">¿Eres cliente y aún no tienes acceso? Pide tus credenciales al equipo.</p>
+        <p className="auth-foot auth-legal">
+          <a href="/privacidad">Política de privacidad</a> · <a href="/eliminar-datos">Eliminación de datos</a>
+        </p>
       </div>
     </div>
   );

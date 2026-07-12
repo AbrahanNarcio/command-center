@@ -129,6 +129,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     load(true).catch(() => setSetupError("No se pudo conectar con el servidor."));
   }, [load]);
 
+  // Una pestaña que quedó abierta muestra datos viejos (el sync corre a diario).
+  // Al volver a la pestaña, si pasaron >5 min desde la última carga, se refresca.
+  useEffect(() => {
+    let lastLoad = Date.now();
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastLoad < 5 * 60_000) return;
+      lastLoad = Date.now();
+      load(false).catch(() => {});
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [load]);
+
   const refresh = useCallback(async () => {
     await load(false);
   }, [load]);

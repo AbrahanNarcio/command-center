@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { accountGate } from "@/lib/auth";
 import { getSourceForAccount } from "@/lib/db";
+import { rateLimited, tooManyResponse } from "@/lib/security";
 import { ANGLES, FORMATS, OBJECTIVES } from "@/lib/types";
 
 /**
@@ -72,6 +73,9 @@ export async function POST(request: Request) {
 
   const gate = await accountGate(accountId);
   if (gate.response) return gate.response;
+
+  // Cada llamada cuesta dinero (API de pago): tope por IP como en /api/clients.
+  if (await rateLimited("generate", 10, 10 * 60_000)) return tooManyResponse();
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {

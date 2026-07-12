@@ -3229,6 +3229,21 @@ input[type="range"] {
   line-height: 1.5;
 }
 
+.auth-legal {
+  margin-top: 8px;
+}
+
+.auth-legal a {
+  color: var(--muted);
+  font-weight: 700;
+  transition: color 0.18s ease;
+}
+
+.auth-legal a:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
 /* ── Reportes ────────────────────────────────────────────────── */
 
 /* Configuración del reporte: periodo + secciones a incluir + nota/generar. */

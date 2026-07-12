@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Activity, AtSign, ListChecks, Menu, RotateCcw, Search, Sparkles, SquareKanban } from "lucide-react";
 import { useStore } from "@/lib/store-context";
 import { FORMATS, PieceFormat } from "@/lib/types";
+import { hideOnImgError } from "@/lib/utils";
 import { ViewId } from "@/lib/views";
 import Rail from "@/components/Rail";
 import OverviewView from "@/components/views/OverviewView";
@@ -60,11 +61,24 @@ export default function Dashboard() {
   // Drawer del menú en móvil (en escritorio el rail es fijo y esto no aplica).
   const [railOpen, setRailOpen] = useState(false);
 
-  // Con el drawer abierto, la página de atrás no debe hacer scroll.
+  // Con el drawer abierto: sin scroll de fondo, Escape lo cierra y el foco
+  // entra al botón de cerrar (y regresa a la hamburguesa al salir).
   useEffect(() => {
     document.body.style.overflow = railOpen ? "hidden" : "";
+    if (!railOpen) return () => {
+      document.body.style.overflow = "";
+    };
+    (document.querySelector(".rail-close") as HTMLElement | null)?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setRailOpen(false);
+        (document.querySelector(".topbar-menu") as HTMLElement | null)?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
+      document.removeEventListener("keydown", onKey);
     };
   }, [railOpen]);
 
@@ -138,7 +152,13 @@ export default function Dashboard() {
 
       {/* Barra superior SOLO móvil: menú a la izquierda, cuenta activa a la derecha. */}
       <header className="mobile-topbar">
-        <button className="topbar-menu" onClick={() => setRailOpen(true)} aria-label="Abrir menú" title="Abrir menú">
+        <button
+          className="topbar-menu"
+          onClick={() => setRailOpen(true)}
+          aria-label="Abrir menú"
+          aria-expanded={railOpen}
+          title="Abrir menú"
+        >
           <Menu size={20} />
         </button>
         <div className="topbar-brand">
@@ -157,7 +177,7 @@ export default function Dashboard() {
             {activeMetrics?.avatarUrl ? (
               <span className="avatar-ring">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="avatar" src={activeMetrics.avatarUrl} alt="" loading="lazy" />
+                <img className="avatar" src={activeMetrics.avatarUrl} alt="" loading="lazy" onError={hideOnImgError} />
               </span>
             ) : (
               <span className="dot" style={{ ["--accent" as string]: activeAccount.color }} />
@@ -178,7 +198,7 @@ export default function Dashboard() {
                 {activeMetrics?.avatarUrl && (
                   <span className="avatar-ring hero-avatar">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img className="avatar" src={activeMetrics.avatarUrl} alt="" loading="lazy" />
+                    <img className="avatar" src={activeMetrics.avatarUrl} alt="" loading="lazy" onError={hideOnImgError} />
                   </span>
                 )}
                 <div className="hero-id-text">
