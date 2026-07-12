@@ -526,23 +526,25 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
           </div>
         </section>
 
-        <section className="chart-card">
-          <div className="chart-top">
-            <div>
-              <p className="eyebrow">Operación de contenido</p>
-              <h2>Lo que hay que mirar hoy</h2>
+        {canEdit && (
+          <section className="chart-card">
+            <div className="chart-top">
+              <div>
+                <p className="eyebrow">Operación de contenido</p>
+                <h2>Lo que hay que mirar hoy</h2>
+              </div>
             </div>
-          </div>
-          <div className="mini-metrics">
-            {ops.map((o) => (
-              <article className="mini-metric" key={o.label}>
-                <span>{o.label}</span>
-                <strong>{o.value}</strong>
-                <p style={{ color: "var(--soft)", fontSize: 12, margin: "6px 0 0" }}>{o.detail}</p>
-              </article>
-            ))}
-          </div>
-        </section>
+            <div className="mini-metrics">
+              {ops.map((o) => (
+                <article className="mini-metric" key={o.label}>
+                  <span>{o.label}</span>
+                  <strong>{o.value}</strong>
+                  <p style={{ color: "var(--soft)", fontSize: 12, margin: "6px 0 0" }}>{o.detail}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       <section className="chart-card">
@@ -584,93 +586,110 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
         )}
       </section>
 
-      <div className="analytics-grid">
-        <section className="chart-card">
-          <div className="chart-top">
-            <div>
-              <p className="eyebrow">Piezas ganadoras</p>
-              <h2>Contenido con más señal comercial</h2>
+      {(() => {
+        const alertsCard = (
+          <section className="chart-card">
+            <div className="chart-top">
+              <div>
+                <p className="eyebrow">{canEdit ? "Alertas + insights" : "Alertas"}</p>
+                <h2>{canEdit ? "Control de calidad" : "Lo que cambió en tu cuenta"}</h2>
+              </div>
             </div>
-          </div>
-          <div className="filters" role="group" aria-label="Filtrar ganadoras por formato" style={{ marginBottom: 12 }}>
-            <button className={`chip${winFormat === "all" ? " active" : ""}`} onClick={() => setWinFormat("all")}>
-              Todo
-            </button>
-            {FORMATS.map((f) => (
-              <button
-                key={f}
-                className={`chip${winFormat === f ? " active" : ""}`}
-                onClick={() => setWinFormat(f)}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-          <div className="content-list">
-            {winners.length ? (
-              winners.map((p, i) => <PostCard key={p.id} piece={p} index={i} />)
-            ) : (
-              <div className="no-results">Sin piezas de este formato.</div>
-            )}
-          </div>
-        </section>
+            <div className="alerts">
+              {(activeMetrics.anomalies ?? []).map((a) => {
+                const fecha = new Date(`${a.date}T12:00:00`).toLocaleDateString("es-MX", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "short",
+                });
+                return (
+                  <div
+                    className="alert"
+                    key={`anom-${a.date}`}
+                    style={{ ["--accent" as string]: a.net < 0 ? "var(--coral)" : "var(--green)" }}
+                  >
+                    <strong>{a.net < 0 ? "Caída fuerte de seguidores" : "Pico de seguidores"}</strong>
+                    <p>
+                      {a.net < 0 ? "Perdiste" : "Ganaste"} {Math.abs(a.net).toLocaleString("es-MX")} seguidores
+                      netos el {fecha}. Detectado automáticamente contra tu ritmo normal.
+                    </p>
+                  </div>
+                );
+              })}
+              {canEdit &&
+                (alerts.length ? (
+                  alerts.map((p) => (
+                    <div
+                      className="alert"
+                      key={p.id}
+                      style={{ ["--accent" as string]: p.score < 65 ? "var(--coral)" : "var(--amber)" }}
+                    >
+                      <strong>{p.hook}</strong>
+                      <p>Score {p.score}. Revisar tensión, CTA o grababilidad antes de aprobar.</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="alert" style={{ ["--accent" as string]: "var(--green)" }}>
+                    <strong>Sin rojos</strong>
+                    <p>El filtro actual no tiene bloqueos fuertes.</p>
+                  </div>
+                ))}
+              {!canEdit && !(activeMetrics.anomalies ?? []).length && (
+                <div className="alert" style={{ ["--accent" as string]: "var(--green)" }}>
+                  <strong>Sin cambios fuera de lo normal</strong>
+                  <p>Tu ritmo de seguidores se mantiene estable.</p>
+                </div>
+              )}
+            </div>
+            <div className="insights" style={{ marginTop: 10 }}>
+              {activeMetrics.insights.map((ins) => (
+                <div className="insight" key={ins.title} style={{ ["--accent" as string]: accentVar(ins.color) }}>
+                  <strong>{ins.title}</strong>
+                  <p>{ins.text}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
 
-        <section className="chart-card">
-          <div className="chart-top">
-            <div>
-              <p className="eyebrow">Alertas + insights</p>
-              <h2>Control de calidad</h2>
-            </div>
-          </div>
-          <div className="alerts">
-            {(activeMetrics.anomalies ?? []).map((a) => {
-              const fecha = new Date(`${a.date}T12:00:00`).toLocaleDateString("es-MX", {
-                weekday: "long",
-                day: "numeric",
-                month: "short",
-              });
-              return (
-                <div
-                  className="alert"
-                  key={`anom-${a.date}`}
-                  style={{ ["--accent" as string]: a.net < 0 ? "var(--coral)" : "var(--green)" }}
-                >
-                  <strong>{a.net < 0 ? "Caída fuerte de seguidores" : "Pico de seguidores"}</strong>
-                  <p>
-                    {a.net < 0 ? "Perdiste" : "Ganaste"} {Math.abs(a.net).toLocaleString("es-MX")} seguidores
-                    netos el {fecha}. Detectado automáticamente contra tu ritmo normal.
-                  </p>
+        if (!canEdit) return alertsCard;
+
+        return (
+          <div className="analytics-grid">
+            <section className="chart-card">
+              <div className="chart-top">
+                <div>
+                  <p className="eyebrow">Piezas ganadoras</p>
+                  <h2>Contenido con más señal comercial</h2>
                 </div>
-              );
-            })}
-            {alerts.length ? (
-              alerts.map((p) => (
-                <div
-                  className="alert"
-                  key={p.id}
-                  style={{ ["--accent" as string]: p.score < 65 ? "var(--coral)" : "var(--amber)" }}
-                >
-                  <strong>{p.hook}</strong>
-                  <p>Score {p.score}. Revisar tensión, CTA o grababilidad antes de aprobar.</p>
-                </div>
-              ))
-            ) : (
-              <div className="alert" style={{ ["--accent" as string]: "var(--green)" }}>
-                <strong>Sin rojos</strong>
-                <p>El filtro actual no tiene bloqueos fuertes.</p>
               </div>
-            )}
-          </div>
-          <div className="insights" style={{ marginTop: 10 }}>
-            {activeMetrics.insights.map((ins) => (
-              <div className="insight" key={ins.title} style={{ ["--accent" as string]: accentVar(ins.color) }}>
-                <strong>{ins.title}</strong>
-                <p>{ins.text}</p>
+              <div className="filters" role="group" aria-label="Filtrar ganadoras por formato" style={{ marginBottom: 12 }}>
+                <button className={`chip${winFormat === "all" ? " active" : ""}`} onClick={() => setWinFormat("all")}>
+                  Todo
+                </button>
+                {FORMATS.map((f) => (
+                  <button
+                    key={f}
+                    className={`chip${winFormat === f ? " active" : ""}`}
+                    onClick={() => setWinFormat(f)}
+                  >
+                    {f}
+                  </button>
+                ))}
               </div>
-            ))}
+              <div className="content-list">
+                {winners.length ? (
+                  winners.map((p, i) => <PostCard key={p.id} piece={p} index={i} />)
+                ) : (
+                  <div className="no-results">Sin piezas de este formato.</div>
+                )}
+              </div>
+            </section>
+
+            {alertsCard}
           </div>
-        </section>
-      </div>
+        );
+      })()}
 
       {editing && <MetricsEditor metrics={activeMetrics} onClose={() => setEditing(false)} />}
     </div>

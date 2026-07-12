@@ -156,7 +156,9 @@ export default function Rail({ view, setView, open = false, onClose }: RailProps
       <nav className="nav" aria-label="Vistas">
         {groups.map((group) => (
           <div className="nav-group" key={group.label}>
-            <p className="eyebrow nav-group-label">{group.label}</p>
+            {/* El rótulo de grupo solo tiene sentido cuando hay más de uno que
+                distinguir (equipo interno); el cliente solo ve un grupo. */}
+            {groups.length > 1 && <p className="eyebrow nav-group-label">{group.label}</p>}
             {group.items.map((item) => (
               <button
                 key={item.id}

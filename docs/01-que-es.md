@@ -26,7 +26,7 @@ El menú lateral está dividido en dos secciones con título:
 | --- | --- | --- |
 | Resumen | `summary` | Seguidores + frase real de crecimiento 30d, 3 KPIs en lenguaje llano (Vistas/Alcance/Interacción) con deltas, y "Qué se publica esta semana". Botones a Control y Planeación. **El cliente aterriza aquí; admin/editor aterrizan en Control.** |
 | Planeación | `plan` | Qué se publica y qué día. Tira semanal (Lun-Dom, navegable, hoy resaltado) + tab de mes de solo lectura. Cada formato con icono y color. Los anuncios se representan como piezas formato `Ad` con fecha ("este día se sube o rota el anuncio"). |
-| Control | `overview` | Dashboard técnico completo: 12 KPIs con deltas por rango (Hoy/7/30 días), evolución diaria real de seguidores (Totales/Ganados/Perdidos/Netos), mix de engagement (donut), alcance por formato, top publicaciones, retención de reels (caída por tramo + tiempo promedio por reel con código de segundos), heatmap de publicación, funnel a DM, historias, anomalías, piezas ganadoras, últimas publicaciones. |
+| Control | `overview` | Dashboard técnico completo: 12 KPIs con deltas por rango (Hoy/7/30 días), evolución diaria real de seguidores (Totales/Ganados/Perdidos/Netos), mix de engagement (donut), alcance por formato, top publicaciones, retención de reels (caída por tramo + tiempo promedio por reel con código de segundos), heatmap de publicación, funnel a DM, historias, anomalías, últimas publicaciones. **"Operación de contenido" y "Piezas ganadoras" (score/estado/responsable) son de producción interna: solo admin/editor las ven**; el cliente ve el resto igual (son sus métricas de audiencia). Las alertas de score bajo ("revisar antes de aprobar") también son solo de equipo; el cliente solo ve anomalías de seguidores. |
 | Reportes | `reports` | Snapshots congelados de métricas (histórico que el sync no pisa) con export a PDF vía print. Al generar se elige el **periodo** (7/30 días o todo; congela los KPIs de ese rango real y la serie de seguidores recortada) y **qué secciones incluir** (KPIs, seguidores, mix, top posts, retención, funnel). **Cualquier usuario de la cuenta puede generar, incluido el cliente**; eliminar sigue siendo del equipo. Uno mensual se autogenera el día 1. |
 
 ### Administración (solo admin y editor)
@@ -50,7 +50,7 @@ Una **pieza** es la unidad editorial. Tiene:
 - **Estado** del pipeline, **objetivo** (DM/Agenda/Registro/Venta/Tráfico a perfil), **responsable**
   (selector de usuarios registrados, NO texto libre; default = quien la crea), **hora**, **día** y
   **fecha** opcional (si hay fecha, el día se deriva de ella y se bloquea).
-- **Score** de calidad (0-100) que alimenta el "quality gate" del hero.
+- **Score** de calidad (0-100) que alimenta el "quality gate" del hero (solo lo ve admin/editor).
 
 ## Invariantes (NO se negocian al modificar o fusionar)
 

@@ -6,6 +6,8 @@ import { useStore } from "@/lib/store-context";
 import { FORMATS, PieceFormat } from "@/lib/types";
 import { hideOnImgError } from "@/lib/utils";
 import { ViewId } from "@/lib/views";
+import { isoDate, piecesForDate, sameWeek, weekDays } from "@/lib/plan";
+import { FORMAT_META } from "@/components/FormatIcon";
 import Rail from "@/components/Rail";
 import OverviewView from "@/components/views/OverviewView";
 import PipelineView from "@/components/views/PipelineView";
@@ -59,6 +61,7 @@ export default function Dashboard() {
   const [view, setView] = useState<ViewId>("overview");
   const [format, setFormat] = useState<PieceFormat | "all">("all");
   const [search, setSearch] = useState("");
+  const today = new Date();
   // Drawer del menú en móvil (en escritorio el rail es fijo y esto no aplica).
   const [railOpen, setRailOpen] = useState(false);
 
@@ -123,6 +126,20 @@ export default function Dashboard() {
     const blocked = accountPieces.filter((p) => p.score < 70).length;
     return { avg, ready, blocked };
   }, [accountPieces]);
+
+  // Lo que ve el cliente en vez del panel de producción: su cuenta, no la cocina interna.
+  const audienceStrip = useMemo(() => {
+    const kpis = activeMetrics?.kpiRanges?.["30"] ?? activeMetrics?.kpis ?? [];
+    const byLabel = (label: string) => kpis.find((k) => k.label === label);
+    const followers = byLabel("Seguidores");
+    const views = byLabel("Vistas");
+    const next = weekDays(today)
+      .filter((d) => isoDate(d) >= isoDate(today))
+      .flatMap((date) => piecesForDate(accountPieces, date, sameWeek(date, today)).map((p) => ({ date, piece: p })))
+      .sort((a, b) => isoDate(a.date).localeCompare(isoDate(b.date)) || a.piece.time.localeCompare(b.piece.time))[0];
+    return { followers, views, next };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeMetrics, accountPieces]);
 
   if (setupError) {
     return (
@@ -251,35 +268,65 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-            <div className="command-strip" aria-label="Estado operativo">
-              <div className="command-card">
-                <div className="row">
-                  <strong>Quality gate</strong>
-                  <span>{gate.avg}%</span>
+            {canEdit ? (
+              <div className="command-strip" aria-label="Estado operativo">
+                <div className="command-card">
+                  <div className="row">
+                    <strong>Quality gate</strong>
+                    <span>{gate.avg}%</span>
+                  </div>
+                  <div className="pulse-bar">
+                    <span style={{ ["--w" as string]: `${gate.avg}%` }} />
+                  </div>
                 </div>
-                <div className="pulse-bar">
-                  <span style={{ ["--w" as string]: `${gate.avg}%` }} />
+                <div className="command-card">
+                  <div className="row">
+                    <strong>Listas para salir</strong>
+                    <span>{gate.ready} piezas</span>
+                  </div>
+                  <div className="pulse-bar">
+                    <span style={{ ["--w" as string]: `${Math.min(100, gate.ready * 12)}%` }} />
+                  </div>
+                </div>
+                <div className="command-card">
+                  <div className="row">
+                    <strong>Bloqueos creativos</strong>
+                    <span>{gate.blocked} rojos</span>
+                  </div>
+                  <div className="pulse-bar">
+                    <span style={{ ["--w" as string]: `${Math.min(100, gate.blocked * 20)}%` }} />
+                  </div>
                 </div>
               </div>
-              <div className="command-card">
-                <div className="row">
-                  <strong>Listas para salir</strong>
-                  <span>{gate.ready} piezas</span>
+            ) : (
+              <div className="command-strip" aria-label="Estado de tu cuenta">
+                <div className="command-card">
+                  <div className="row">
+                    <strong>Seguidores</strong>
+                    <span>{audienceStrip.followers?.value ?? "—"}</span>
+                  </div>
+                  <p className="command-card-hint">Total actual del perfil</p>
                 </div>
-                <div className="pulse-bar">
-                  <span style={{ ["--w" as string]: `${Math.min(100, gate.ready * 12)}%` }} />
+                <div className="command-card">
+                  <div className="row">
+                    <strong>Vistas</strong>
+                    <span>{audienceStrip.views?.value ?? "—"}</span>
+                  </div>
+                  <p className="command-card-hint">Últimos 30 días{audienceStrip.views?.delta ? ` · ${audienceStrip.views.delta}` : ""}</p>
+                </div>
+                <div className="command-card">
+                  <div className="row">
+                    <strong>Próxima publicación</strong>
+                    <span>{audienceStrip.next ? FORMAT_META[audienceStrip.next.piece.format].label : "—"}</span>
+                  </div>
+                  <p className="command-card-hint">
+                    {audienceStrip.next
+                      ? `${isoDate(audienceStrip.next.date) === isoDate(today) ? "Hoy" : audienceStrip.next.piece.day} · ${audienceStrip.next.piece.time}`
+                      : "Nada programado todavía"}
+                  </p>
                 </div>
               </div>
-              <div className="command-card">
-                <div className="row">
-                  <strong>Bloqueos creativos</strong>
-                  <span>{gate.blocked} rojos</span>
-                </div>
-                <div className="pulse-bar">
-                  <span style={{ ["--w" as string]: `${Math.min(100, gate.blocked * 20)}%` }} />
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </section>
 

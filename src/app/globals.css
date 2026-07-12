@@ -977,6 +977,18 @@ textarea {
   margin-bottom: 8px;
 }
 
+.command-card .row span {
+  color: var(--text);
+  font-weight: 800;
+}
+
+/* Tira de estado del cliente (sin barra de progreso, solo el dato + su contexto). */
+.command-card-hint {
+  color: var(--muted);
+  font-size: 11.5px;
+  margin: 0;
+}
+
 .pulse-bar {
   height: 7px;
   border-radius: 999px;
