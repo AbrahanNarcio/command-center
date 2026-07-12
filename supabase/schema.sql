@@ -120,6 +120,7 @@ create table if not exists ig_conversations (
   account_id text not null references accounts(id) on delete cascade,
   igsid text not null,                 -- id del usuario de IG (Instagram-scoped ID)
   username text not null default '',   -- si la API lo da
+  avatar_url text not null default '',  -- foto de perfil (URL del CDN de Meta; caduca, la refresca el sync)
   last_message_at timestamptz,
   last_snippet text not null default '',
   unread boolean not null default false,
@@ -142,3 +143,7 @@ create index if not exists ig_messages_conv on ig_messages(conversation_id, crea
 
 alter table ig_conversations enable row level security;
 alter table ig_messages enable row level security;
+
+-- MIGRACIÓN (2026-07-12, foto de perfil del contacto): si ya creaste las tablas
+-- de mensajes antes de esta fecha, corre esta línea en el SQL Editor:
+-- alter table ig_conversations add column if not exists avatar_url text not null default '';

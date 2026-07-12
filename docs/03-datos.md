@@ -77,11 +77,16 @@ Reportes viejos sin `reportMeta` = snapshot completo con todas las secciones.
 
 ### `ig_conversations` y `ig_messages`
 Bandeja de DMs. `ig_conversations`: una por persona (`igsid`) y cuenta (id = `conv_<account>_<igsid>`,
-único por cuenta+igsid), con `last_message_at`, `last_snippet`, `unread` y **lo nuestro**: `tags`
-(jsonb, etiquetas de lead) y `note`. `ig_messages`: id = `mid` de Meta (dedupe natural entre
-webhook y backfill vía upsert ignoreDuplicates), `from_me`, `text` (truncado a 4000), `created_at`.
-Meta solo expone ~20 mensajes recientes por conversación en el backfill; el histórico real lo
-acumula el webhook. MIGRACIÓN: bloque "MENSAJES DE INSTAGRAM" al final de `supabase/schema.sql`.
+único por cuenta+igsid), con `username`, `avatar_url` (foto de perfil vía User Profile API; la URL
+del CDN de Meta caduca — el sync la refresca y la UI tiene inicial de respaldo), `last_message_at`,
+`last_snippet`, `unread` y **lo nuestro**: `tags` (jsonb, etiquetas de lead) y `note`.
+`ig_messages`: id = `mid` de Meta (dedupe natural entre webhook y backfill vía upsert
+ignoreDuplicates), `from_me`, `text` (truncado a 4000), `created_at`. Meta solo expone ~20
+mensajes recientes por conversación en el backfill; el histórico real lo acumula el webhook.
+MIGRACIÓN: bloque "MENSAJES DE INSTAGRAM" al final de `supabase/schema.sql`; si las tablas se
+crearon antes de 2026-07-12, correr además la línea de `avatar_url` (comentada al final del
+bloque). `upsertConversation` reintenta sin `avatar_url` si la columna falta (misma red de
+seguridad que `withOptionalColumns` en piezas).
 
 ## Reglas transversales de la capa de datos
 

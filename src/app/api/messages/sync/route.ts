@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { accountGate } from "@/lib/auth";
 import { open } from "@/lib/crypto";
-import { getConnection, igTablesMissing, insertIgMessage, upsertConversation } from "@/lib/db";
-import { fetchConversations, subscribeMessaging } from "@/lib/instagram";
+import { getConnection, igTablesMissing, insertIgMessages, upsertConversation } from "@/lib/db";
+import { fetchConversations, fetchIgUserProfile, subscribeMessaging } from "@/lib/instagram";
 
 /**
  * Backfill de la bandeja + suscripción a webhooks. Se usa al activar Mensajes
@@ -43,34 +43,50 @@ export async function POST(request: Request) {
     const conversations = await fetchConversations(token);
     let convCount = 0;
     let msgCount = 0;
-    for (const conv of conversations) {
-      // Los mensajes vienen del más reciente al más viejo; el primero da el snippet.
-      const ordered = [...conv.messages].sort(
-        (a, b) => new Date(a.created_time).getTime() - new Date(b.created_time).getTime(),
-      );
-      let convId: string | null = null;
-      for (const m of ordered) {
-        const fromMe = m.from?.id === conn.igUserId;
-        const other = fromMe ? m.to?.data?.[0] : m.from;
-        if (!other?.id) continue;
-        convId = await upsertConversation({
+    // Cada conversación se procesa en paralelo: perfil del contacto (foto),
+    // un upsert de la conversación y sus mensajes en un solo lote.
+    const results = await Promise.allSettled(
+      conversations.map(async (conv) => {
+        const ordered = [...conv.messages].sort(
+          (a, b) => new Date(a.created_time).getTime() - new Date(b.created_time).getTime(),
+        );
+        // La persona del otro lado sale del primer mensaje que la identifique.
+        let other: { id: string; username?: string } | undefined;
+        for (const m of ordered) {
+          const candidate = m.from?.id === conn.igUserId ? m.to?.data?.[0] : m.from;
+          if (candidate?.id) { other = candidate; break; }
+        }
+        if (!other) return 0;
+        const last = ordered[ordered.length - 1];
+        // Foto de perfil (y username más fresco); tolerante: sin perfil no se cae.
+        const profile = await fetchIgUserProfile(token, other.id);
+        const convId = await upsertConversation({
           accountId,
           igsid: other.id,
-          username: other.username ?? undefined,
-          lastMessageAt: new Date(m.created_time).toISOString(),
-          lastSnippet: m.message ?? "",
+          username: profile?.username ?? other.username ?? undefined,
+          avatarUrl: profile?.profilePic ?? "",
+          lastMessageAt: new Date(last.created_time).toISOString(),
+          lastSnippet: last.message ?? "",
         });
-        await insertIgMessage({
-          id: m.id,
-          conversationId: convId,
-          accountId,
-          fromMe,
-          text: m.message ?? "",
-          createdAt: new Date(m.created_time).toISOString(),
-        });
-        msgCount++;
+        const rows = ordered
+          .filter((m) => m.id)
+          .map((m) => ({
+            id: m.id,
+            conversationId: convId,
+            accountId,
+            fromMe: m.from?.id === conn.igUserId,
+            text: m.message ?? "",
+            createdAt: new Date(m.created_time).toISOString(),
+          }));
+        await insertIgMessages(rows);
+        return rows.length;
+      }),
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value > 0) {
+        convCount++;
+        msgCount += r.value;
       }
-      if (convId) convCount++;
     }
     return NextResponse.json({ ok: true, subscribed, subscribeError, conversations: convCount, messages: msgCount });
   } catch (err) {

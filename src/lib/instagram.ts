@@ -418,16 +418,33 @@ export async function fetchConversations(token: string): Promise<IgApiConversati
   if (!res.ok) throw new Error(data?.error?.message || "No se pudieron leer las conversaciones.");
   const convs = (data?.data ?? []) as { id: string }[];
 
-  const out: IgApiConversation[] = [];
-  for (const conv of convs.slice(0, 25)) {
-    const mp = new URLSearchParams({
-      fields: "messages{id,created_time,from,to,message}",
-      access_token: token,
-    });
-    const mres = await fetch(`${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${conv.id}?${mp.toString()}`);
-    const mdata = await mres.json().catch(() => null);
-    if (!mres.ok) continue; // una conversación ilegible no tumba el backfill
-    out.push({ id: conv.id, messages: (mdata?.messages?.data ?? []) as IgApiMessage[] });
-  }
-  return out;
+  // En paralelo: una conversación ilegible no tumba el backfill (null → se filtra).
+  const results = await Promise.all(
+    convs.slice(0, 25).map(async (conv): Promise<IgApiConversation | null> => {
+      const mp = new URLSearchParams({
+        fields: "messages{id,created_time,from,to,message}",
+        access_token: token,
+      });
+      const mres = await fetch(`${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${conv.id}?${mp.toString()}`).catch(() => null);
+      if (!mres?.ok) return null;
+      const mdata = await mres.json().catch(() => null);
+      return { id: conv.id, messages: (mdata?.messages?.data ?? []) as IgApiMessage[] };
+    }),
+  );
+  return results.filter((c): c is IgApiConversation => c !== null);
+}
+
+/** Perfil público de un contacto por su IGSID (User Profile API; requiere el
+ *  scope de mensajes). `profile_pic` puede faltar y su URL caduca — refrescar
+ *  en cada sync. Devuelve null si Meta no expone el perfil. */
+export async function fetchIgUserProfile(
+  token: string,
+  igsid: string,
+): Promise<{ username?: string; profilePic?: string } | null> {
+  const params = new URLSearchParams({ fields: "username,profile_pic", access_token: token });
+  const res = await fetch(`${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${igsid}?${params.toString()}`).catch(() => null);
+  if (!res?.ok) return null;
+  const data = await res.json().catch(() => null);
+  if (!data) return null;
+  return { username: data.username, profilePic: data.profile_pic };
 }

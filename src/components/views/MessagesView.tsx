@@ -5,7 +5,21 @@ import { ArrowLeft, Loader2, RefreshCcw, Send } from "lucide-react";
 import { IgConversation, IgMessage, LEAD_TAGS, LEAD_TAG_COLORS, LeadTag } from "@/lib/types";
 import { useStore } from "@/lib/store-context";
 import { trackBusy } from "@/lib/busy";
-import { relativeTime } from "@/lib/utils";
+import { hideOnImgError, relativeTime } from "@/lib/utils";
+
+/** Foto de perfil del contacto con inicial de respaldo (la URL del CDN de Meta caduca). */
+function ConvAvatar({ conv }: { conv: IgConversation }) {
+  const initial = (conv.username || conv.igsid).slice(0, 1).toUpperCase();
+  return (
+    <span className="conv-avatar" aria-hidden>
+      <b>{initial}</b>
+      {conv.avatarUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={conv.avatarUrl} alt="" onError={hideOnImgError} />
+      )}
+    </span>
+  );
+}
 
 /** Bandeja de DMs de Instagram + etiquetas de lead (las etiquetas son nuestras,
  *  viven en la base de Content OS; Meta solo aporta los mensajes). */
@@ -19,6 +33,11 @@ export default function MessagesView() {
   const [sending, setSending] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const threadEnd = useRef<HTMLDivElement>(null);
+  const threadScroll = useRef<HTMLDivElement>(null);
+  const openIdRef = useRef<string | null>(null);
+  const threadLenRef = useRef<number | null>(null);
+  openIdRef.current = openId;
+  threadLenRef.current = thread?.length ?? null;
 
   const accountId = activeAccount?.id;
   const open = conversations?.find((c) => c.id === openId) ?? null;
@@ -47,6 +66,48 @@ export default function MessagesView() {
     setThread(null);
     load();
   }, [load]);
+
+  // Actualización en vivo: el webhook escribe los DMs al instante en la base y
+  // esta vista se refresca sola cada 10 s (bandeja + hilo abierto), sin tocar
+  // "Sincronizar bandeja". Silencioso: sin spinners y con reintento en el
+  // siguiente tick; se pausa con la pestaña oculta.
+  useEffect(() => {
+    if (!accountId) return;
+    let alive = true;
+    const tick = async () => {
+      if (document.hidden) return;
+      try {
+        const res = await fetch(`/api/messages?account=${encodeURIComponent(accountId)}`);
+        if (!alive || !res.ok) return;
+        const list = (await res.json()) as IgConversation[];
+        if (!alive) return;
+        setConversations(list.map((c) => (c.id === openIdRef.current ? { ...c, unread: false } : c)));
+
+        const id = openIdRef.current;
+        if (!id) return;
+        const tres = await fetch(`/api/messages/${id}`);
+        if (!alive || !tres.ok) return;
+        const tdata = await tres.json();
+        if (!alive || openIdRef.current !== id) return;
+        const next = tdata.messages as IgMessage[];
+        const prevLen = threadLenRef.current;
+        setThread(next);
+        // Mensajes nuevos: baja al final solo si ya estabas al final del hilo.
+        if (prevLen !== null && next.length > prevLen) {
+          const sc = threadScroll.current;
+          const nearBottom = !sc || sc.scrollHeight - sc.scrollTop - sc.clientHeight < 140;
+          if (nearBottom) setTimeout(() => threadEnd.current?.scrollIntoView({ block: "end" }), 60);
+        }
+      } catch {
+        // sin red o error puntual: el próximo tick lo reintenta
+      }
+    };
+    const iv = setInterval(tick, 10_000);
+    return () => {
+      alive = false;
+      clearInterval(iv);
+    };
+  }, [accountId]);
 
   const openConversation = async (id: string) => {
     setOpenId(id);
@@ -142,9 +203,9 @@ export default function MessagesView() {
           <p className="eyebrow">Bandeja de entrada · {activeAccount?.handle}</p>
           <h2>Mensajes</h2>
           <p style={{ color: "var(--muted)", fontSize: 13, margin: "6px 0 0" }}>
-            Los DMs de Instagram llegan aquí en tiempo real. Responde dentro de las 24 horas
-            posteriores al último mensaje de la persona (regla de Meta) y etiqueta cada lead para
-            darle seguimiento.
+            Los DMs de Instagram llegan solos: la bandeja se actualiza en segundos, sin sincronizar
+            a mano. Responde dentro de las 24 horas posteriores al último mensaje de la persona
+            (regla de Meta) y etiqueta cada lead para darle seguimiento.
           </p>
         </div>
         <div className="toolbar">
@@ -191,24 +252,27 @@ export default function MessagesView() {
                 className={`conv-item${c.id === openId ? " active" : ""}${c.unread ? " unread" : ""}`}
                 onClick={() => openConversation(c.id)}
               >
-                <span className="conv-top">
-                  <b>{title(c)}</b>
-                  <small>{c.lastMessageAt ? relativeTime(c.lastMessageAt) : ""}</small>
-                </span>
-                <span className="conv-snippet">{c.lastSnippet || "…"}</span>
-                {c.tags.length > 0 && (
-                  <span className="conv-tags">
-                    {c.tags.map((t) => (
-                      <em
-                        key={t}
-                        className="lead-tag"
-                        style={{ ["--tag" as string]: LEAD_TAG_COLORS[t as LeadTag] ?? "var(--muted)" }}
-                      >
-                        {t}
-                      </em>
-                    ))}
+                <ConvAvatar conv={c} />
+                <span className="conv-body">
+                  <span className="conv-top">
+                    <b>{title(c)}</b>
+                    <small>{c.lastMessageAt ? relativeTime(c.lastMessageAt) : ""}</small>
                   </span>
-                )}
+                  <span className="conv-snippet">{c.lastSnippet || "…"}</span>
+                  {c.tags.length > 0 && (
+                    <span className="conv-tags">
+                      {c.tags.map((t) => (
+                        <em
+                          key={t}
+                          className="lead-tag"
+                          style={{ ["--tag" as string]: LEAD_TAG_COLORS[t as LeadTag] ?? "var(--muted)" }}
+                        >
+                          {t}
+                        </em>
+                      ))}
+                    </span>
+                  )}
+                </span>
               </button>
             ))
           )}
@@ -225,6 +289,7 @@ export default function MessagesView() {
                 <button className="icon-button thread-back" onClick={() => setOpenId(null)} aria-label="Volver a la lista">
                   <ArrowLeft size={15} />
                 </button>
+                <ConvAvatar conv={open} />
                 <strong>{title(open)}</strong>
                 <div className="tagbar" role="group" aria-label="Etiquetas de lead">
                   {LEAD_TAGS.map((tag) => (
@@ -241,7 +306,7 @@ export default function MessagesView() {
                 </div>
               </div>
 
-              <div className="thread-scroll">
+              <div className="thread-scroll" ref={threadScroll}>
                 {thread === null ? (
                   <div className="no-results">Cargando hilo…</div>
                 ) : thread.length === 0 ? (

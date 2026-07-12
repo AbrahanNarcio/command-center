@@ -74,9 +74,18 @@ Docs de Meta verificadas 2026-07-12 (endpoints en `lib/instagram.ts`):
   posteriores al último mensaje del usuario; fuera de ella Meta devuelve error (la ruta reply lo
   traduce a un mensaje claro).
 - **Backfill**: `GET /me/conversations?platform=instagram` y luego
-  `GET /{CONV_ID}?fields=messages{id,created_time,from,to,message}`. ⚠️ Meta solo expone ~20
-  mensajes recientes por conversación y omite conversaciones de "Solicitudes" inactivas +30 días.
-  El histórico real lo acumula el webhook en nuestra base.
+  `GET /{CONV_ID}?fields=messages{id,created_time,from,to,message}` (en paralelo, una conversación
+  ilegible no tumba el resto). ⚠️ Meta solo expone ~20 mensajes recientes por conversación y omite
+  conversaciones de "Solicitudes" inactivas +30 días. El histórico real lo acumula el webhook en
+  nuestra base.
+- **Perfil del contacto (foto)**: `GET /{IGSID}?fields=username,profile_pic` (User Profile API,
+  verificada en vivo 2026-07-12; requiere el scope de mensajes). `profile_pic` puede FALTAR
+  (depende de la privacidad del usuario) y su URL del CDN caduca → el sync la refresca en cada
+  corrida y el webhook solo la consulta para conversaciones nuevas o sin foto; la UI siempre tiene
+  inicial de respaldo (`hideOnImgError`).
+- **Tiempo real en la UI**: el webhook escribe en la base al instante y `MessagesView` se refresca
+  sola cada 10 s (bandeja + hilo abierto, pausado con la pestaña oculta). "Sincronizar bandeja"
+  queda solo para el backfill inicial o para re-suscribir el webhook.
 - **Webhooks**: dos pasos. (1) En el panel de Meta: producto Instagram → Webhooks → Callback URL
   `https://<dominio>/api/webhooks/instagram` + verify token (`IG_WEBHOOK_VERIFY_TOKEN`) y
   suscribir el campo `messages`. (2) POR CUENTA: `POST /me/subscribed_apps?subscribed_fields=messages`

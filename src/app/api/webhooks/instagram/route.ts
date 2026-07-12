@@ -1,7 +1,8 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
-import { getConnectionByIgUser, insertIgMessage, upsertConversation } from "@/lib/db";
-import { IG_CONFIG } from "@/lib/instagram";
+import { open } from "@/lib/crypto";
+import { getConnectionByIgUser, getConversation, insertIgMessage, upsertConversation } from "@/lib/db";
+import { fetchIgUserProfile, IG_CONFIG } from "@/lib/instagram";
 
 /**
  * Webhook de mensajes de Instagram (producto Instagram → campo "messages").
@@ -84,9 +85,27 @@ export async function POST(request: Request) {
 
       const createdAt = new Date(ev.timestamp ?? Date.now()).toISOString();
       try {
+        // Conversación nueva o sin identificar: una sola consulta del perfil
+        // del contacto (username + foto). No-fatal: sin perfil, el mensaje
+        // se guarda igual.
+        let username: string | undefined;
+        let avatarUrl: string | undefined;
+        try {
+          const existing = await getConversation(`conv_${conn.accountId}_${otherIgsid}`);
+          if (!existing || !existing.username || !existing.avatarUrl) {
+            const token = open({ tokenEnc: conn.tokenEnc, tokenIv: conn.tokenIv, tokenTag: conn.tokenTag });
+            const profile = await fetchIgUserProfile(token, String(otherIgsid));
+            username = profile?.username ?? existing?.username ?? undefined;
+            avatarUrl = profile?.profilePic ?? undefined;
+          }
+        } catch {
+          // sin perfil (o sin clave de cifrado): seguimos con el mensaje pelón
+        }
         const convId = await upsertConversation({
           accountId: conn.accountId,
           igsid: String(otherIgsid),
+          username,
+          avatarUrl,
           lastMessageAt: createdAt,
           lastSnippet: text,
           unread: !fromMe,

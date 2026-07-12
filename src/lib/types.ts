@@ -253,6 +253,8 @@ export interface IgConversation {
   accountId: string;
   igsid: string;
   username: string;
+  /** Foto de perfil del contacto (URL del CDN de Meta; caduca — la refresca el sync). */
+  avatarUrl: string;
   lastMessageAt: string | null;
   lastSnippet: string;
   unread: boolean;

@@ -470,6 +470,7 @@ export async function rowAccountId(table: "pieces" | "sources" | "reports" | "ig
 
 type IgConvRow = {
   id: string; account_id: string; igsid: string; username: string;
+  avatar_url?: string | null;
   last_message_at: string | null; last_snippet: string; unread: boolean;
   tags: string[] | null; note: string;
 };
@@ -480,6 +481,7 @@ const toConversation = (r: IgConvRow): IgConversation => ({
   accountId: r.account_id,
   igsid: r.igsid,
   username: r.username ?? "",
+  avatarUrl: r.avatar_url ?? "",
   lastMessageAt: r.last_message_at,
   lastSnippet: r.last_snippet ?? "",
   unread: Boolean(r.unread),
@@ -517,7 +519,7 @@ export async function getConversation(id: string): Promise<IgConversation | null
 
 /** Crea/actualiza la conversación de una persona (por cuenta+igsid). */
 export async function upsertConversation(conv: {
-  accountId: string; igsid: string; username?: string;
+  accountId: string; igsid: string; username?: string; avatarUrl?: string;
   lastMessageAt?: string; lastSnippet?: string; unread?: boolean;
 }): Promise<string> {
   const id = `conv_${conv.accountId}_${conv.igsid}`;
@@ -528,10 +530,16 @@ export async function upsertConversation(conv: {
     updated_at: new Date().toISOString(),
   };
   if (conv.username !== undefined) row.username = conv.username;
+  if (conv.avatarUrl !== undefined) row.avatar_url = conv.avatarUrl;
   if (conv.lastMessageAt !== undefined) row.last_message_at = conv.lastMessageAt;
   if (conv.lastSnippet !== undefined) row.last_snippet = conv.lastSnippet.slice(0, 200);
   if (conv.unread !== undefined) row.unread = conv.unread;
-  const { error } = await adminClient().from("ig_conversations").upsert(row, { onConflict: "id" });
+  let { error } = await adminClient().from("ig_conversations").upsert(row, { onConflict: "id" });
+  // Red de seguridad: base sin la migración de avatar_url → reintenta sin la columna.
+  if (error && "avatar_url" in row && missingColumn(error, "avatar_url")) {
+    delete row.avatar_url;
+    ({ error } = await adminClient().from("ig_conversations").upsert(row, { onConflict: "id" }));
+  }
   if (error) fail("upsertConversation", error);
   return id;
 }
@@ -577,6 +585,26 @@ export async function insertIgMessage(msg: {
     { onConflict: "id", ignoreDuplicates: true },
   );
   if (error) fail("insertIgMessage", error);
+}
+
+/** Lote de mensajes en un solo upsert (backfill); mids repetidos se ignoran. */
+export async function insertIgMessages(msgs: {
+  id: string; conversationId: string; accountId: string;
+  fromMe: boolean; text: string; createdAt: string;
+}[]): Promise<void> {
+  if (!msgs.length) return;
+  const rows = msgs.map((m) => ({
+    id: m.id,
+    conversation_id: m.conversationId,
+    account_id: m.accountId,
+    from_me: m.fromMe,
+    text: m.text.slice(0, 4000),
+    created_at: m.createdAt,
+  }));
+  const { error } = await adminClient()
+    .from("ig_messages")
+    .upsert(rows, { onConflict: "id", ignoreDuplicates: true });
+  if (error) fail("insertIgMessages", error);
 }
 
 /** Conexión por el id de usuario de IG (el webhook llega con ese id). */
