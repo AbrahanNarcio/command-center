@@ -24,7 +24,7 @@ El menú lateral está dividido en dos secciones con título:
 
 | Vista | ViewId | Qué hace |
 | --- | --- | --- |
-| Resumen | `summary` | Seguidores + frase real de crecimiento 30d, 3 KPIs en lenguaje llano (Vistas/Alcance/Interacción) con deltas, y "Qué se publica esta semana". Botones a Control y Planeación. **El cliente aterriza aquí; admin/editor aterrizan en Control.** |
+| Resumen | `summary` | Seguidores + frase real de crecimiento 30d, **veredicto en una frase** ("Vas bien: 2 de 3 métricas subieron…", cuenta cuántos de los 3 KPIs subieron/bajaron frente al periodo anterior — nunca opina más de lo que el dato sostiene), 3 KPIs en lenguaje llano (Vistas/Alcance/Interacción) con deltas, y "Qué se publica esta semana". Botones a Control y Planeación. **El cliente aterriza aquí; admin/editor aterrizan en Control.** |
 | Planeación | `plan` | Qué se publica y qué día. Tira semanal (Lun-Dom, navegable, hoy resaltado) + tab de mes de solo lectura. Cada formato con icono y color. Los anuncios se representan como piezas formato `Ad` con fecha ("este día se sube o rota el anuncio"). **Solo la ve el cliente**: para admin/editor es redundante con Calendario (misma info, editable), así que se oculta del menú cuando `canEdit` (`Rail.tsx`, `internalHidden`). |
 | Control | `overview` | Dashboard técnico completo: 12 KPIs con deltas por rango (Hoy/7/30 días), evolución diaria real de seguidores (Totales/Ganados/Perdidos/Netos), mix de engagement (donut), alcance por formato, top publicaciones, retención de reels (caída por tramo + tiempo promedio por reel con código de segundos), heatmap de publicación, funnel a DM, historias, anomalías, últimas publicaciones. **"Operación de contenido" y "Piezas ganadoras" (score/estado/responsable) son de producción interna: solo admin/editor las ven**; el cliente ve el resto igual (son sus métricas de audiencia). Las alertas de score bajo ("revisar antes de aprobar") también son solo de equipo; el cliente solo ve anomalías de seguidores. |
 | Reportes | `reports` | Snapshots congelados de métricas (histórico que el sync no pisa) con export a PDF vía print. Al generar se elige el **periodo** (7/30 días o todo; congela los KPIs de ese rango real y la serie de seguidores recortada) y **qué secciones incluir** (KPIs, seguidores, mix, top posts, retención, funnel). **Cualquier usuario de la cuenta puede generar, incluido el cliente**; eliminar sigue siendo del equipo. Uno mensual se autogenera el día 1. |
@@ -41,7 +41,7 @@ se usa, configuración al final — no alfabético ni de creación):
 | Generador | `generator` | Genera borradores de guion con **IA real** (Claude API vía `/api/generate`): usa la fuente elegida (materia prima), formato, objetivo y nivel de filo; devuelve ángulo + hook + cuerpo + CTA y lo envía al pipeline. Requiere `ANTHROPIC_API_KEY`; sin ella responde 503 con mensaje claro (nunca finge generar). |
 | Pipeline | `pipeline` | Kanban por estado (Idea → Guion → Grabado → Editado → Aprobado → Programado), drag & drop, filtro por responsable. |
 | Calendario | `calendar` | Piezas por semana o por mes. La vista Semana usa fechas REALES (misma regla que Planeación, `lib/plan.ts`): navegable ‹ ›, piezas con fecha solo en su semana; sin fecha solo en la semana en curso. El "+"/Agregar crea la pieza ya fechada en ese día. |
-| Conexión IG | `settings` | OAuth con Meta, sincronizar ahora, desconectar (con confirmación), crear/borrar accesos de clientes (con generador de contraseñas fuertes), panel de salud (admin). |
+| Conexión IG | `settings` | OAuth con Meta, sincronizar ahora, desconectar (con confirmación), crear/borrar accesos de clientes (con generador de contraseñas fuertes), panel de salud (admin). **IG User ID, fecha de expiración del token y el "Checklist técnico" (AES-256-GCM, etc.) son solo admin**: el editor ve la cuenta conectada, la última sincronización y las "Reglas anti-baneo" (esas sí le sirven), sin el ruido de depuración. |
 
 ## La pieza de contenido (concepto central)
 
@@ -53,7 +53,9 @@ Una **pieza** es la unidad editorial. Tiene:
 - **Estado** del pipeline, **objetivo** (DM/Agenda/Registro/Venta/Tráfico a perfil), **responsable**
   (selector de usuarios registrados, NO texto libre; default = quien la crea), **hora**, **día** y
   **fecha** opcional (si hay fecha, el día se deriva de ella y se bloquea).
-- **Score** de calidad (0-100) que alimenta el "quality gate" del hero (solo lo ve admin/editor).
+- **Score** de calidad (0-100). No se calcula solo: lo califica quien crea/edita la pieza (slider en
+  `PieceModal`, default 70). Alimenta el "quality gate" del hero y el filtro de "bloqueos" (score
+  bajo 70) en Control (solo lo ve admin/editor).
 
 ## Invariantes (NO se negocian al modificar o fusionar)
 

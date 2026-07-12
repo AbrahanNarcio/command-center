@@ -2539,6 +2539,34 @@ textarea {
   color: var(--coral);
 }
 
+/* Veredicto de una frase (Resumen): lectura rápida de "voy bien o mal" sin
+   tener que interpretar 3 chips de delta por separado. */
+.summary-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 800;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--text);
+}
+
+.summary-verdict.up {
+  --accent: var(--green);
+}
+
+.summary-verdict.down {
+  --accent: var(--coral);
+}
+
+.summary-verdict.flat {
+  --accent: var(--amber);
+}
+
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));

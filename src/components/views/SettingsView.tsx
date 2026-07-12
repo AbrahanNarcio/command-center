@@ -331,17 +331,21 @@ export default function SettingsView() {
                 <input disabled value={`@${activeConnection.username} · ${activeConnection.accountType}`} />
               </label>
               <label>
-                IG User ID
-                <input disabled value={activeConnection.igUserId} />
-              </label>
-              <label>
                 Última sincronización
                 <input disabled value={activeConnection.lastSyncAt ? relativeTime(activeConnection.lastSyncAt) : "nunca"} />
               </label>
-              <label>
-                Token expira
-                <input disabled value={relativeTime(activeConnection.expiresAt)} />
-              </label>
+              {isAdmin && (
+                <>
+                  <label>
+                    IG User ID
+                    <input disabled value={activeConnection.igUserId} />
+                  </label>
+                  <label>
+                    Token expira
+                    <input disabled value={relativeTime(activeConnection.expiresAt)} />
+                  </label>
+                </>
+              )}
             </div>
             {activeConnection.status === "error" && activeConnection.error && (
               <div className="alert" style={{ ["--accent" as string]: "var(--coral)", marginBottom: 14 }}>
@@ -404,49 +408,53 @@ export default function SettingsView() {
       </section>
 
       <section className="panel">
-        <div className="panel-head">
-          <div>
-            <p className="eyebrow">{igConfigured ? "Estado" : "Setup pendiente"}</p>
-            <h2>{igConfigured ? "Checklist técnico" : "Cómo activar la conexión"}</h2>
-          </div>
-        </div>
-
-        {!igConfigured ? (
-          <div className="checklist">
-            {SETUP.map((step, i) => (
-              <div key={i}>
-                <span className="empty" />
-                {step}
+        {isAdmin && (
+          <>
+            <div className="panel-head">
+              <div>
+                <p className="eyebrow">{igConfigured ? "Estado" : "Setup pendiente"}</p>
+                <h2>{igConfigured ? "Checklist técnico" : "Cómo activar la conexión"}</h2>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="checklist">
-            <div>
-              <span className="check">✓</span>Credenciales de Meta cargadas
             </div>
-            <div>
-              <span className="check">✓</span>Cifrado de tokens activo (AES-256-GCM)
-            </div>
-            <div>
-              <span className="check">✓</span>Tokens fuera del frontend
-            </div>
-            <div>
-              {connected ? <span className="check">✓</span> : <span className="empty" />}
-              Cuenta conectada por OAuth
-            </div>
-            <div>
-              {activeConnection?.lastSyncAt ? <span className="check">✓</span> : <span className="empty" />}
-              Primer sync de insights realizado
-            </div>
-            <div>
-              <span className="empty" />
-              Publicación con confirmación humana (App Review)
-            </div>
-          </div>
+
+            {!igConfigured ? (
+              <div className="checklist">
+                {SETUP.map((step, i) => (
+                  <div key={i}>
+                    <span className="empty" />
+                    {step}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="checklist">
+                <div>
+                  <span className="check">✓</span>Credenciales de Meta cargadas
+                </div>
+                <div>
+                  <span className="check">✓</span>Cifrado de tokens activo (AES-256-GCM)
+                </div>
+                <div>
+                  <span className="check">✓</span>Tokens fuera del frontend
+                </div>
+                <div>
+                  {connected ? <span className="check">✓</span> : <span className="empty" />}
+                  Cuenta conectada por OAuth
+                </div>
+                <div>
+                  {activeConnection?.lastSyncAt ? <span className="check">✓</span> : <span className="empty" />}
+                  Primer sync de insights realizado
+                </div>
+                <div>
+                  <span className="empty" />
+                  Publicación con confirmación humana (App Review)
+                </div>
+              </div>
+            )}
+          </>
         )}
 
-        <div className="panel-head" style={{ margin: "18px 0 10px" }}>
+        <div className="panel-head" style={{ margin: isAdmin ? "18px 0 10px" : 0 }}>
           <div>
             <p className="eyebrow">Reglas anti-baneo</p>
             <h2>Lo que no hay que hacer</h2>

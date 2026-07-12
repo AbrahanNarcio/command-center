@@ -56,7 +56,7 @@ export default function PostCard({
           <span>{piece.objective}</span>
           <span>{piece.cta}</span>
         </div>
-        <div className="score-line">
+        <div className="score-line" title="Score de calidad: qué tan lista está la pieza (la califica quien la crea)">
           <div className="meter">
             <span
               style={{ ["--score" as string]: `${piece.score}%`, ["--meter" as string]: scoreColor(piece.score) }}

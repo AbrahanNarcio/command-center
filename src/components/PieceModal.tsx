@@ -235,7 +235,7 @@ export default function PieceModal({ initial, presetDate, onClose, onSave }: Pro
               />
             </label>
             <label>
-              Quality score: {draft.score}
+              Score de calidad: {draft.score}
               <input
                 type="range"
                 min={0}
@@ -243,6 +243,10 @@ export default function PieceModal({ initial, presetDate, onClose, onSave }: Pro
                 value={draft.score}
                 onChange={(e) => set("score", Number(e.target.value))}
               />
+              <span className="field-hint">
+                Qué tan lista sientes esta pieza (tú la calificas, no se calcula sola). Por debajo
+                de 70 se marca como bloqueo en Control.
+              </span>
             </label>
           </div>
         </div>

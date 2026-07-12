@@ -40,6 +40,24 @@ export default function SummaryView({ go }: { go: (view: ViewId) => void }) {
   const followers = byLabel("Seguidores");
   const simple = ["Vistas", "Alcance", "Interacción"].map(byLabel).filter(Boolean) as Kpi[];
 
+  // Un veredicto en una frase: cuenta cuántas de las 3 métricas subieron o
+  // bajaron frente al periodo anterior. Nunca opina más allá de lo que el
+  // dato dice (invariante: no fabricar juicios que el dato no sostiene).
+  const verdict = useMemo(() => {
+    const withDelta = simple.filter((k) => k.delta);
+    if (!withDelta.length) return null;
+    const up = withDelta.filter((k) => k.delta.startsWith("+")).length;
+    const down = withDelta.filter((k) => k.delta.startsWith("-")).length;
+    const total = withDelta.length;
+    if (up > down) {
+      return { tone: "up" as const, text: `Vas bien: ${up} de ${total} métricas subieron frente al periodo anterior.` };
+    }
+    if (down > up) {
+      return { tone: "down" as const, text: `${down} de ${total} métricas bajaron frente al periodo anterior.` };
+    }
+    return { tone: "flat" as const, text: "Mes estable: mitad de tus métricas subió, mitad bajó." };
+  }, [simple]);
+
   // Ganados - perdidos de los últimos 30 días, para decirlo en una frase.
   const net30 = useMemo(() => {
     const daily = activeMetrics?.followersDaily;
@@ -95,6 +113,8 @@ export default function SummaryView({ go }: { go: (view: ViewId) => void }) {
             </p>
           )}
         </div>
+
+        {verdict && <p className={`summary-verdict ${verdict.tone}`}>{verdict.text}</p>}
 
         <div className="summary-cards">
           {simple.map((kpi) => (
