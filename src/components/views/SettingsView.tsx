@@ -295,7 +295,7 @@ export default function SettingsView() {
       <section className="panel">
         <div className="panel-head">
           <div>
-            <p className="eyebrow">Instagram connector · {activeAccount?.handle}</p>
+            <p className="eyebrow">Conexión Instagram · {activeAccount?.handle}</p>
             <h2>{connected ? "Cuenta conectada" : igConfigured ? "Listo para conectar" : "Preparado, no configurado"}</h2>
           </div>
         </div>

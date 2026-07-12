@@ -31,7 +31,10 @@ type NavItem = { id: ViewId; icon: React.ReactNode; label: string };
 
 /* El menú en dos secciones: lo que ve el cliente y lo interno del equipo.
    El cliente (solo lectura) ve únicamente la primera; editor y admin ven
-   ambas (el editor, acotado a su propia cuenta, como en toda la app). */
+   ambas (el editor, acotado a su propia cuenta, como en toda la app).
+   "Planeación" es la versión de solo lectura de "Calendario": para el
+   equipo (que ya tiene Calendario, editable) se oculta por redundante —
+   ver `internalHidden` más abajo, no borrar el item de aquí. */
 const NAV_GROUPS: { label: string; internal: boolean; items: NavItem[] }[] = [
   {
     label: "Vistas para el cliente",
@@ -44,18 +47,26 @@ const NAV_GROUPS: { label: string; internal: boolean; items: NavItem[] }[] = [
     ],
   },
   {
+    // Orden por flujo real de trabajo: interacción diaria primero (Mensajes),
+    // luego producción en el orden en que de verdad se usa (Fuentes → Generador
+    // → Pipeline → Calendario), y configuración que se toca una sola vez al final.
     label: "Administración",
     internal: true,
     items: [
+      { id: "messages", icon: <MessageCircle />, label: "Mensajes" },
+      { id: "sources", icon: <Database />, label: "Fuentes" },
+      { id: "generator", icon: <Sparkles />, label: "Generador" },
       { id: "pipeline", icon: <SquareKanban />, label: "Pipeline" },
       { id: "calendar", icon: <CalendarDays />, label: "Calendario" },
-      { id: "messages", icon: <MessageCircle />, label: "Mensajes" },
-      { id: "generator", icon: <Sparkles />, label: "Generador" },
-      { id: "sources", icon: <Database />, label: "Fuentes" },
       { id: "settings", icon: <AtSign />, label: "Conexión IG" },
     ],
   },
 ];
+
+/** Items del grupo "cliente" que, para el equipo, duplican una vista interna
+ *  equivalente (Planeación = solo-lectura de Calendario). Se ocultan solo
+ *  cuando canEdit, para no quitarle nada al cliente real. */
+const internalHidden = new Set<ViewId>(["plan"]);
 
 interface RailProps {
   view: ViewId;
@@ -159,7 +170,9 @@ export default function Rail({ view, setView, open = false, onClose }: RailProps
             {/* El rótulo de grupo solo tiene sentido cuando hay más de uno que
                 distinguir (equipo interno); el cliente solo ve un grupo. */}
             {groups.length > 1 && <p className="eyebrow nav-group-label">{group.label}</p>}
-            {group.items.map((item) => (
+            {group.items
+              .filter((item) => !(canEdit && internalHidden.has(item.id)))
+              .map((item) => (
               <button
                 key={item.id}
                 className={`nav-${item.id}${view === item.id ? " active" : ""}`}

@@ -31,7 +31,7 @@ const PERIOD_OPTIONS: { key: string; label: string }[] = [
 const SECTION_OPTIONS: { key: ReportSection; label: string }[] = [
   { key: "kpis", label: "KPIs" },
   { key: "growth", label: "Seguidores" },
-  { key: "mix", label: "Mix engagement" },
+  { key: "mix", label: "Qué genera reacciones" },
   { key: "topPosts", label: "Top publicaciones" },
   { key: "retention", label: "Retención reels" },
   { key: "funnel", label: "Ruta a la acción" },
@@ -336,7 +336,7 @@ export default function ReportsView() {
                     <section className="chart-card">
                       <div className="chart-top">
                         <div>
-                          <p className="eyebrow">Mix engagement</p>
+                          <p className="eyebrow">Qué genera reacciones</p>
                           <h2>Qué generó acción</h2>
                         </div>
                       </div>
@@ -421,11 +421,11 @@ export default function ReportsView() {
                 <section className="chart-card">
                   <div className="chart-top">
                     <div>
-                      <p className="eyebrow">Funnel</p>
-                      <h2>Ruta a la acción</h2>
+                      <p className="eyebrow">Ruta a la acción</p>
+                      <h2>De tu alcance a tus seguidores</h2>
                     </div>
                     <div className="chart-value">
-                      <strong>{open.data.ctrBio}</strong>CTR bio
+                      <strong>{open.data.ctrBio}</strong>clic al link
                     </div>
                   </div>
                   <div className="funnel-list">

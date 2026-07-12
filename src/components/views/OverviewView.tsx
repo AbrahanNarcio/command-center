@@ -106,7 +106,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
       { label: "Piezas activas", value: pieces.length, detail: "En la semana" },
       { label: "Listas", value: ready, detail: "Aprobadas/programadas" },
       { label: "Score medio", value: avg, detail: "Quality gate" },
-      { label: "Reels", value: reels, detail: "Motor principal" },
+      { label: "Reels", value: reels, detail: "Tu formato más usado" },
       { label: "Bloqueos", value: blocked, detail: "Score bajo 70" },
       { label: "Publicables", value: ready, detail: "Listas para salir" },
     ];
@@ -248,7 +248,7 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
         <section className="chart-card tall">
           <div className="chart-top">
             <div>
-              <p className="eyebrow">Mix engagement</p>
+              <p className="eyebrow">Qué genera reacciones</p>
               <h2>Qué está generando acción</h2>
               <p>Me gusta, comentarios, guardados y compartidos.</p>
             </div>
@@ -477,11 +477,11 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
         <section className="chart-card">
           <div className="chart-top">
             <div>
-              <p className="eyebrow">CTR / perfil</p>
-              <h2>Ruta a DM y agenda</h2>
+              <p className="eyebrow">Ruta a la acción</p>
+              <h2>De tu alcance a tus seguidores</h2>
             </div>
             <div className="chart-value">
-              <strong>{activeMetrics.ctrBio}</strong>CTR bio
+              <strong>{activeMetrics.ctrBio}</strong>clic al link
             </div>
           </div>
           <div className="funnel-list">
@@ -507,9 +507,9 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
         <section className="chart-card">
           <div className="chart-top">
             <div>
-              <p className="eyebrow">Performance horario</p>
-              <h2>Heatmap de publicación</h2>
-              <p>Intensidad por día/hora para decidir slots.</p>
+              <p className="eyebrow">Cuándo publicar</p>
+              <h2>Mejores horarios para publicar</h2>
+              <p>Entre más brillante el cuadro, más interés generó publicar ese día y esa hora.</p>
             </div>
           </div>
           <div className="heatmap">
