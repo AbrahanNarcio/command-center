@@ -11,6 +11,7 @@ import OverviewView from "@/components/views/OverviewView";
 import PipelineView from "@/components/views/PipelineView";
 import CalendarView from "@/components/views/CalendarView";
 import GeneratorView from "@/components/views/GeneratorView";
+import MessagesView from "@/components/views/MessagesView";
 import SourcesView from "@/components/views/SourcesView";
 import SettingsView from "@/components/views/SettingsView";
 import ReportsView from "@/components/views/ReportsView";
@@ -335,6 +336,7 @@ export default function Dashboard() {
           {view === "pipeline" && canEdit && <PipelineView pieces={filtered} />}
           {view === "calendar" && canEdit && <CalendarView pieces={filtered} />}
           {view === "reports" && <ReportsView />}
+          {view === "messages" && canEdit && <MessagesView />}
           {view === "generator" && canEdit && <GeneratorView />}
           {view === "sources" && canEdit && <SourcesView />}
           {view === "settings" && canEdit && <SettingsView />}

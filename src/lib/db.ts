@@ -1,5 +1,7 @@
 import { adminClient } from "./supabase/admin";
 import {
+  IgConversation,
+  IgMessage,
   Account,
   AccountConnection,
   AccountMetrics,
@@ -458,8 +460,128 @@ export async function deleteClientUsersOf(accountId: string): Promise<void> {
 }
 
 /** Cuenta a la que pertenece una fila (para el guard por cuenta en PATCH/DELETE). */
-export async function rowAccountId(table: "pieces" | "sources" | "reports", id: string): Promise<string | null> {
+export async function rowAccountId(table: "pieces" | "sources" | "reports" | "ig_conversations", id: string): Promise<string | null> {
   const { data, error } = await adminClient().from(table).select("account_id").eq("id", id).maybeSingle();
   if (error) fail(`rowAccountId:${table}`, error);
   return data?.account_id ?? null;
+}
+
+/* ── Mensajes de Instagram (bandeja + etiquetas de lead) ────── */
+
+type IgConvRow = {
+  id: string; account_id: string; igsid: string; username: string;
+  last_message_at: string | null; last_snippet: string; unread: boolean;
+  tags: string[] | null; note: string;
+};
+type IgMsgRow = { id: string; conversation_id: string; account_id: string; from_me: boolean; text: string; created_at: string };
+
+const toConversation = (r: IgConvRow): IgConversation => ({
+  id: r.id,
+  accountId: r.account_id,
+  igsid: r.igsid,
+  username: r.username ?? "",
+  lastMessageAt: r.last_message_at,
+  lastSnippet: r.last_snippet ?? "",
+  unread: Boolean(r.unread),
+  tags: Array.isArray(r.tags) ? r.tags : [],
+  note: r.note ?? "",
+});
+
+const toIgMessage = (r: IgMsgRow): IgMessage => ({
+  id: r.id,
+  conversationId: r.conversation_id,
+  fromMe: Boolean(r.from_me),
+  text: r.text ?? "",
+  createdAt: r.created_at,
+});
+
+/** ¿Falta la migración de mensajes (tablas ig_*)? Para avisar claro en la UI. */
+export const igTablesMissing = (e: unknown): boolean =>
+  e instanceof Error && /ig_(conversations|messages)/.test(e.message) && /(does not exist|schema cache)/i.test(e.message);
+
+export async function listConversations(accountId: string): Promise<IgConversation[]> {
+  const { data, error } = await adminClient()
+    .from("ig_conversations")
+    .select("*")
+    .eq("account_id", accountId)
+    .order("last_message_at", { ascending: false, nullsFirst: false });
+  if (error) fail("listConversations", error);
+  return (data as IgConvRow[]).map(toConversation);
+}
+
+export async function getConversation(id: string): Promise<IgConversation | null> {
+  const { data, error } = await adminClient().from("ig_conversations").select("*").eq("id", id).maybeSingle();
+  if (error) fail("getConversation", error);
+  return data ? toConversation(data as IgConvRow) : null;
+}
+
+/** Crea/actualiza la conversación de una persona (por cuenta+igsid). */
+export async function upsertConversation(conv: {
+  accountId: string; igsid: string; username?: string;
+  lastMessageAt?: string; lastSnippet?: string; unread?: boolean;
+}): Promise<string> {
+  const id = `conv_${conv.accountId}_${conv.igsid}`;
+  const row: Record<string, unknown> = {
+    id,
+    account_id: conv.accountId,
+    igsid: conv.igsid,
+    updated_at: new Date().toISOString(),
+  };
+  if (conv.username !== undefined) row.username = conv.username;
+  if (conv.lastMessageAt !== undefined) row.last_message_at = conv.lastMessageAt;
+  if (conv.lastSnippet !== undefined) row.last_snippet = conv.lastSnippet.slice(0, 200);
+  if (conv.unread !== undefined) row.unread = conv.unread;
+  const { error } = await adminClient().from("ig_conversations").upsert(row, { onConflict: "id" });
+  if (error) fail("upsertConversation", error);
+  return id;
+}
+
+/** Etiquetas de lead / nota / leído: lo NUESTRO de la conversación. */
+export async function updateConversationRow(
+  id: string,
+  patch: { tags?: string[]; note?: string; unread?: boolean },
+): Promise<void> {
+  const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (patch.tags !== undefined) row.tags = patch.tags;
+  if (patch.note !== undefined) row.note = patch.note;
+  if (patch.unread !== undefined) row.unread = patch.unread;
+  const { error } = await adminClient().from("ig_conversations").update(row).eq("id", id);
+  if (error) fail("updateConversation", error);
+}
+
+export async function listIgMessages(conversationId: string, limit = 100): Promise<IgMessage[]> {
+  const { data, error } = await adminClient()
+    .from("ig_messages")
+    .select("*")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: true })
+    .limit(limit);
+  if (error) fail("listIgMessages", error);
+  return (data as IgMsgRow[]).map(toIgMessage);
+}
+
+/** Inserta un mensaje (id = mid de Meta). Ignora duplicados: el webhook y el
+ *  backfill pueden traer el mismo mensaje. */
+export async function insertIgMessage(msg: {
+  id: string; conversationId: string; accountId: string; fromMe: boolean; text: string; createdAt: string;
+}): Promise<void> {
+  const { error } = await adminClient().from("ig_messages").upsert(
+    {
+      id: msg.id,
+      conversation_id: msg.conversationId,
+      account_id: msg.accountId,
+      from_me: msg.fromMe,
+      text: msg.text.slice(0, 4000),
+      created_at: msg.createdAt,
+    },
+    { onConflict: "id", ignoreDuplicates: true },
+  );
+  if (error) fail("insertIgMessage", error);
+}
+
+/** Conexión por el id de usuario de IG (el webhook llega con ese id). */
+export async function getConnectionByIgUser(igUserId: string): Promise<AccountConnection | null> {
+  const { data, error } = await adminClient().from("connections").select("*").eq("ig_user_id", igUserId).maybeSingle();
+  if (error) fail("getConnectionByIgUser", error);
+  return data ? toConnection(data as ConnectionRow) : null;
 }

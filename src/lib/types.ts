@@ -232,3 +232,38 @@ export function toPublicConnection(c: AccountConnection): PublicConnection {
     error: c.error,
   };
 }
+
+/* ── Mensajes de Instagram (bandeja + etiquetas de lead) ────── */
+
+/** Etiquetas de lead disponibles (nuestras, no de Meta). Colores del sistema:
+ *  mismo concepto = mismo color en toda la app. */
+export const LEAD_TAGS = ["Nuevo", "Interesado", "Agendado", "Cliente", "Frío"] as const;
+export type LeadTag = (typeof LEAD_TAGS)[number];
+export const LEAD_TAG_COLORS: Record<LeadTag, string> = {
+  Nuevo: "var(--cyan)",
+  Interesado: "var(--lime)",
+  Agendado: "var(--amber)",
+  Cliente: "var(--green)",
+  Frío: "var(--muted)",
+};
+
+/** Conversación de DM con una persona. tags/note son propias de Content OS. */
+export interface IgConversation {
+  id: string;
+  accountId: string;
+  igsid: string;
+  username: string;
+  lastMessageAt: string | null;
+  lastSnippet: string;
+  unread: boolean;
+  tags: string[];
+  note: string;
+}
+
+export interface IgMessage {
+  id: string;
+  conversationId: string;
+  fromMe: boolean;
+  text: string;
+  createdAt: string;
+}

@@ -75,6 +75,14 @@ van recortados a esos días) y `sections` (qué secciones se incluyeron; la vist
 esas). Va dentro del jsonb a propósito: no requiere migración y sobrevive al restore del deshacer.
 Reportes viejos sin `reportMeta` = snapshot completo con todas las secciones.
 
+### `ig_conversations` y `ig_messages`
+Bandeja de DMs. `ig_conversations`: una por persona (`igsid`) y cuenta (id = `conv_<account>_<igsid>`,
+único por cuenta+igsid), con `last_message_at`, `last_snippet`, `unread` y **lo nuestro**: `tags`
+(jsonb, etiquetas de lead) y `note`. `ig_messages`: id = `mid` de Meta (dedupe natural entre
+webhook y backfill vía upsert ignoreDuplicates), `from_me`, `text` (truncado a 4000), `created_at`.
+Meta solo expone ~20 mensajes recientes por conversación en el backfill; el histórico real lo
+acumula el webhook. MIGRACIÓN: bloque "MENSAJES DE INSTAGRAM" al final de `supabase/schema.sql`.
+
 ## Reglas transversales de la capa de datos
 
 - **RLS activado sin políticas** en todas las tablas: nadie lee nada con la anon key; el único

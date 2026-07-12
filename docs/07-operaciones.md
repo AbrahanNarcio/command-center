@@ -19,10 +19,11 @@
 | `IG_APP_ID` / `IG_APP_SECRET` | server | app de Meta (producto Instagram) |
 | `IG_REDIRECT_URI` | server | EXACTA a la registrada en Meta (local: `http://localhost:8900/api/connect/callback`) |
 | `IG_API_VERSION` | server | versión Graph API (hoy v21.0) |
-| `IG_SCOPES` | server | `instagram_business_basic` (+extras solo si se usan) |
+| `IG_SCOPES` | server | `instagram_business_basic,instagram_business_manage_insights,instagram_business_manage_messages` |
 | `TOKEN_ENC_KEY` | server | 32 bytes hex (`openssl rand -hex 32`) para AES-256-GCM |
 | `CRON_SECRET` | server | bearer del cron de Vercel |
 | `SYNC_TIMEZONE` | server | zona horaria para "día 1" del reporte mensual |
+| `IG_WEBHOOK_VERIFY_TOKEN` | server | verify token del webhook de mensajes (lo inventas tú; igual en el panel de Meta) |
 | `ANTHROPIC_API_KEY` | **server** | key de la API de Claude para el Generador (sin ella el generador responde 503) |
 | `ANTHROPIC_MODEL` | server | opcional; modelo para generar guiones (default `claude-sonnet-5`) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | solo `npm run setup` | crear el admin inicial |

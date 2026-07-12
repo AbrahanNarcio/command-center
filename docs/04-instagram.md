@@ -63,6 +63,30 @@ Qué construye (todo dentro de `metrics.data`):
    esa invitación. Para conectar clientes sin invitación se necesita pasar **App Review** (Fase 4,
    pendiente).
 
+## Mensajería (bandeja de DMs)
+
+Docs de Meta verificadas 2026-07-12 (endpoints en `lib/instagram.ts`):
+
+- **Scope**: `instagram_business_manage_messages` (+ basic). Las conexiones hechas ANTES de
+  agregar el scope no lo tienen: hay que desconectar y reconectar la cuenta.
+- **Enviar**: `POST {graph}/{ver}/{IG_ID}/messages` con `{recipient:{id:IGSID}, message:{text}}` y
+  `Authorization: Bearer`. **Ventana de 24h**: solo se puede responder dentro de las 24 horas
+  posteriores al último mensaje del usuario; fuera de ella Meta devuelve error (la ruta reply lo
+  traduce a un mensaje claro).
+- **Backfill**: `GET /me/conversations?platform=instagram` y luego
+  `GET /{CONV_ID}?fields=messages{id,created_time,from,to,message}`. ⚠️ Meta solo expone ~20
+  mensajes recientes por conversación y omite conversaciones de "Solicitudes" inactivas +30 días.
+  El histórico real lo acumula el webhook en nuestra base.
+- **Webhooks**: dos pasos. (1) En el panel de Meta: producto Instagram → Webhooks → Callback URL
+  `https://<dominio>/api/webhooks/instagram` + verify token (`IG_WEBHOOK_VERIFY_TOKEN`) y
+  suscribir el campo `messages`. (2) POR CUENTA: `POST /me/subscribed_apps?subscribed_fields=messages`
+  con el token de la cuenta (lo hace `/api/messages/sync`). Sin el paso 2 no llegan eventos.
+- **Payload del webhook**: `entry[].id` = IG user id de la cuenta profesional;
+  `entry[].messaging[]` con `sender.id`, `recipient.id`, `timestamp`, `message.{mid,text,is_echo}`.
+  `is_echo` = lo envió la propia cuenta (p. ej. desde la app de IG): se guarda como `from_me`.
+- En modo desarrollo (acceso estándar) los webhooks y la mensajería funcionan SOLO para cuentas
+  con rol en la app (testers) — igual que el resto de la plataforma.
+
 ## Cron
 
 `vercel.json` → `GET /api/cron/sync` todos los días a las **13:00 UTC**. Autenticación: header

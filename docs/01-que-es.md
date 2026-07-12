@@ -34,6 +34,7 @@ El menú lateral está dividido en dos secciones con título:
 | Vista | ViewId | Qué hace |
 | --- | --- | --- |
 | Pipeline | `pipeline` | Kanban por estado (Idea → Guion → Grabado → Editado → Aprobado → Programado), drag & drop, filtro por responsable. |
+| Mensajes | `messages` | Bandeja de DMs de Instagram en tiempo real (webhook + backfill) con **etiquetas de lead propias** (Nuevo/Interesado/Agendado/Cliente/Frío, viven en nuestra base, no en Meta), nota y responder dentro de la ventana de 24h. Solo equipo (admin/editor); el viewer no ve DMs. |
 | Calendario | `calendar` | Piezas por semana o por mes. La vista Semana usa fechas REALES (misma regla que Planeación, `lib/plan.ts`): navegable ‹ ›, piezas con fecha solo en su semana; sin fecha solo en la semana en curso. El "+"/Agregar crea la pieza ya fechada en ese día. |
 | Generador | `generator` | Genera borradores de guion con **IA real** (Claude API vía `/api/generate`): usa la fuente elegida (materia prima), formato, objetivo y nivel de filo; devuelve ángulo + hook + cuerpo + CTA y lo envía al pipeline. Requiere `ANTHROPIC_API_KEY`; sin ella responde 503 con mensaje claro (nunca finge generar). |
 | Fuentes | `sources` | Banco de materia prima por cuenta. Importa archivos de texto (.txt/.md/.csv/.srt/.vtt, máx ~500 KB); **guarda solo el texto, nunca el archivo**. |

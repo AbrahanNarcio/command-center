@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   ListChecks,
   LogOut,
+  MessageCircle,
   Pencil,
   Plus,
   Sparkles,
@@ -48,6 +49,7 @@ const NAV_GROUPS: { label: string; internal: boolean; items: NavItem[] }[] = [
     items: [
       { id: "pipeline", icon: <SquareKanban />, label: "Pipeline" },
       { id: "calendar", icon: <CalendarDays />, label: "Calendario" },
+      { id: "messages", icon: <MessageCircle />, label: "Mensajes" },
       { id: "generator", icon: <Sparkles />, label: "Generador" },
       { id: "sources", icon: <Database />, label: "Fuentes" },
       { id: "settings", icon: <AtSign />, label: "Conexión IG" },

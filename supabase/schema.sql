@@ -106,3 +106,39 @@ create table if not exists reports (
   created_at timestamptz not null default now()
 );
 alter table reports enable row level security;
+
+-- ─────────────────────────────────────────────────────────────
+-- MENSAJES DE INSTAGRAM (bandeja + etiquetas de lead)
+-- MIGRACIÓN: si tu base ya existe, corre este bloque completo una vez
+-- en el SQL Editor de Supabase.
+-- ─────────────────────────────────────────────────────────────
+
+-- Conversación de DM: una por persona (IGSID) y cuenta. Las etiquetas de lead
+-- y la nota son NUESTRAS (viven aquí, no en Meta).
+create table if not exists ig_conversations (
+  id text primary key,                 -- conv_<igsid>_<account>
+  account_id text not null references accounts(id) on delete cascade,
+  igsid text not null,                 -- id del usuario de IG (Instagram-scoped ID)
+  username text not null default '',   -- si la API lo da
+  last_message_at timestamptz,
+  last_snippet text not null default '',
+  unread boolean not null default false,
+  tags jsonb not null default '[]',    -- etiquetas de lead (propias)
+  note text not null default '',
+  updated_at timestamptz not null default now()
+);
+create unique index if not exists ig_conversations_acc_igsid on ig_conversations(account_id, igsid);
+
+-- Mensaje individual (id = mid de Meta para dedupe entre webhook y backfill).
+create table if not exists ig_messages (
+  id text primary key,
+  conversation_id text not null references ig_conversations(id) on delete cascade,
+  account_id text not null references accounts(id) on delete cascade,
+  from_me boolean not null,
+  text text not null default '',
+  created_at timestamptz not null
+);
+create index if not exists ig_messages_conv on ig_messages(conversation_id, created_at);
+
+alter table ig_conversations enable row level security;
+alter table ig_messages enable row level security;

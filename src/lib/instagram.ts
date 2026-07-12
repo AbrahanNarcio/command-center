@@ -16,7 +16,7 @@ export const IG_CONFIG = {
   apiVersion: process.env.IG_API_VERSION ?? "v21.0",
   // Comma-separated. basic = perfil + media; manage_insights = métricas (requerido para el sync).
   // Add instagram_business_content_publish / _manage_messages / _manage_comments only if used.
-  scopes: (process.env.IG_SCOPES ?? "instagram_business_basic,instagram_business_manage_insights").trim(),
+  scopes: (process.env.IG_SCOPES ?? "instagram_business_basic,instagram_business_manage_insights,instagram_business_manage_messages").trim(),
   graphHost: "https://graph.instagram.com",
   authHost: "https://www.instagram.com",
   tokenHost: "https://api.instagram.com",
@@ -353,4 +353,81 @@ export function formatCompact(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return `${n}`;
+}
+
+/* ── Mensajería (DMs) — Instagram API with Instagram Login ──────
+   Docs verificadas 2026-07-12:
+   - Enviar:        POST {graph}/{ver}/{IG_ID}/messages  body {recipient:{id:IGSID}, message:{text}}
+   - Conversaciones: GET {graph}/{ver}/me/conversations?platform=instagram
+   - Mensajes:       GET {graph}/{ver}/{CONVERSATION_ID}?fields=messages  (solo ~20 recientes)
+   - Detalle:        GET {graph}/{ver}/{MESSAGE_ID}?fields=id,created_time,from,to,message
+   - Webhook:        producto Instagram, campo "messages"; además la cuenta debe
+                     suscribirse con POST /me/subscribed_apps?subscribed_fields=messages
+   Regla de plataforma: solo se puede responder dentro de las 24h posteriores al
+   último mensaje del usuario. */
+
+/** Envía un DM de texto. Lanza Error con el mensaje de Meta si falla
+ *  (p. ej. fuera de la ventana de 24 horas). */
+export async function sendIgMessage(
+  igUserId: string,
+  token: string,
+  recipientIgsid: string,
+  text: string,
+): Promise<{ message_id: string }> {
+  const res = await fetch(`${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${igUserId}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ recipient: { id: recipientIgsid }, message: { text } }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.message_id) {
+    throw new Error(data?.error?.message || "No se pudo enviar el mensaje.");
+  }
+  return data as { message_id: string };
+}
+
+/** Suscribe la cuenta profesional a los webhooks de mensajes de la app.
+ *  Sin esto, Meta no envía notificaciones de DMs para esta cuenta. */
+export async function subscribeMessaging(token: string): Promise<void> {
+  const params = new URLSearchParams({ subscribed_fields: "messages", access_token: token });
+  const res = await fetch(`${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/me/subscribed_apps?${params.toString()}`, {
+    method: "POST",
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.error?.message || "No se pudo suscribir a los webhooks de mensajes.");
+}
+
+export interface IgApiMessage {
+  id: string;
+  created_time: string;
+  from?: { id: string; username?: string };
+  to?: { data?: { id: string; username?: string }[] };
+  message?: string;
+}
+export interface IgApiConversation {
+  id: string;
+  messages: IgApiMessage[];
+}
+
+/** Backfill: conversaciones recientes con sus mensajes (Meta solo expone ~20
+ *  mensajes por conversación; el histórico vivo lo mantiene el webhook). */
+export async function fetchConversations(token: string): Promise<IgApiConversation[]> {
+  const params = new URLSearchParams({ platform: "instagram", access_token: token });
+  const res = await fetch(`${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/me/conversations?${params.toString()}`);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.error?.message || "No se pudieron leer las conversaciones.");
+  const convs = (data?.data ?? []) as { id: string }[];
+
+  const out: IgApiConversation[] = [];
+  for (const conv of convs.slice(0, 25)) {
+    const mp = new URLSearchParams({
+      fields: "messages{id,created_time,from,to,message}",
+      access_token: token,
+    });
+    const mres = await fetch(`${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${conv.id}?${mp.toString()}`);
+    const mdata = await mres.json().catch(() => null);
+    if (!mres.ok) continue; // una conversación ilegible no tumba el backfill
+    out.push({ id: conv.id, messages: (mdata?.messages?.data ?? []) as IgApiMessage[] });
+  }
+  return out;
 }

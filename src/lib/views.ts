@@ -4,6 +4,7 @@ export type ViewId =
   | "pipeline"
   | "calendar"
   | "plan"
+  | "messages"
   | "generator"
   | "sources"
   | "settings"
