@@ -84,8 +84,17 @@ Docs de Meta verificadas 2026-07-12 (endpoints en `lib/instagram.ts`):
 - **Payload del webhook**: `entry[].id` = IG user id de la cuenta profesional;
   `entry[].messaging[]` con `sender.id`, `recipient.id`, `timestamp`, `message.{mid,text,is_echo}`.
   `is_echo` = lo envió la propia cuenta (p. ej. desde la app de IG): se guarda como `from_me`.
-- En modo desarrollo (acceso estándar) los webhooks y la mensajería funcionan SOLO para cuentas
-  con rol en la app (testers) — igual que el resto de la plataforma.
+  ⚠️ La cuenta profesional tiene DOS ids (el `ig_user_id` clásico `178...` que guardamos al
+  conectar, y el id nuevo que devuelve `GET /me?fields=id` con login de Instagram); `entry.id`
+  puede llegar con cualquiera, así que la ruta del webhook hace fallback al id de negocio del
+  evento (`recipient` en entrantes, `sender` en ecos) y loggea los que no matcheen.
+- ⚠️ **Los webhooks requieren la app en modo Activo (Live)**. Cita textual de la doc de Meta
+  (Instagram Platform → Webhooks, verificada 2026-07-12): "Apps must be set to Live in the App
+  Dashboard to receive webhook notifications". En modo desarrollo Meta NO entrega eventos (aunque
+  la verificación del callback y `subscribed_apps` funcionen) y además el backfill
+  `/me/conversations` devuelve `data: []` aunque existan DMs (filtrado de modo desarrollo,
+  comprobado en vivo 2026-07-12). Con acceso estándar + app en Live, la mensajería sigue
+  funcionando solo para cuentas con rol en la app (testers).
 
 ## Cron
 

@@ -58,15 +58,27 @@ export async function POST(request: Request) {
     // entry.id = IG user id de la cuenta profesional que recibió/emitió el evento.
     const igAccountId = String(entry.id ?? "");
     if (!igAccountId) continue;
-    const conn = await getConnectionByIgUser(igAccountId).catch(() => null);
-    if (!conn) continue; // cuenta no conectada a Content OS: se ignora
+    let conn = await getConnectionByIgUser(igAccountId).catch(() => null);
 
     for (const ev of entry.messaging ?? []) {
       const mid = ev.message?.mid;
       const text = ev.message?.text ?? "";
       if (!mid) continue; // reacciones/lecturas u otros eventos: por ahora no se guardan
       // is_echo = lo envió la propia cuenta (p. ej. respondió desde la app de IG).
-      const fromMe = Boolean(ev.message?.is_echo) || ev.sender?.id === igAccountId;
+      const echo = Boolean(ev.message?.is_echo);
+      // La cuenta profesional tiene DOS ids (el ig_user_id clásico 178... y el id
+      // nuevo de la API con login de Instagram); entry.id puede llegar con cualquiera.
+      // Si no matchea el guardado, se intenta con el id de negocio del evento
+      // (recipient en mensajes entrantes, sender en ecos).
+      if (!conn) {
+        const candidate = echo ? ev.sender?.id : ev.recipient?.id;
+        if (candidate) conn = await getConnectionByIgUser(String(candidate)).catch(() => null);
+      }
+      if (!conn) {
+        console.log("webhook instagram: evento sin cuenta conectada, entry.id =", igAccountId);
+        continue;
+      }
+      const fromMe = echo || ev.sender?.id === igAccountId || ev.sender?.id === conn.igUserId;
       const otherIgsid = fromMe ? ev.recipient?.id : ev.sender?.id;
       if (!otherIgsid) continue;
 
