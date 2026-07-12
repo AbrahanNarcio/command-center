@@ -59,6 +59,11 @@ Documentados y corregidos en la ronda anterior: ver commits `f387814`…`b2073a3
 - **Evidencia:** `/api/clients` (10/10min) y `/api/password` (5/15min) usan `rateLimited`; la ruta
   nueva de IA — que cuesta dinero por llamada — no lo tenía.
 - **Fix:** `rateLimited("generate", 10, 10*60_000)` tras el gate.
+- **Limitación verificada en prod:** 12 llamadas seguidas NO produjeron 429 — el bucket vive en
+  memoria y las instancias serverless de Vercel no lo comparten (limitación ya documentada en
+  `05-seguridad-roles.md`). Es mitigación best-effort; la protección real es que la ruta exige
+  sesión de equipo (accountGate) y `max_tokens` acotado. Si el costo se vuelve un tema, el
+  siguiente paso es un contador durable (tabla en Supabase o Upstash).
 
 ### 8. 404 y errores fatales salían en inglés
 - **Evidencia:** no existían `src/app/not-found.tsx` ni `src/app/error.tsx`; Next muestra sus
