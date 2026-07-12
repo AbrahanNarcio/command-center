@@ -244,7 +244,7 @@ export default function Dashboard() {
                   </button>
                 )}
                 {canEdit && (
-                  <button className="button" onClick={() => setView("settings")}>
+                  <button className="button paint" onClick={() => setView("settings")}>
                     <AtSign size={15} /> Conexión Instagram
                   </button>
                 )}

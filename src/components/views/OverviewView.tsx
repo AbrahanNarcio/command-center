@@ -81,11 +81,13 @@ export default function OverviewView({ pieces }: { pieces: Piece[] }) {
       lost: `-${compact(sum(series.lost))}`,
       net: `${netSum >= 0 ? "+" : "-"}${compact(Math.abs(netSum))}`,
     };
+    // Días efectivos: si la serie aún no acumula fRange días, decir los reales.
+    const effDays = Math.min(fRange, daily.length);
     const caption = {
       total: "seguidores hoy",
-      gained: `ganados en ${fRange} días`,
-      lost: `perdidos en ${fRange} días`,
-      net: `netos en ${fRange} días`,
+      gained: `ganados en ${effDays} días`,
+      lost: `perdidos en ${effDays} días`,
+      net: `netos en ${effDays} días`,
     };
     return { series, headline, caption, dates, ranges };
   }, [activeMetrics, fRange]);

@@ -62,6 +62,13 @@ export async function rateLimited(key: string, max: number, windowMs: number): P
   return hit.count > max;
 }
 
+/** Los colores que escriben usuarios acaban en propiedades CSS (var(--accent)):
+ *  solo se aceptan formatos de color seguros; lo demás cae a un gris neutro.
+ *  Evita cargar recursos externos vía url() dentro de gradientes/fondos. */
+const SAFE_COLOR = /^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$|^hsla?\([\d.,\s%]+\)$/;
+export const safeColor = (c: unknown): string =>
+  typeof c === "string" && SAFE_COLOR.test(c.trim()) ? c.trim() : "#8a93a6";
+
 export function tooManyResponse(): NextResponse {
   return NextResponse.json(
     { error: "Demasiados intentos. Espera un momento e inténtalo de nuevo." },

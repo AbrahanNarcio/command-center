@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminGate } from "@/lib/auth";
+import { safeColor } from "@/lib/security";
 import { deleteAccountRow, deleteClientUsersOf, updateAccountRow } from "@/lib/db";
 
 type Params = { params: Promise<{ id: string }> };
@@ -14,7 +15,7 @@ export async function PATCH(request: Request, { params }: Params) {
     name: typeof body.name === "string" ? body.name : undefined,
     handle: typeof body.handle === "string" ? body.handle : undefined,
     kind: body.kind === "propia" || body.kind === "cliente" ? body.kind : undefined,
-    color: typeof body.color === "string" ? body.color : undefined,
+    color: typeof body.color === "string" ? safeColor(body.color) : undefined,
   });
   return NextResponse.json({ ok: true });
 }

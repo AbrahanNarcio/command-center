@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { accountGate } from "@/lib/auth";
 import { getMetricsRow, upsertMetrics } from "@/lib/db";
+import { safeColor } from "@/lib/security";
 import { AccountMetrics } from "@/lib/types";
 
 type Params = { params: Promise<{ accountId: string }> };
@@ -10,14 +11,6 @@ const EDITABLE: (keyof Omit<AccountMetrics, "accountId" | "updatedAt">)[] = [
   "reachTotal", "retention", "retentionAvg", "funnel", "ctrBio", "heatmap", "insights",
 ];
 
-/**
- * Los campos color se usan en propiedades CSS (var(--accent)), así que solo se
- * aceptan formatos de color seguros; cualquier otra cosa cae a un gris neutro.
- * Evita inyección CSS vía valores como "red; background: url(...)".
- */
-const SAFE_COLOR = /^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$|^hsla?\([\d.,\s%]+\)$/;
-const safeColor = (c: unknown): string =>
-  typeof c === "string" && SAFE_COLOR.test(c.trim()) ? c.trim() : "#8a93a6";
 
 function sanitizeColors(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sanitizeColors);

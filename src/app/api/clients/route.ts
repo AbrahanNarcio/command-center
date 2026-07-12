@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminGate } from "@/lib/auth";
+import { authErrorEs } from "@/lib/auth-errors";
 import { adminClient } from "@/lib/supabase/admin";
 import { passwordProblem, rateLimited, tooManyResponse } from "@/lib/security";
 
@@ -27,7 +28,8 @@ export async function POST(request: Request) {
     email_confirm: true,
   });
   if (error || !created.user) {
-    return NextResponse.json({ error: error?.message || "No se pudo crear el usuario" }, { status: 400 });
+    // Supabase responde en inglés: se traduce antes de mostrarlo (invariante de idioma).
+    return NextResponse.json({ error: authErrorEs(error?.message) }, { status: 400 });
   }
 
   const { error: profileError } = await supabase.from("profiles").insert({

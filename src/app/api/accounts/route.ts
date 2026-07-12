@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminGate } from "@/lib/auth";
+import { safeColor } from "@/lib/security";
 import { insertAccount, upsertMetrics } from "@/lib/db";
 import { emptyMetrics, newId } from "@/lib/seed";
 import { Account } from "@/lib/types";
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
     name: String(body.name || "Cuenta nueva"),
     handle: String(body.handle || "@cuenta"),
     kind: body.kind === "propia" ? "propia" : "cliente",
-    color: String(body.color || "#9b7cff"),
+    color: safeColor(body.color || "#9b7cff"),
   };
   await insertAccount(account);
   // Cuentas nuevas arrancan vacías: métricas en cero, sin piezas ni fuentes.

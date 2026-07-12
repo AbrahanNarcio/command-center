@@ -537,6 +537,44 @@ button {
   box-shadow: 0 0 18px var(--cyan);
 }
 
+/* Conexión IG: la ÚNICA entrada del menú con el barrido multicolor de
+   Instagram (mismo lenguaje que .button.paint: lo que parece IG, ES de IG). */
+.nav button.nav-settings {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.nav button.nav-settings::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(120deg, #feda75, #fa7e1e 30%, #d62976 55%, #962fbf 80%, #4f5bd5);
+  transform: translateX(-101%);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav button.nav-settings:hover::before {
+  transform: translateX(0);
+}
+
+.nav button.nav-settings:hover {
+  color: #fff;
+  border-color: transparent;
+}
+
+.nav button.nav-settings:hover i {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.nav button.nav-settings:hover::after {
+  background: #fff;
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.8);
+}
+
 .nav i,
 .tool-icon {
   width: 26px;

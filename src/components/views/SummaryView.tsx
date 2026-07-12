@@ -44,7 +44,10 @@ export default function SummaryView({ go }: { go: (view: ViewId) => void }) {
   const net30 = useMemo(() => {
     const daily = activeMetrics?.followersDaily;
     if (!daily?.length) return null;
-    return daily.slice(-30).reduce((sum, d) => sum + d.gained - d.lost, 0);
+    // Si la serie aún no acumula 30 días, la frase dice los días REALES
+    // (invariante: no afirmar periodos que los datos no cubren).
+    const days = Math.min(30, daily.length);
+    return { days, net: daily.slice(-days).reduce((sum, d) => sum + d.gained - d.lost, 0) };
   }, [activeMetrics]);
 
   // Lo que queda de esta semana (de hoy al domingo).
@@ -86,9 +89,9 @@ export default function SummaryView({ go }: { go: (view: ViewId) => void }) {
             </div>
           </div>
           {net30 != null && (
-            <p className={`summary-net${net30 < 0 ? " down" : " up"}`}>
-              {net30 >= 0 ? "▲ Ganaste" : "▼ Perdiste"} {Math.abs(net30).toLocaleString("es-MX")}{" "}
-              seguidores en los últimos 30 días.
+            <p className={`summary-net${net30.net < 0 ? " down" : " up"}`}>
+              {net30.net >= 0 ? "▲ Ganaste" : "▼ Perdiste"} {Math.abs(net30.net).toLocaleString("es-MX")}{" "}
+              seguidores en los últimos {net30.days} días.
             </p>
           )}
         </div>

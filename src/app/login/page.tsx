@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { browserClient } from "@/lib/supabase/browser";
+import { authErrorEs } from "@/lib/auth-errors";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function LoginPage() {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset`,
       });
-      if (resetError) setError(resetError.message);
+      if (resetError) setError(authErrorEs(resetError.message));
       else setNotice("Listo: revisa tu correo y abre el enlace para crear una contraseña nueva.");
     } finally {
       setBusy(false);
@@ -41,11 +42,7 @@ export default function LoginPage() {
       const supabase = browserClient();
       const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
       if (authError) {
-        setError(
-          authError.message === "Invalid login credentials"
-            ? "Email o contraseña incorrectos."
-            : authError.message,
-        );
+        setError(authErrorEs(authError.message));
         return;
       }
       router.push("/");

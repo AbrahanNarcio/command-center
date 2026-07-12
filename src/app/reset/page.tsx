@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { browserClient } from "@/lib/supabase/browser";
+import { authErrorEs } from "@/lib/auth-errors";
 
 /**
  * Destino del enlace de "Olvidé mi contraseña". El cliente de Supabase detecta
@@ -45,7 +46,7 @@ export default function ResetPage() {
       const supabase = browserClient();
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) {
-        setError(updateError.message);
+        setError(authErrorEs(updateError.message));
         return;
       }
       router.push("/");

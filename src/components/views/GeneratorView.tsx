@@ -11,6 +11,10 @@ type GenScript = { angle: PieceAngle; hook: string; cuerpo: string; cta: string;
 /** Día de la semana de HOY en formato del sistema (Lun..Dom), en hora local. */
 const todayDay = () => DAYS[(new Date().getDay() + 6) % 7];
 
+/** El guion generado cuesta dinero: sobrevive al cambio de vista (la vista se
+ *  desmonta al navegar). Caché por cuenta, viva mientras dure la pestaña. */
+const scriptCache = new Map<string, GenScript>();
+
 export default function GeneratorView() {
   const { activeAccount, accountSources, createPiece, notify, me } = useStore();
   const [sourceId, setSourceId] = useState("");
@@ -22,13 +26,13 @@ export default function GeneratorView() {
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
-  // Al cambiar de cuenta: la fuente elegida y el resultado son de la cuenta
-  // anterior, se descartan (antes quedaba una fuente ajena "pegada").
+  // Al cambiar de cuenta: la fuente elegida se descarta (antes quedaba una
+  // fuente ajena "pegada") y se restaura el último guion generado DE ESA cuenta.
   useEffect(() => {
     setSourceId("");
-    setScript(null);
+    setScript(activeAccount ? scriptCache.get(activeAccount.id) ?? null : null);
     setError(null);
-  }, [activeAccount?.id]);
+  }, [activeAccount?.id, activeAccount]);
 
   const generate = async () => {
     if (!activeAccount) return;
@@ -55,6 +59,7 @@ export default function GeneratorView() {
         return;
       }
       setScript(data as GenScript);
+      scriptCache.set(activeAccount.id, data as GenScript);
     } catch {
       setError("Sin conexión con el servidor. Inténtalo de nuevo.");
     } finally {

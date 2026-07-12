@@ -98,6 +98,50 @@ Documentados y corregidos en la ronda anterior: ver commits `f387814`…`b2073a3
 - **Tamaño del bundle:** 215KB de JS transferidos (747KB descomprimidos) medidos en producción —
   razonable para un dashboard; no amerita code-splitting todavía.
 
+## Ronda 3 (2026-07-12)
+
+### 13. Mensajes de Supabase en inglés mostrados al usuario
+- **Evidencia:** login (`setError(resetError.message)` en "¿La olvidaste?"), reset
+  (`setError(updateError.message)`) y `/api/clients` (`error?.message` de `createUser`) mostraban
+  el texto crudo de Supabase: "For security purposes, you can only request this after N seconds",
+  "New password should be different…", "A user with this email address has already been
+  registered". Solo "Invalid login credentials" estaba traducido. Rompe el invariante de español.
+- **Fix:** `lib/auth-errors.ts` (`authErrorEs`) traduce los mensajes comunes y cae a un genérico
+  en español; aplicado en login, reset y el endpoint de accesos.
+
+### 14. El color de las cuentas no se sanitizaba (inyección CSS)
+- **Evidencia:** `PUT /api/metrics` sanitiza todo campo `color` con `SAFE_COLOR` justamente porque
+  esos valores aterrizan en propiedades CSS (`--accent`, gradientes) y un valor tipo
+  `url(https://…)` puede cargar recursos externos; pero `POST/PATCH /api/accounts` guardaba
+  `body.color` crudo, y ese color se usa igual en CSS (punto y anillo de cuenta, topbar).
+  Severidad acotada (solo admin escribe), pero inconsistente.
+- **Fix:** `safeColor` movido a `lib/security.ts` (compartido) y aplicado también en cuentas.
+
+### 15. Frases que afirmaban periodos que los datos no cubren
+- **Evidencia:** el Resumen decía "Ganaste N seguidores en los últimos 30 días" sumando
+  `followersDaily.slice(-30)` aunque la serie tuviera menos días acumulados (una cuenta recién
+  conectada tiene 1-2); Control decía "ganados en X días" con el mismo problema. Viola el
+  invariante de no fabricar datos.
+- **Fix:** ambas frases dicen los días REALES (`min(rango, días acumulados)`).
+
+### 16. El guion generado con IA se perdía al cambiar de vista
+- **Evidencia:** `Dashboard.tsx` remonta la vista al navegar (`key={view-account}` en
+  `.view-anim`), y el guion vivía en estado local del GeneratorView → mirar Fuentes y volver
+  descartaba una generación que costó dinero.
+- **Fix:** caché a nivel de módulo por cuenta (`scriptCache`); el guion se restaura al volver y
+  se limpia solo al cerrar la pestaña.
+
+### Pedido de diseño en esta ronda (no bug)
+- "Conexión IG" en el menú y el botón del hero ahora llevan el barrido multicolor de Instagram
+  (extiende el lenguaje de `.button.paint`: lo que parece IG, ES de IG). Ver `06-ui.md`.
+
+### Descartados con evidencia (estaban bien)
+- LineChart con <2 puntos: ya muestra un mensaje explicativo, no NaN.
+- Donut: los valores del mix siempre son "%" (sync y seed) y `parseFloat` los maneja.
+- `PUT /api/metrics`: hace merge con whitelist `EDITABLE`, no pisa los campos del sync.
+- Dedupe del reporte mensual del cron: corre una vez al día, el título es estable dentro del mes.
+- `deleteAccount`: sí resetea la cuenta activa a la primera restante.
+
 ## Deuda conocida (no bugs, decisiones)
 
 - El drag & drop sigue siendo solo de escritorio; en touch se usan ◀ ▶ (suficiente y estándar).
