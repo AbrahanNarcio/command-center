@@ -41,19 +41,21 @@ const NAV_GROUPS: { label: string; internal: boolean; items: NavItem[] }[] = [
     internal: false,
     items: [
       { id: "summary", icon: <Gauge />, label: "Resumen" },
+      { id: "messages", icon: <MessageCircle />, label: "Mensajes" },
       { id: "plan", icon: <ListChecks />, label: "Planeación" },
       { id: "overview", icon: <LayoutDashboard />, label: "Control" },
       { id: "reports", icon: <FileText />, label: "Reportes" },
     ],
   },
   {
-    // Orden por flujo real de trabajo: interacción diaria primero (Mensajes),
-    // luego producción en el orden en que de verdad se usa (Fuentes → Generador
-    // → Pipeline → Calendario), y configuración que se toca una sola vez al final.
+    // Orden por flujo real de trabajo: producción en el orden en que de
+    // verdad se usa (Fuentes → Generador → Pipeline → Calendario), y
+    // configuración que se toca una sola vez al final. Mensajes vive en el
+    // grupo de arriba: el viewer también lo ve (solo lectura, sin responder
+    // ni etiquetar); el equipo lo sigue teniendo disponible ahí.
     label: "Administración",
     internal: true,
     items: [
-      { id: "messages", icon: <MessageCircle />, label: "Mensajes" },
       { id: "sources", icon: <Database />, label: "Fuentes" },
       { id: "generator", icon: <Sparkles />, label: "Generador" },
       { id: "pipeline", icon: <SquareKanban />, label: "Pipeline" },

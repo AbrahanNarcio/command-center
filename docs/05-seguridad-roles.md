@@ -64,9 +64,14 @@ contacto está como constante `CONTACT` en cada una.
 
 `POST /api/webhooks/instagram` no tiene sesión: se autentica validando la firma
 `X-Hub-Signature-256` (HMAC-SHA256 del cuerpo crudo con `IG_APP_SECRET`, comparación timing-safe).
-Payload sin firma válida → 401. El GET de verificación exige `IG_WEBHOOK_VERIFY_TOKEN`. Los DMs
-son datos sensibles: **el viewer NO ve la vista Mensajes** (decisión de producto: los DMs los
-gestiona el equipo); `/api/messages` devuelve 403 a viewers.
+Payload sin firma válida → 401. El GET de verificación exige `IG_WEBHOOK_VERIFY_TOKEN`.
+
+**Mensajes por rol (2026-07-12, decisión de producto revisada):** el viewer SÍ ve la bandeja de su
+cuenta, en solo lectura — puede leer conversaciones e hilos, y ve las etiquetas de lead ya puestas,
+pero no responde ni etiqueta ni sincroniza (esas mutaciones las gatea `accountGate`, que excluye
+viewer). `GET /api/messages` y `GET /api/messages/[id]` aceptan a cualquier miembro de la cuenta
+(admin, editor, viewer); `PATCH /api/messages/[id]`, `POST /api/messages/[id]/reply` y
+`POST /api/messages/sync` siguen con `accountGate` (admin/editor de esa cuenta, viewer 403).
 
 ## Rate limiting
 

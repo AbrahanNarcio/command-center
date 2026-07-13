@@ -103,8 +103,9 @@ Puntos clave del store (`store-context.tsx`):
 | `/api/metrics/[accountId]` | PUT | accountGate |
 | `/api/reports` · `/api/reports/[id]` | GET, POST · DELETE | GET sesión de la cuenta · POST generar accountMemberGate (cualquier usuario de SU cuenta, incluido viewer; acepta `period` "7"/"30" y `sections`) · restore/DELETE accountGate |
 | `/api/generate` | POST | accountGate + rate limit 10/10min → Claude API server-side (guion hook/cuerpo/CTA; valida que la fuente sea de la cuenta; 503 sin `ANTHROPIC_API_KEY`) |
-| `/api/messages` | GET | equipo de la cuenta (admin con `?account=`; editor la suya; viewer 403) |
-| `/api/messages/[id]` · `/reply` | GET, PATCH · POST | accountGate vía `rowAccountId("ig_conversations")` (hilo, etiquetas/nota, responder) |
+| `/api/messages` | GET | cualquier miembro de la cuenta, incluido viewer (admin con `?account=`; editor/viewer la suya) — solo lectura |
+| `/api/messages/[id]` | GET | igual que arriba (hilo + mensajes), incluido viewer |
+| `/api/messages/[id]` · `/reply` | PATCH · POST | accountGate vía `rowAccountId("ig_conversations")` (etiquetas/nota, responder) — viewer 403 |
 | `/api/messages/sync` | POST | accountGate → backfill de conversaciones + suscripción a webhooks (`/me/subscribed_apps`) |
 | `/api/webhooks/instagram` | GET, POST | GET verificación de Meta (verify token) · POST firmado con `X-Hub-Signature-256` (HMAC del app secret, timing-safe); sin sesión |
 | `/api/clients` · `/api/clients/[userId]` | POST · DELETE | admin (crear/borrar accesos) |

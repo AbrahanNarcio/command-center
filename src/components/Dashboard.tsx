@@ -378,12 +378,12 @@ export default function Dashboard() {
 
         <div className="view-anim" key={`${view}-${activeAccount?.id ?? ""}`}>
           {view === "summary" && <SummaryView go={setView} />}
+          {view === "messages" && <MessagesView />}
           {view === "plan" && <PlanView />}
           {view === "overview" && <OverviewView pieces={accountPieces} />}
           {view === "pipeline" && canEdit && <PipelineView pieces={filtered} />}
           {view === "calendar" && canEdit && <CalendarView pieces={filtered} />}
           {view === "reports" && <ReportsView />}
-          {view === "messages" && canEdit && <MessagesView />}
           {view === "generator" && canEdit && <GeneratorView />}
           {view === "sources" && canEdit && <SourcesView />}
           {view === "settings" && canEdit && <SettingsView />}

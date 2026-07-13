@@ -24,7 +24,7 @@ function ConvAvatar({ conv }: { conv: IgConversation }) {
 /** Bandeja de DMs de Instagram + etiquetas de lead (las etiquetas son nuestras,
  *  viven en la base de Content OS; Meta solo aporta los mensajes). */
 export default function MessagesView() {
-  const { activeAccount, activeConnection, notify } = useStore();
+  const { activeAccount, activeConnection, notify, canEdit } = useStore();
   const [conversations, setConversations] = useState<IgConversation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -203,17 +203,19 @@ export default function MessagesView() {
           <p className="eyebrow">Bandeja de entrada · {activeAccount?.handle}</p>
           <h2>Mensajes</h2>
           <p style={{ color: "var(--muted)", fontSize: 13, margin: "6px 0 0" }}>
-            Los DMs de Instagram llegan solos: la bandeja se actualiza en segundos, sin sincronizar
-            a mano. Responde dentro de las 24 horas posteriores al último mensaje de la persona
-            (regla de Meta) y etiqueta cada lead para darle seguimiento.
+            {canEdit
+              ? "Los DMs de Instagram llegan solos: la bandeja se actualiza en segundos, sin sincronizar a mano. Responde dentro de las 24 horas posteriores al último mensaje de la persona (regla de Meta) y etiqueta cada lead para darle seguimiento."
+              : "Los DMs de Instagram de esta cuenta, en tiempo real. Vista de solo lectura: responder y etiquetar leads lo hace el equipo."}
           </p>
         </div>
-        <div className="toolbar">
-          <button className="button small" disabled={syncing || !activeConnection} onClick={syncNow}>
-            {syncing ? <Loader2 size={13} className="spin" /> : <RefreshCcw size={13} />}{" "}
-            {syncing ? "Sincronizando…" : "Sincronizar bandeja"}
-          </button>
-        </div>
+        {canEdit && (
+          <div className="toolbar">
+            <button className="button small" disabled={syncing || !activeConnection} onClick={syncNow}>
+              {syncing ? <Loader2 size={13} className="spin" /> : <RefreshCcw size={13} />}{" "}
+              {syncing ? "Sincronizando…" : "Sincronizar bandeja"}
+            </button>
+          </div>
+        )}
       </div>
 
       {!activeConnection && (
@@ -221,7 +223,7 @@ export default function MessagesView() {
           <p>Esta cuenta no está conectada a Instagram. Conéctala primero en Conexión IG.</p>
         </div>
       )}
-      {activeConnection && !hasMessagesScope && (
+      {activeConnection && !hasMessagesScope && canEdit && (
         <div className="alert" style={{ ["--accent" as string]: "var(--amber)" }}>
           <strong>Falta el permiso de mensajes</strong>
           <p>
@@ -242,8 +244,9 @@ export default function MessagesView() {
             <div className="no-results">Cargando conversaciones…</div>
           ) : conversations.length === 0 ? (
             <div className="no-results">
-              Sin conversaciones todavía. Cuando alguien escriba por DM aparecerá aquí; usa
-              Sincronizar bandeja para traer las recientes.
+              {canEdit
+                ? "Sin conversaciones todavía. Cuando alguien escriba por DM aparecerá aquí; usa Sincronizar bandeja para traer las recientes."
+                : "Sin conversaciones todavía. Cuando alguien escriba por DM aparecerá aquí."}
             </div>
           ) : (
             conversations.map((c) => (
@@ -291,19 +294,35 @@ export default function MessagesView() {
                 </button>
                 <ConvAvatar conv={open} />
                 <strong>{title(open)}</strong>
-                <div className="tagbar" role="group" aria-label="Etiquetas de lead">
-                  {LEAD_TAGS.map((tag) => (
-                    <button
-                      key={tag}
-                      className={`chip lead-chip${open.tags.includes(tag) ? " active" : ""}`}
-                      style={{ ["--tag" as string]: LEAD_TAG_COLORS[tag] }}
-                      aria-pressed={open.tags.includes(tag)}
-                      onClick={() => toggleTag(tag)}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
+                {canEdit ? (
+                  <div className="tagbar" role="group" aria-label="Etiquetas de lead">
+                    {LEAD_TAGS.map((tag) => (
+                      <button
+                        key={tag}
+                        className={`chip lead-chip${open.tags.includes(tag) ? " active" : ""}`}
+                        style={{ ["--tag" as string]: LEAD_TAG_COLORS[tag] }}
+                        aria-pressed={open.tags.includes(tag)}
+                        onClick={() => toggleTag(tag)}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  open.tags.length > 0 && (
+                    <div className="tagbar" aria-label="Etiquetas de lead">
+                      {open.tags.map((tag) => (
+                        <em
+                          key={tag}
+                          className="lead-tag"
+                          style={{ ["--tag" as string]: LEAD_TAG_COLORS[tag as LeadTag] ?? "var(--muted)" }}
+                        >
+                          {tag}
+                        </em>
+                      ))}
+                    </div>
+                  )
+                )}
               </div>
 
               <div className="thread-scroll" ref={threadScroll}>
@@ -322,24 +341,26 @@ export default function MessagesView() {
                 <div ref={threadEnd} />
               </div>
 
-              <div className="reply-row">
-                <input
-                  value={reply}
-                  onChange={(e) => setReply(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      send();
-                    }
-                  }}
-                  placeholder="Escribe tu respuesta…"
-                  aria-label="Respuesta"
-                />
-                <button className="button primary" disabled={sending || !reply.trim()} onClick={send}>
-                  {sending ? <Loader2 size={15} className="spin" /> : <Send size={15} />}{" "}
-                  {sending ? "Enviando…" : "Enviar"}
-                </button>
-              </div>
+              {canEdit && (
+                <div className="reply-row">
+                  <input
+                    value={reply}
+                    onChange={(e) => setReply(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        send();
+                      }
+                    }}
+                    placeholder="Escribe tu respuesta…"
+                    aria-label="Respuesta"
+                  />
+                  <button className="button primary" disabled={sending || !reply.trim()} onClick={send}>
+                    {sending ? <Loader2 size={15} className="spin" /> : <Send size={15} />}{" "}
+                    {sending ? "Enviando…" : "Enviar"}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>

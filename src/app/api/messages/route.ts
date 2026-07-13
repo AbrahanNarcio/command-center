@@ -5,7 +5,9 @@ import { igTablesMissing, listConversations } from "@/lib/db";
 const MIGRATION_HINT =
   "Faltan las tablas de mensajes. Corre el bloque MENSAJES DE INSTAGRAM de supabase/schema.sql en el SQL Editor de Supabase.";
 
-/** Bandeja: conversaciones de una cuenta. Solo equipo (admin/editor de ESA cuenta). */
+/** Bandeja: conversaciones de una cuenta. Lectura para cualquiera de la cuenta
+ *  (admin, editor, y también el viewer — solo lectura, no puede responder ni
+ *  etiquetar, eso lo gatea el endpoint de detalle/PATCH). */
 export async function GET(request: Request) {
   const session = await getSessionProfile();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -14,10 +16,9 @@ export async function GET(request: Request) {
   let accountId = url.searchParams.get("account") ?? "";
   if (session.role === "admin") {
     if (!accountId) return NextResponse.json({ error: "Falta ?account=" }, { status: 400 });
-  } else if (session.role === "editor" && session.accountId) {
+  } else if (session.accountId) {
     accountId = session.accountId;
   } else {
-    // Los DMs los gestiona el equipo; el viewer no los ve (decisión de producto).
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

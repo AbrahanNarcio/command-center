@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
-import { accountGate } from "@/lib/auth";
+import { accountGate, getSessionProfile } from "@/lib/auth";
 import { getConversation, listIgMessages, rowAccountId, updateConversationRow } from "@/lib/db";
 
 type Params = { params: Promise<{ id: string }> };
 
-/** Hilo completo de una conversación (mensajes + datos de la conversación). */
+/** Hilo completo de una conversación (mensajes + datos de la conversación).
+ *  Lectura: admin, editor y también el viewer de esa cuenta (solo lectura). */
 export async function GET(_request: Request, { params }: Params) {
   const { id } = await params;
-  const gate = await accountGate((await rowAccountId("ig_conversations", id)) ?? "");
-  if (gate.response) return gate.response;
+  const session = await getSessionProfile();
+  if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const ownerAccountId = await rowAccountId("ig_conversations", id);
+  const member = session.role === "admin" || (!!session.accountId && session.accountId === ownerAccountId);
+  if (!ownerAccountId || !member) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const conversation = await getConversation(id);
   if (!conversation) return NextResponse.json({ error: "not found" }, { status: 404 });
