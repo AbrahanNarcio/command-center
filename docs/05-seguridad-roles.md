@@ -60,6 +60,10 @@ accesibles sin login y para sus rastreadores (se registran en el panel de la app
 contenido vive en `src/app/privacidad/page.tsx` y `src/app/eliminar-datos/page.tsx`; el correo de
 contacto está como constante `CONTACT` en cada una.
 
+El `matcher` del proxy además exime a los estáticos por extensión (`png|jpg|jpeg|svg|ico|webp`)
+y a `_next/static`/`_next/image`, para que assets decorativos sin secreto (p. ej. el fondo
+`public/aero-bg.webp` del tema Aero) se sirvan sin el guard de sesión.
+
 ## Webhook de Instagram (única escritura sin sesión)
 
 `POST /api/webhooks/instagram` no tiene sesión: se autentica validando la firma
