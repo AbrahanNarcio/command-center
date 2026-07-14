@@ -622,8 +622,10 @@ button {
   display: flex;
   align-items: center;
   gap: 7px;
-  min-height: 32px;
+  min-height: 34px;
   padding: 0 10px;
+  appearance: none;
+  -webkit-appearance: none;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(var(--tint), 0.05);
@@ -686,11 +688,17 @@ button {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 8px;
+  gap: 9px;
+  padding: 8px 10px;
+  /* Reset del chrome por defecto del navegador: sin esto, en estado normal el
+     botón hereda el fondo gris/blanco del sistema y rompe la homogeneidad. */
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
   border-radius: calc(var(--radius) - 4px);
   color: var(--soft);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
   text-align: left;
   transition: background-color 0.14s ease, color 0.14s ease;
@@ -700,18 +708,28 @@ button {
   flex: 1;
 }
 
+/* Hover claramente perceptible y en la dirección correcta según el tema
+   (se aclara sobre fondos oscuros, se oscurece sobre claros). */
 .theme-dd-item:hover {
-  background: rgba(var(--tint), 0.08);
+  background: color-mix(in srgb, var(--text) 12%, transparent);
   color: var(--text);
 }
 
+/* Seleccionado: acento del tema (el azul de la marca) — mismo lenguaje visual
+   en los 4 temas, así el elegido siempre se lee igual y con claridad. */
 .theme-dd-item.active {
   color: var(--text);
-  background: rgba(var(--tint), 0.13);
+  font-weight: 800;
+  background: color-mix(in srgb, var(--cyan) 18%, transparent);
+}
+
+.theme-dd-item.active:hover {
+  background: color-mix(in srgb, var(--cyan) 26%, transparent);
 }
 
 .theme-dd-check {
   color: var(--cyan);
+  margin-left: auto;
 }
 
 .signal {
