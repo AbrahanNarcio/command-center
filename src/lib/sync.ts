@@ -2,8 +2,10 @@ import { getConnection, getMetricsRow, patchConnection, updateAccountRow, upsert
 import { open, seal } from "./crypto";
 import {
   ACCOUNT_METRICS_CORE,
+  DemographicPair,
   MediaItem,
   fetchAccountInsights,
+  fetchAudienceDemographics,
   fetchFollowersDaily,
   fetchMediaList,
   fetchMediaMetrics,
@@ -13,7 +15,18 @@ import {
   metricValue,
   refreshLongToken,
 } from "./instagram";
-import { FunnelStep, HeatCell, Kpi, LabeledPct, LabeledValue, RecentPost, ReelRetention } from "./types";
+import {
+  AudienceBreakdown,
+  AudienceSlice,
+  FollowsPost,
+  FunnelStep,
+  HeatCell,
+  Kpi,
+  LabeledPct,
+  LabeledValue,
+  RecentPost,
+  ReelRetention,
+} from "./types";
 
 // Guía: no recalcular en tiempo real en cada carga. Throttle mínimo entre syncs manuales.
 const MIN_SYNC_MS = 30 * 60 * 1000;
@@ -71,6 +84,37 @@ function formatLabel(media: MediaItem): string {
   if (media.media_product_type === "STORY") return "Historias";
   if (media.media_type === "CAROUSEL_ALBUM") return "Carruseles";
   return "Posts";
+}
+
+/** Etiquetas legibles de género tal como los entrega Meta (F/M/U). */
+const GENDER_ES: Record<string, string> = { F: "Mujeres", M: "Hombres", U: "Sin especificar" };
+/** Orden natural de los rangos de edad de Meta. */
+const AGE_ORDER = ["13-17", "18-24", "25-34", "35-44", "45-54", "55-64", "65+"];
+
+/** Agrega los pares (edad, género) del breakdown combinado a sus dos márgenes:
+ *  distribución por género y por edad, cada una con conteo y % del total. */
+function aggregateDemographics(pairs: DemographicPair[]): AudienceBreakdown | null {
+  const total = pairs.reduce((s, p) => s + p.value, 0);
+  if (!total) return null;
+  const margin = (key: "gender" | "age"): Map<string, number> => {
+    const m = new Map<string, number>();
+    for (const p of pairs) m.set(p[key], (m.get(p[key]) ?? 0) + p.value);
+    return m;
+  };
+  const slice = (label: string, value: number): AudienceSlice => ({
+    label,
+    value,
+    pct: Math.round((value / total) * 100),
+  });
+  const gender = [...margin("gender").entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([g, v]) => slice(GENDER_ES[g] ?? g, v));
+  // Meta también devuelve "U" como EDAD desconocida: se traduce y va al final.
+  const ageIdx = (a: string) => (AGE_ORDER.indexOf(a) === -1 ? 99 : AGE_ORDER.indexOf(a));
+  const age = [...margin("age").entries()]
+    .sort((a, b) => ageIdx(a[0]) - ageIdx(b[0]))
+    .map(([a, v]) => slice(a === "U" ? "Sin especificar" : a, v));
+  return { total, gender, age };
 }
 
 /** Sincroniza una cuenta conectada: KPIs y TODAS las gráficas desde la API oficial. */
@@ -379,6 +423,61 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
         pct: Math.max(4, Math.round((score / top) * 100)),
         color: colors[i % colors.length],
       }));
+    }
+
+    // ── Demografía de audiencia (género + edad, breakdown combinado en 1 llamada) ──
+    // Si Meta no la expone (cuenta con pocos seguidores), se conserva lo anterior.
+    try {
+      const agg = aggregateDemographics(
+        await fetchAudienceDemographics(conn.igUserId, token, "follower_demographics", "this_month"),
+      );
+      if (agg) metrics.audienceFollowers = agg;
+    } catch {
+      // sin demografía de seguidores este sync
+    }
+    // Meta puede responder VACÍO para una ventana y con datos para otra
+    // (verificado en vivo: last_30_days vacío, this_month con datos). Se intenta
+    // en cascada y se guarda la etiqueta del periodo que sí respondió.
+    for (const [tf, label] of [
+      ["last_30_days", "últimos 30 días"],
+      ["this_month", "este mes"],
+      ["last_14_days", "últimos 14 días"],
+    ] as const) {
+      try {
+        const agg = aggregateDemographics(
+          await fetchAudienceDemographics(conn.igUserId, token, "reached_audience_demographics", tf),
+        );
+        if (agg) {
+          metrics.audienceReached = { ...agg, windowLabel: label };
+          break;
+        }
+      } catch {
+        // esta ventana no respondió; se intenta la siguiente
+      }
+    }
+
+    // ── Seguidores ganados por publicación (métrica follows) ──
+    // Meta SOLO la expone para publicaciones del feed (posts/carruseles); para
+    // reels responde error de tipo de media (verificado en vivo 2026-07-17).
+    const feedPosts = media.filter((m) => m.media_product_type === "FEED").slice(0, 25);
+    if (feedPosts.length) {
+      const withFollows = await Promise.all(
+        feedPosts.map(async (m) => ({ m, follows: (await fetchMediaMetrics(m.id, token, "follows")).follows })),
+      );
+      const rankedFollows = withFollows
+        .filter((x): x is { m: MediaItem; follows: number } => typeof x.follows === "number")
+        .sort((a, b) => b.follows - a.follows)
+        .slice(0, 10)
+        .map(({ m, follows }): FollowsPost => ({
+          id: m.id,
+          thumb: m.thumbnail_url ?? m.media_url ?? "",
+          permalink: m.permalink ?? "",
+          caption: (m.caption ?? "").replace(/\s+/g, " ").slice(0, 90),
+          follows,
+          date: m.timestamp?.slice(0, 10) ?? "",
+          format: formatLabel(m),
+        }));
+      if (rankedFollows.length) metrics.followsPosts = rankedFollows;
     }
 
     // ── Funnel real: reach → engagement → interacciones → taps → follows ──

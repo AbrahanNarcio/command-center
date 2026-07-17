@@ -10,6 +10,7 @@ import { isoDate, piecesForDate, sameWeek, weekDays } from "@/lib/plan";
 import { FORMAT_META } from "@/components/FormatIcon";
 import Rail from "@/components/Rail";
 import OverviewView from "@/components/views/OverviewView";
+import AudienceView from "@/components/views/AudienceView";
 import PipelineView from "@/components/views/PipelineView";
 import CalendarView from "@/components/views/CalendarView";
 import GeneratorView from "@/components/views/GeneratorView";
@@ -381,6 +382,7 @@ export default function Dashboard() {
           {view === "messages" && <MessagesView />}
           {view === "plan" && <PlanView />}
           {view === "overview" && <OverviewView pieces={accountPieces} />}
+          {view === "audience" && <AudienceView />}
           {view === "pipeline" && canEdit && <PipelineView pieces={filtered} />}
           {view === "calendar" && canEdit && <CalendarView pieces={filtered} />}
           {view === "reports" && <ReportsView />}

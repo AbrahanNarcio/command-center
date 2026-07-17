@@ -37,6 +37,10 @@ Qué construye (todo dentro de `metrics.data`):
   `#feda75`, 15-30s naranja `#ffa14e`, 30s+ rojo `#ff5d51`.
 - **Historias**: views, replies y navegación con breakdown para calcular % de término
   (`1 - tap_exit/views`).
+- **Demografía de audiencia** (`audienceFollowers` / `audienceReached`): género y edad de los
+  seguidores actuales y del público alcanzado, para la vista Audiencia (ver trampas 8-9).
+- **Seguidores por publicación** (`followsPosts`): ranking de publicaciones del feed por la
+  métrica `follows` (cuántas cuentas te siguieron tras verla). SOLO feed — ver trampa 8.
 - **Reporte mensual**: el día 1 (en `SYNC_TIMEZONE`) crea un snapshot en `reports` si no existe.
 
 ## ⚠️ Trampas de la API de Meta (descubiertas a prueba y error — NO re-aprender)
@@ -62,6 +66,19 @@ Qué construye (todo dentro de `metrics.data`):
    (Configuración → Sitios web y apps). El error "Insufficient Developer Role" al conectar = falta
    esa invitación. Para conectar clientes sin invitación se necesita pasar **App Review** (Fase 4,
    pendiente).
+8. **`follows` por publicación SOLO existe para media del feed** (posts/carruseles). Para REELS
+   la API responde "The Media Insights API does not support the follows metric for this media
+   product type" — verificado en vivo 2026-07-17 en v21.0 y v23.0. NO hay forma oficial de saber
+   cuántos seguidores dio un reel; la UI lo dice tal cual (no inventar proxies).
+9. **Demografía** (`follower_demographics`, `reached_audience_demographics`,
+   `engaged_audience_demographics`): `period=lifetime&metric_type=total_value` + `breakdown=age,gender`
+   **combinado en UNA llamada** (los márgenes por edad y por género se agregan localmente).
+   `timeframe` válidos: `last_14_days`, `last_30_days`, `last_90_days`, `this_week`, `this_month`,
+   `prev_month`. ⚠️ Una ventana puede responder 200 con breakdown VACÍO mientras otra sí trae
+   datos (visto en vivo: `last_30_days` vacío, `this_month` con datos) → el sync intenta en
+   cascada y guarda `windowLabel` con el periodo que respondió. Género llega como F/M/U y la
+   EDAD también puede traer "U" (desconocida): ambas se traducen a "Sin especificar". Cuentas
+   con muy pocos seguidores no tienen demografía (Meta la omite).
 
 ## Mensajería (bandeja de DMs)
 

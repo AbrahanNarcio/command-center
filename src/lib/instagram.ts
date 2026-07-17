@@ -342,6 +342,45 @@ export async function fetchMediaMetrics(
   return out;
 }
 
+/** Par (edad, género) → conteo, tal como lo entrega el breakdown combinado. */
+export type DemographicPair = { age: string; gender: string; value: number };
+
+/**
+ * Demografía de un público con el breakdown combinado age,gender en UNA llamada
+ * (verificado en vivo 2026-07-17): el que llama agrega los márgenes por edad y
+ * por género. Géneros: F / M / U (sin especificar). Edades: 13-17 … 65+.
+ * - follower_demographics: foto actual de los seguidores (timeframe irrelevante).
+ * - reached/engaged_audience_demographics: requieren timeframe (last_14_days,
+ *   last_30_days, last_90_days, this_week, this_month, prev_month).
+ * Meta responde error si la cuenta no tiene suficientes seguidores (~100+):
+ * el que llama debe tratarlo como "sin datos", no como falla del sync.
+ */
+export async function fetchAudienceDemographics(
+  igUserId: string,
+  token: string,
+  metric: "follower_demographics" | "reached_audience_demographics" | "engaged_audience_demographics",
+  timeframe: string,
+): Promise<DemographicPair[]> {
+  const params = new URLSearchParams({
+    metric,
+    period: "lifetime",
+    metric_type: "total_value",
+    breakdown: "age,gender",
+    timeframe,
+    access_token: token,
+  });
+  const res = await fetch(
+    `${IG_CONFIG.graphHost}/${IG_CONFIG.apiVersion}/${igUserId}/insights?${params.toString()}`,
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || `No se pudo leer ${metric}.`);
+  const results: { dimension_values?: string[]; value?: number }[] =
+    data?.data?.[0]?.total_value?.breakdowns?.[0]?.results ?? [];
+  return results
+    .filter((r) => r.dimension_values?.length === 2 && typeof r.value === "number")
+    .map((r) => ({ age: r.dimension_values![0], gender: r.dimension_values![1], value: r.value as number }));
+}
+
 export function metricValue(insights: InsightValue[], name: string): number | null {
   const item = insights.find((i) => i.name === name);
   if (!item) return null;

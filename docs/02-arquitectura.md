@@ -42,8 +42,8 @@ src/
 │   ├── ThemeSelector.tsx     # 4 temas (oscuro/claro/glass/aero), persiste en localStorage
 │   ├── ModalPortal.tsx       # portal a <body> para modales
 │   ├── KpiIcon.tsx           # icono decorativo por etiqueta de KPI
-│   └── views/                # una vista por archivo (Summary, Plan, Overview, Pipeline,
-│                             #  Calendar, Reports, Generator, Sources, Settings)
+│   └── views/                # una vista por archivo (Summary, Plan, Overview, Audience,
+│                             #  Pipeline, Calendar, Reports, Generator, Sources, Settings)
 └── lib/
     ├── types.ts              # TODOS los tipos de dominio + constantes de color (fuente de verdad)
     ├── views.ts              # ViewId (ids de las vistas)

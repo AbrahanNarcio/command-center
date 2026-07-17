@@ -85,6 +85,30 @@ export type RecentPost = {
   format: string;
 };
 
+/** Una rebanada demográfica: etiqueta legible + conteo real + % del total. */
+export type AudienceSlice = { label: string; value: number; pct: number };
+/** Demografía de un público (género y edad), con el total que suma cada breakdown.
+ *  `windowLabel` = periodo REAL del que vienen los datos (Meta a veces devuelve
+ *  vacío para una ventana y datos para otra; la UI muestra la que sí respondió). */
+export type AudienceBreakdown = {
+  total: number;
+  gender: AudienceSlice[];
+  age: AudienceSlice[];
+  windowLabel?: string;
+};
+/** Publicación del feed con los seguidores que generó (métrica `follows` de Meta).
+ *  Meta NO expone este dato para reels (verificado en vivo): solo posts/carruseles. */
+export type FollowsPost = {
+  id: string;
+  thumb: string;
+  permalink: string;
+  caption: string;
+  follows: number;
+  /** Fecha de publicación YYYY-MM-DD. */
+  date: string;
+  format: string;
+};
+
 export interface AccountMetrics {
   accountId: string;
   updatedAt: string;
@@ -121,6 +145,13 @@ export interface AccountMetrics {
   stories?: { label: string; views: number | null; replies: number | null; exits: number | null; completion: number | null }[];
   /** Total de seguidores al momento del último sync, para reconstruir la serie de totales. */
   followersTotal?: number;
+  /** Demografía de los seguidores actuales (foto al día del sync). Meta solo la
+   *  expone para cuentas con suficientes seguidores (~100+). */
+  audienceFollowers?: AudienceBreakdown;
+  /** Demografía del público alcanzado en los últimos 30 días. */
+  audienceReached?: AudienceBreakdown;
+  /** Publicaciones del feed ordenadas por seguidores ganados (métrica follows). */
+  followsPosts?: FollowsPost[];
 }
 
 /** Secciones que un reporte puede incluir (elegidas al generarlo). */
