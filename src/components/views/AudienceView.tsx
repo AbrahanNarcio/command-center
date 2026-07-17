@@ -1,7 +1,8 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store-context";
-import { AudienceBreakdown } from "@/lib/types";
+import { AudienceBreakdown, AudienceSlice } from "@/lib/types";
 import { hideOnImgError, relativeTime } from "@/lib/utils";
 
 /** Código de color estable del género (mismo concepto = mismo color en toda la app):
@@ -21,7 +22,48 @@ function compact(n: number): string {
   return nf.format(n);
 }
 
-/** Tarjeta de demografía: barra 100% por género + distribución por edad. */
+/** Pastel de género (SVG de rebanadas reales, no dona). */
+function GenderPie({ slices }: { slices: AudienceSlice[] }) {
+  const total = slices.reduce((s, x) => s + x.value, 0) || 1;
+  const R = 54;
+  const C = 60;
+  let angle = -Math.PI / 2;
+  const wedges = slices.map((s) => {
+    const frac = s.value / total;
+    const a0 = angle;
+    const a1 = angle + frac * 2 * Math.PI;
+    angle = a1;
+    return { ...s, a0, a1, frac };
+  });
+  const pt = (a: number) => `${(C + R * Math.cos(a)).toFixed(2)},${(C + R * Math.sin(a)).toFixed(2)}`;
+  return (
+    <svg
+      viewBox="0 0 120 120"
+      className="aud-pie-svg"
+      role="img"
+      aria-label={`Distribución por género: ${slices.map((s) => `${s.label} ${s.pct}%`).join(", ")}`}
+    >
+      {wedges.map((w) =>
+        w.frac >= 0.999 ? (
+          <circle key={w.label} cx={C} cy={C} r={R} style={{ fill: GENDER_COLORS[w.label] ?? "var(--violet)" }}>
+            <title>{`${w.label}: ${w.pct}%`}</title>
+          </circle>
+        ) : w.frac <= 0.0005 ? null : (
+          <path
+            key={w.label}
+            className="aud-pie-wedge"
+            d={`M ${C},${C} L ${pt(w.a0)} A ${R} ${R} 0 ${w.a1 - w.a0 > Math.PI ? 1 : 0} 1 ${pt(w.a1)} Z`}
+            style={{ fill: GENDER_COLORS[w.label] ?? "var(--violet)" }}
+          >
+            <title>{`${w.label}: ${w.pct}% (${nf.format(w.value)})`}</title>
+          </path>
+        ),
+      )}
+    </svg>
+  );
+}
+
+/** Tarjeta de demografía: pastel por género + distribución por edad en barras. */
 function DemographicsCard({
   eyebrow,
   title,
@@ -50,26 +92,20 @@ function DemographicsCard({
       </div>
       {data ? (
         <>
-          <div className="aud-split" role="img" aria-label={`Distribución por género: ${data.gender.map((g) => `${g.label} ${g.pct}%`).join(", ")}`}>
-            {data.gender.map((g) => (
-              <span
-                key={g.label}
-                style={{ flex: g.value, background: GENDER_COLORS[g.label] ?? "var(--violet)" }}
-                title={`${g.label}: ${g.pct}% (${nf.format(g.value)})`}
-              />
-            ))}
-          </div>
-          <div className="ret-legend" aria-label="Género">
-            {data.gender.map((g) => (
-              <span
-                className="ret-legend-item"
-                key={g.label}
-                title={g.label === "Sin especificar" ? "Cuentas que no comparten su género en Instagram" : `${nf.format(g.value)} cuentas`}
-              >
-                <span className="ret-legend-dot" style={{ background: GENDER_COLORS[g.label] ?? "var(--violet)" }} />
-                {g.label} · {g.pct}%
-              </span>
-            ))}
+          <div className="aud-pie">
+            <GenderPie slices={data.gender} />
+            <div className="aud-pie-legend">
+              {data.gender.map((g) => (
+                <span
+                  className="ret-legend-item"
+                  key={g.label}
+                  title={g.label === "Sin especificar" ? "Cuentas que no comparten su género en Instagram" : `${nf.format(g.value)} cuentas`}
+                >
+                  <span className="ret-legend-dot" style={{ background: GENDER_COLORS[g.label] ?? "var(--violet)" }} />
+                  {g.label} · {g.pct}%
+                </span>
+              ))}
+            </div>
           </div>
           <div className="aud-ages" aria-label="Distribución por edad">
             {data.age.map((a) => (
@@ -99,17 +135,155 @@ function DemographicsCard({
   );
 }
 
-/** Audiencia: quién te sigue, quién ve tu contenido y qué publicaciones dieron
- *  seguidores. Visible para todos los roles (admin, editor y cliente). */
+/* ── Rankings con selector de métrica ───────────────────────── */
+
+type MetricKey = "follows" | "reach" | "likes" | "likescomments";
+
+const METRIC_DEFS: Record<MetricKey, { chip: string; color: string; fmt: (n: number) => string }> = {
+  follows: { chip: "Seguidores", color: "var(--green)", fmt: (n) => `+${nf.format(n)}` },
+  reach: { chip: "Alcance", color: "var(--lime)", fmt: compact },
+  likes: { chip: "Me gusta", color: "var(--cyan)", fmt: compact },
+  likescomments: { chip: "Me gusta + comentarios", color: "var(--pink)", fmt: compact },
+};
+
+type RankItem = {
+  id: string;
+  thumb: string;
+  permalink: string;
+  caption: string;
+  sub: string;
+  values: Partial<Record<MetricKey, number | null>>;
+};
+
+/** Ranking de publicaciones con chips para elegir la métrica (se reordena al
+ *  instante con los datos ya sincronizados; sin llamadas nuevas). */
+function RankCard({
+  eyebrow,
+  titles,
+  hint,
+  metricKeys,
+  items,
+  emptyText,
+}: {
+  eyebrow: string;
+  titles: Partial<Record<MetricKey, string>>;
+  hint: string;
+  metricKeys: MetricKey[];
+  items: RankItem[];
+  emptyText: string;
+}) {
+  const [metric, setMetric] = useState<MetricKey>(metricKeys[0]);
+  const def = METRIC_DEFS[metric];
+  const rows = useMemo(() => {
+    return items
+      .map((it) => ({ ...it, v: it.values[metric] ?? null }))
+      .sort((a, b) => (b.v ?? -1) - (a.v ?? -1));
+  }, [items, metric]);
+  const max = Math.max(...rows.map((r) => r.v ?? 0), 1);
+
+  return (
+    <section className="chart-card">
+      <div className="chart-top">
+        <div>
+          <p className="eyebrow">{eyebrow}</p>
+          <h2>{titles[metric] ?? ""}</h2>
+          <p>{hint}</p>
+        </div>
+        <div className="filters" role="group" aria-label="Métrica del ranking">
+          {metricKeys.map((k) => (
+            <button
+              key={k}
+              className={`chip${metric === k ? " active" : ""}`}
+              onClick={() => setMetric(k)}
+            >
+              {METRIC_DEFS[k].chip}
+            </button>
+          ))}
+        </div>
+      </div>
+      {rows.length ? (
+        <div className="aud-rank-list">
+          {rows.map((p, i) => (
+            <a
+              className="aud-row"
+              key={p.id}
+              href={p.permalink || undefined}
+              target="_blank"
+              rel="noreferrer"
+              title={`${p.caption} · ${p.sub}`}
+              style={{ ["--i" as string]: i, ["--accent" as string]: def.color }}
+            >
+              <span className="aud-rank">{i + 1}</span>
+              {p.thumb ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="reel-ret-thumb" src={p.thumb} alt="" loading="lazy" onError={hideOnImgError} />
+              ) : (
+                <span className="reel-ret-thumb reel-ret-ph" />
+              )}
+              <span className="aud-caption">
+                <span className="aud-caption-text">{p.caption}</span>
+                <span className="aud-date">{p.sub}</span>
+              </span>
+              <div className="meter">
+                <span
+                  style={{
+                    ["--score" as string]: p.v == null ? "0%" : `${Math.max(4, Math.round((p.v / max) * 100))}%`,
+                    ["--meter" as string]: `linear-gradient(90deg, ${def.color}, color-mix(in srgb, ${def.color} 22%, transparent))`,
+                  }}
+                />
+              </div>
+              <b className="aud-follows">{p.v == null ? "—" : def.fmt(p.v)}</b>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div className="no-results">{emptyText}</div>
+      )}
+    </section>
+  );
+}
+
+/** Audiencia: quién te sigue, quién ve tu contenido y qué publicaciones/reels
+ *  funcionan mejor por métrica. Visible para todos los roles. */
 export default function AudienceView() {
   const { activeAccount, activeMetrics } = useStore();
 
-  if (!activeMetrics) return <div className="no-results">Sin métricas para esta cuenta.</div>;
+  const feedItems = useMemo<RankItem[]>(
+    () =>
+      (activeMetrics?.followsPosts ?? []).map((p) => ({
+        id: p.id,
+        thumb: p.thumb,
+        permalink: p.permalink,
+        caption: p.caption || p.format,
+        sub: `${p.format} · ${p.date}`,
+        values: {
+          follows: p.follows,
+          reach: p.reach ?? null,
+          likes: p.likes ?? null,
+          likescomments: p.likes == null && p.comments == null ? null : (p.likes ?? 0) + (p.comments ?? 0),
+        },
+      })),
+    [activeMetrics?.followsPosts],
+  );
 
-  const follows = activeMetrics.followsPosts ?? [];
-  const maxFollows = Math.max(...follows.map((p) => p.follows), 1);
-  const reels = activeMetrics.reelsTopReach ?? [];
-  const maxReach = Math.max(...reels.map((p) => p.reach), 1);
+  const reelItems = useMemo<RankItem[]>(
+    () =>
+      (activeMetrics?.reelsTopReach ?? []).map((p) => ({
+        id: p.id,
+        thumb: p.thumb,
+        permalink: p.permalink,
+        caption: p.caption || "Reel",
+        sub: `Reels · ${p.date}`,
+        values: {
+          reach: p.reach,
+          likes: p.likes ?? null,
+          likescomments: p.likes == null && p.comments == null ? null : (p.likes ?? 0) + (p.comments ?? 0),
+        },
+      })),
+    [activeMetrics?.reelsTopReach],
+  );
+
+  if (!activeMetrics) return <div className="no-results">Sin métricas para esta cuenta.</div>;
 
   return (
     <>
@@ -119,7 +293,7 @@ export default function AudienceView() {
           <h2>Audiencia · actualizado {relativeTime(activeMetrics.updatedAt)}</h2>
           <p style={{ color: "var(--muted)", fontSize: 12, margin: "6px 0 0" }}>
             Fuente: API oficial de Instagram. Quién te sigue, quién ve tu contenido y qué
-            publicaciones te dieron seguidores.
+            publicaciones te funcionan mejor.
           </p>
         </div>
       </div>
@@ -139,128 +313,32 @@ export default function AudienceView() {
         />
       </div>
 
-      <section className="chart-card">
-        <div className="chart-top">
-          <div>
-            <p className="eyebrow">Crecimiento por publicación</p>
-            <h2>Publicaciones que te dieron seguidores</h2>
-            <p>
-              Cuántas cuentas empezaron a seguirte después de ver cada publicación, de mayor a
-              menor. Instagram comparte este dato solo para posts y carruseles del feed — para
-              reels no lo expone. Clic para abrir en Instagram.
-            </p>
-          </div>
-          {follows.length > 0 && (
-            <div className="chart-value">
-              <strong>{follows.length}</strong>publicaciones
-            </div>
-          )}
-        </div>
-        {follows.length ? (
-          <div className="aud-rank-list">
-            {follows.map((p, i) => (
-              <a
-                className="aud-row"
-                key={p.id}
-                href={p.permalink || undefined}
-                target="_blank"
-                rel="noreferrer"
-                title={`${p.caption || p.format} · ${p.date}`}
-                style={{ ["--i" as string]: i }}
-              >
-                <span className="aud-rank">{i + 1}</span>
-                {p.thumb ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="reel-ret-thumb" src={p.thumb} alt="" loading="lazy" onError={hideOnImgError} />
-                ) : (
-                  <span className="reel-ret-thumb reel-ret-ph" />
-                )}
-                <span className="aud-caption">
-                  <span className="aud-caption-text">{p.caption || p.format}</span>
-                  <span className="aud-date">
-                    {p.format} · {p.date}
-                  </span>
-                </span>
-                <div className="meter">
-                  <span
-                    style={{
-                      ["--score" as string]: `${Math.max(4, Math.round((p.follows / maxFollows) * 100))}%`,
-                      ["--meter" as string]:
-                        "linear-gradient(90deg, var(--green), color-mix(in srgb, var(--green) 22%, transparent))",
-                    }}
-                  />
-                </div>
-                <b className="aud-follows">+{nf.format(p.follows)}</b>
-              </a>
-            ))}
-          </div>
-        ) : (
-          <div className="no-results">
-            Sin datos todavía. Se llenan con la sincronización, y solo si la cuenta tiene
-            publicaciones en el feed (posts o carruseles): Instagram no comparte los seguidores
-            ganados por reel.
-          </div>
-        )}
-      </section>
+      <RankCard
+        eyebrow="Posts y carruseles del feed"
+        titles={{
+          follows: "Publicaciones que te dieron seguidores",
+          reach: "Publicaciones que más cuentas alcanzaron",
+          likes: "Publicaciones con más me gusta",
+          likescomments: "Publicaciones con más me gusta y comentarios",
+        }}
+        hint="Elige la métrica con los botones. Seguidores = cuentas que empezaron a seguirte tras ver la publicación (Instagram solo comparte ese dato para posts y carruseles del feed). Clic para abrir en Instagram."
+        metricKeys={["follows", "reach", "likes", "likescomments"]}
+        items={feedItems}
+        emptyText="Sin datos todavía. Se llenan con la sincronización, y solo si la cuenta tiene publicaciones en el feed (posts o carruseles)."
+      />
 
-      <section className="chart-card">
-        <div className="chart-top">
-          <div>
-            <p className="eyebrow">Reels · alcance</p>
-            <h2>Reels que más cuentas alcanzaron</h2>
-            <p>
-              Instagram no comparte cuántos seguidores dio cada reel (ese dato solo existe para
-              posts y carruseles, arriba). Lo más cercano que su API ofrece por reel es el
-              alcance: cuántas cuentas únicas lo vieron. De tus últimos reels sincronizados, de
-              mayor a menor. Clic para abrir en Instagram.
-            </p>
-          </div>
-          {reels.length > 0 && (
-            <div className="chart-value">
-              <strong>{reels.length}</strong>reels
-            </div>
-          )}
-        </div>
-        {reels.length ? (
-          <div className="aud-rank-list">
-            {reels.map((p, i) => (
-              <a
-                className="aud-row"
-                key={p.id}
-                href={p.permalink || undefined}
-                target="_blank"
-                rel="noreferrer"
-                title={`${p.caption || "Reel"} · ${p.date}`}
-                style={{ ["--i" as string]: i, ["--accent" as string]: "var(--lime)" }}
-              >
-                <span className="aud-rank">{i + 1}</span>
-                {p.thumb ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="reel-ret-thumb" src={p.thumb} alt="" loading="lazy" onError={hideOnImgError} />
-                ) : (
-                  <span className="reel-ret-thumb reel-ret-ph" />
-                )}
-                <span className="aud-caption">
-                  <span className="aud-caption-text">{p.caption || "Reel"}</span>
-                  <span className="aud-date">Reels · {p.date}</span>
-                </span>
-                <div className="meter">
-                  <span
-                    style={{
-                      ["--score" as string]: `${Math.max(4, Math.round((p.reach / maxReach) * 100))}%`,
-                      ["--meter" as string]:
-                        "linear-gradient(90deg, var(--lime), color-mix(in srgb, var(--lime) 22%, transparent))",
-                    }}
-                  />
-                </div>
-                <b className="aud-follows">{compact(p.reach)}</b>
-              </a>
-            ))}
-          </div>
-        ) : (
-          <div className="no-results">Sin reels sincronizados todavía para esta cuenta.</div>
-        )}
-      </section>
+      <RankCard
+        eyebrow="Reels"
+        titles={{
+          reach: "Reels que más cuentas alcanzaron",
+          likes: "Reels con más me gusta",
+          likescomments: "Reels con más me gusta y comentarios",
+        }}
+        hint="Elige la métrica con los botones. Instagram no comparte cuántos seguidores dio cada reel (ese dato solo existe para posts y carruseles, arriba); el alcance — cuántas cuentas únicas lo vieron — es lo más cercano que su API ofrece. Clic para abrir en Instagram."
+        metricKeys={["reach", "likes", "likescomments"]}
+        items={reelItems}
+        emptyText="Sin reels sincronizados todavía para esta cuenta."
+      />
     </>
   );
 }

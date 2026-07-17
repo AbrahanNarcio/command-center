@@ -107,6 +107,10 @@ export type FollowsPost = {
   /** Fecha de publicación YYYY-MM-DD. */
   date: string;
   format: string;
+  /** Cuentas únicas alcanzadas (misma llamada que follows). null = Meta no lo dio. */
+  reach?: number | null;
+  likes?: number;
+  comments?: number;
 };
 /** Reel con su alcance (cuentas únicas). Es el proxy honesto de crecimiento por
  *  reel: Meta NO da seguidores por reel, y el alcance sí existe por reel. */
@@ -117,6 +121,8 @@ export type ReelReachPost = {
   caption: string;
   reach: number;
   date: string;
+  likes?: number;
+  comments?: number;
 };
 
 export interface AccountMetrics {

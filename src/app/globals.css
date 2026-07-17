@@ -2000,19 +2000,34 @@ textarea {
   margin-bottom: 14px;
 }
 
-/* Barra 100% apilada por género (los anchos son proporciones exactas via flex). */
-.aud-split {
+/* Pastel de género + leyenda al lado. */
+.aud-pie {
   display: flex;
-  height: 14px;
-  border-radius: 999px;
-  overflow: hidden;
-  margin: 12px 0 10px;
-  background: var(--sunken);
+  align-items: center;
+  gap: 18px;
+  margin: 12px 0 4px;
 }
 
-.aud-split span {
-  display: block;
-  min-width: 2px;
+.aud-pie-svg {
+  width: 116px;
+  height: 116px;
+  flex: none;
+  filter: drop-shadow(0 4px 14px rgba(var(--tint), 0.18));
+}
+
+.aud-pie-wedge {
+  stroke: var(--bg-2);
+  stroke-width: 1.5;
+  transition: opacity 0.18s ease;
+}
+
+.aud-pie-svg:hover .aud-pie-wedge:not(:hover) {
+  opacity: 0.55;
+}
+
+.aud-pie-legend {
+  display: grid;
+  gap: 7px;
 }
 
 .aud-ages {

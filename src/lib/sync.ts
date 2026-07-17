@@ -463,14 +463,21 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
     // reels responde error de tipo de media (verificado en vivo 2026-07-17).
     const feedPosts = media.filter((m) => m.media_product_type === "FEED").slice(0, 25);
     if (feedPosts.length) {
+      // follows + reach en UNA llamada por publicación; likes/comentarios ya
+      // vienen en la lista de medios (cero llamadas extra).
       const withFollows = await Promise.all(
-        feedPosts.map(async (m) => ({ m, follows: (await fetchMediaMetrics(m.id, token, "follows")).follows })),
+        // El Record<string, number> de fetchMediaMetrics no refleja que una
+        // métrica puede FALTAR en la respuesta: se anota el tipo real.
+        feedPosts.map(async (m): Promise<{ m: MediaItem; follows: number | undefined; reach: number | null }> => {
+          const v = await fetchMediaMetrics(m.id, token, "follows,reach");
+          return { m, follows: v.follows, reach: v.reach ?? null };
+        }),
       );
       const rankedFollows = withFollows
-        .filter((x): x is { m: MediaItem; follows: number } => typeof x.follows === "number")
+        .filter((x): x is { m: MediaItem; follows: number; reach: number | null } => typeof x.follows === "number")
         .sort((a, b) => b.follows - a.follows)
         .slice(0, 10)
-        .map(({ m, follows }): FollowsPost => ({
+        .map(({ m, follows, reach: r }): FollowsPost => ({
           id: m.id,
           thumb: m.thumbnail_url ?? m.media_url ?? "",
           permalink: m.permalink ?? "",
@@ -478,6 +485,9 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
           follows,
           date: m.timestamp?.slice(0, 10) ?? "",
           format: formatLabel(m),
+          reach: r,
+          likes: m.like_count ?? 0,
+          comments: m.comments_count ?? 0,
         }));
       if (rankedFollows.length) metrics.followsPosts = rankedFollows;
     }
@@ -495,6 +505,8 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
           caption: (m.caption ?? "").replace(/\s+/g, " ").slice(0, 90),
           reach: r,
           date: m.timestamp?.slice(0, 10) ?? "",
+          likes: m.like_count ?? 0,
+          comments: m.comments_count ?? 0,
         }));
     }
 
