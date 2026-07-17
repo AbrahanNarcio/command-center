@@ -41,6 +41,9 @@ Qué construye (todo dentro de `metrics.data`):
   seguidores actuales y del público alcanzado, para la vista Audiencia (ver trampas 8-9).
 - **Seguidores por publicación** (`followsPosts`): ranking de publicaciones del feed por la
   métrica `follows` (cuántas cuentas te siguieron tras verla). SOLO feed — ver trampa 8.
+- **Reels por alcance** (`reelsTopReach`): top 10 reels por `reach` (cuentas únicas), armado con
+  el reach que el sync ya pide por publicación (cero llamadas extra). Es el proxy honesto de
+  crecimiento por reel, porque `follows` no existe para reels (trampa 8).
 - **Reporte mensual**: el día 1 (en `SYNC_TIMEZONE`) crea un snapshot en `reports` si no existe.
 
 ## ⚠️ Trampas de la API de Meta (descubiertas a prueba y error — NO re-aprender)

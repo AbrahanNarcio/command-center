@@ -108,6 +108,16 @@ export type FollowsPost = {
   date: string;
   format: string;
 };
+/** Reel con su alcance (cuentas únicas). Es el proxy honesto de crecimiento por
+ *  reel: Meta NO da seguidores por reel, y el alcance sí existe por reel. */
+export type ReelReachPost = {
+  id: string;
+  thumb: string;
+  permalink: string;
+  caption: string;
+  reach: number;
+  date: string;
+};
 
 export interface AccountMetrics {
   accountId: string;
@@ -152,6 +162,8 @@ export interface AccountMetrics {
   audienceReached?: AudienceBreakdown;
   /** Publicaciones del feed ordenadas por seguidores ganados (métrica follows). */
   followsPosts?: FollowsPost[];
+  /** Reels ordenados por alcance (cuentas únicas), de los últimos sincronizados. */
+  reelsTopReach?: ReelReachPost[];
 }
 
 /** Secciones que un reporte puede incluir (elegidas al generarlo). */

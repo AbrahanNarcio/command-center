@@ -310,6 +310,7 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
     const nonStories = media.filter((m) => m.media_product_type !== "STORY").slice(0, MEDIA_REACH_LIMIT);
     const formatReach = new Map<string, number>();
     const reelWatch: { media: MediaItem; ms: number }[] = [];
+    const reelReach: { media: MediaItem; reach: number }[] = [];
     for (const item of nonStories) {
       const isReel = item.media_product_type === "REELS";
       const values = await fetchMediaMetrics(
@@ -319,6 +320,7 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
       );
       const r = values.reach;
       if (r != null) formatReach.set(formatLabel(item), (formatReach.get(formatLabel(item)) ?? 0) + r);
+      if (isReel && r != null) reelReach.push({ media: item, reach: r });
       if (isReel && values.ig_reels_avg_watch_time != null) {
         reelWatch.push({ media: item, ms: values.ig_reels_avg_watch_time });
       }
@@ -478,6 +480,22 @@ export async function syncAccount(accountId: string, force: boolean): Promise<Sy
           format: formatLabel(m),
         }));
       if (rankedFollows.length) metrics.followsPosts = rankedFollows;
+    }
+
+    // ── Reels con más alcance (proxy honesto: Meta no da follows por reel) ──
+    // Se llena con el reach ya pedido arriba: cero llamadas extra.
+    if (reelReach.length) {
+      metrics.reelsTopReach = reelReach
+        .sort((a, b) => b.reach - a.reach)
+        .slice(0, 10)
+        .map(({ media: m, reach: r }) => ({
+          id: m.id,
+          thumb: m.thumbnail_url ?? m.media_url ?? "",
+          permalink: m.permalink ?? "",
+          caption: (m.caption ?? "").replace(/\s+/g, " ").slice(0, 90),
+          reach: r,
+          date: m.timestamp?.slice(0, 10) ?? "",
+        }));
     }
 
     // ── Funnel real: reach → engagement → interacciones → taps → follows ──

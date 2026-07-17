@@ -2059,10 +2059,10 @@ textarea {
 }
 
 .aud-row:hover {
-  border-color: color-mix(in srgb, var(--green) 55%, var(--line));
+  border-color: color-mix(in srgb, var(--accent, var(--green)) 55%, var(--line));
   background: rgba(var(--tint), 0.085);
   transform: translateY(-1px);
-  box-shadow: 0 10px 30px color-mix(in srgb, var(--green) 12%, transparent);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--accent, var(--green)) 12%, transparent);
 }
 
 .aud-rank {
@@ -2073,8 +2073,8 @@ textarea {
   place-items: center;
   font-size: 11px;
   font-weight: 800;
-  background: color-mix(in srgb, var(--green) 16%, transparent);
-  color: var(--green);
+  background: color-mix(in srgb, var(--accent, var(--green)) 16%, transparent);
+  color: var(--accent, var(--green));
 }
 
 .aud-caption {
@@ -2098,7 +2098,7 @@ textarea {
 
 .aud-follows {
   text-align: right;
-  color: var(--green);
+  color: var(--accent, var(--green));
   font-size: 14px;
 }
 

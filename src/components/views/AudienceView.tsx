@@ -14,6 +14,13 @@ const GENDER_COLORS: Record<string, string> = {
 
 const nf = new Intl.NumberFormat("es-MX");
 
+/** Número compacto para valores grandes (1.2M / 86.2K), como en los KPIs. */
+function compact(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return nf.format(n);
+}
+
 /** Tarjeta de demografía: barra 100% por género + distribución por edad. */
 function DemographicsCard({
   eyebrow,
@@ -101,6 +108,8 @@ export default function AudienceView() {
 
   const follows = activeMetrics.followsPosts ?? [];
   const maxFollows = Math.max(...follows.map((p) => p.follows), 1);
+  const reels = activeMetrics.reelsTopReach ?? [];
+  const maxReach = Math.max(...reels.map((p) => p.reach), 1);
 
   return (
     <>
@@ -191,6 +200,65 @@ export default function AudienceView() {
             publicaciones en el feed (posts o carruseles): Instagram no comparte los seguidores
             ganados por reel.
           </div>
+        )}
+      </section>
+
+      <section className="chart-card">
+        <div className="chart-top">
+          <div>
+            <p className="eyebrow">Reels · alcance</p>
+            <h2>Reels que más cuentas alcanzaron</h2>
+            <p>
+              Instagram no comparte cuántos seguidores dio cada reel (ese dato solo existe para
+              posts y carruseles, arriba). Lo más cercano que su API ofrece por reel es el
+              alcance: cuántas cuentas únicas lo vieron. De tus últimos reels sincronizados, de
+              mayor a menor. Clic para abrir en Instagram.
+            </p>
+          </div>
+          {reels.length > 0 && (
+            <div className="chart-value">
+              <strong>{reels.length}</strong>reels
+            </div>
+          )}
+        </div>
+        {reels.length ? (
+          <div className="aud-rank-list">
+            {reels.map((p, i) => (
+              <a
+                className="aud-row"
+                key={p.id}
+                href={p.permalink || undefined}
+                target="_blank"
+                rel="noreferrer"
+                title={`${p.caption || "Reel"} · ${p.date}`}
+                style={{ ["--i" as string]: i, ["--accent" as string]: "var(--lime)" }}
+              >
+                <span className="aud-rank">{i + 1}</span>
+                {p.thumb ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="reel-ret-thumb" src={p.thumb} alt="" loading="lazy" onError={hideOnImgError} />
+                ) : (
+                  <span className="reel-ret-thumb reel-ret-ph" />
+                )}
+                <span className="aud-caption">
+                  <span className="aud-caption-text">{p.caption || "Reel"}</span>
+                  <span className="aud-date">Reels · {p.date}</span>
+                </span>
+                <div className="meter">
+                  <span
+                    style={{
+                      ["--score" as string]: `${Math.max(4, Math.round((p.reach / maxReach) * 100))}%`,
+                      ["--meter" as string]:
+                        "linear-gradient(90deg, var(--lime), color-mix(in srgb, var(--lime) 22%, transparent))",
+                    }}
+                  />
+                </div>
+                <b className="aud-follows">{compact(p.reach)}</b>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="no-results">Sin reels sincronizados todavía para esta cuenta.</div>
         )}
       </section>
     </>
