@@ -71,8 +71,11 @@ Qué construye (todo dentro de `metrics.data`):
    pendiente).
 8. **`follows` por publicación SOLO existe para media del feed** (posts/carruseles). Para REELS
    la API responde "The Media Insights API does not support the follows metric for this media
-   product type" — verificado en vivo 2026-07-17 en v21.0 y v23.0. NO hay forma oficial de saber
-   cuántos seguidores dio un reel; la UI lo dice tal cual (no inventar proxies).
+   product type" — verificado en vivo 2026-07-17 en v21.0 y v23.0, y lo mismo aplica a
+   `profile_visits` y `profile_activity` (las 3 métricas de perfil bloqueadas para reels).
+   NO hay forma oficial de saber cuántos seguidores dio un reel. El único proxy honesto (usado
+   por la vista Audiencia como "Seguidores del día") es cruzar la fecha del reel con la serie
+   diaria REAL `followersDaily`: seguidores que ganó TODA la cuenta ese día, etiquetado así.
 9. **Demografía** (`follower_demographics`, `reached_audience_demographics`,
    `engaged_audience_demographics`): `period=lifetime&metric_type=total_value` + `breakdown=age,gender`
    **combinado en UNA llamada** (los márgenes por edad y por género se agregan localmente).

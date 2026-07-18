@@ -137,13 +137,17 @@ function DemographicsCard({
 
 /* ── Rankings con selector de métrica ───────────────────────── */
 
-type MetricKey = "follows" | "reach" | "likes" | "likescomments";
+type MetricKey = "follows" | "followsday" | "reach" | "likes" | "comments";
 
 const METRIC_DEFS: Record<MetricKey, { chip: string; color: string; fmt: (n: number) => string }> = {
   follows: { chip: "Seguidores", color: "var(--green)", fmt: (n) => `+${nf.format(n)}` },
+  /* Reels: Meta no da seguidores POR reel (follows/profile_visits/profile_activity
+     bloqueados para reels, verificado en vivo); se usa la serie diaria REAL de la
+     cuenta: seguidores ganados el día en que se publicó el reel. */
+  followsday: { chip: "Seguidores del día", color: "var(--green)", fmt: (n) => `+${nf.format(n)}` },
   reach: { chip: "Alcance", color: "var(--lime)", fmt: compact },
   likes: { chip: "Me gusta", color: "var(--cyan)", fmt: compact },
-  likescomments: { chip: "Me gusta + comentarios", color: "var(--pink)", fmt: compact },
+  comments: { chip: "Comentarios", color: "var(--violet)", fmt: compact },
 };
 
 type RankItem = {
@@ -161,6 +165,7 @@ function RankCard({
   eyebrow,
   titles,
   hint,
+  hints,
   metricKeys,
   items,
   emptyText,
@@ -168,6 +173,8 @@ function RankCard({
   eyebrow: string;
   titles: Partial<Record<MetricKey, string>>;
   hint: string;
+  /** Explicación específica por métrica; si falta, se usa `hint`. */
+  hints?: Partial<Record<MetricKey, string>>;
   metricKeys: MetricKey[];
   items: RankItem[];
   emptyText: string;
@@ -187,7 +194,7 @@ function RankCard({
         <div>
           <p className="eyebrow">{eyebrow}</p>
           <h2>{titles[metric] ?? ""}</h2>
-          <p>{hint}</p>
+          <p>{hints?.[metric] ?? hint}</p>
         </div>
         <div className="filters" role="group" aria-label="Métrica del ranking">
           {metricKeys.map((k) => (
@@ -260,11 +267,19 @@ export default function AudienceView() {
           follows: p.follows,
           reach: p.reach ?? null,
           likes: p.likes ?? null,
-          likescomments: p.likes == null && p.comments == null ? null : (p.likes ?? 0) + (p.comments ?? 0),
+          comments: p.comments ?? null,
         },
       })),
     [activeMetrics?.followsPosts],
   );
+
+  // Seguidores ganados por día (serie diaria real de la cuenta), para el chip
+  // "Seguidores del día" de los reels.
+  const dayGain = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const d of activeMetrics?.followersDaily ?? []) m.set(d.date, d.gained);
+    return m;
+  }, [activeMetrics?.followersDaily]);
 
   const reelItems = useMemo<RankItem[]>(
     () =>
@@ -276,11 +291,12 @@ export default function AudienceView() {
         sub: `Reels · ${p.date}`,
         values: {
           reach: p.reach,
+          followsday: dayGain.get(p.date) ?? null,
           likes: p.likes ?? null,
-          likescomments: p.likes == null && p.comments == null ? null : (p.likes ?? 0) + (p.comments ?? 0),
+          comments: p.comments ?? null,
         },
       })),
-    [activeMetrics?.reelsTopReach],
+    [activeMetrics?.reelsTopReach, dayGain],
   );
 
   if (!activeMetrics) return <div className="no-results">Sin métricas para esta cuenta.</div>;
@@ -319,10 +335,10 @@ export default function AudienceView() {
           follows: "Publicaciones que te dieron seguidores",
           reach: "Publicaciones que más cuentas alcanzaron",
           likes: "Publicaciones con más me gusta",
-          likescomments: "Publicaciones con más me gusta y comentarios",
+          comments: "Publicaciones con más comentarios",
         }}
         hint="Elige la métrica con los botones. Seguidores = cuentas que empezaron a seguirte tras ver la publicación (Instagram solo comparte ese dato para posts y carruseles del feed). Clic para abrir en Instagram."
-        metricKeys={["follows", "reach", "likes", "likescomments"]}
+        metricKeys={["follows", "reach", "likes", "comments"]}
         items={feedItems}
         emptyText="Sin datos todavía. Se llenan con la sincronización, y solo si la cuenta tiene publicaciones en el feed (posts o carruseles)."
       />
@@ -331,11 +347,18 @@ export default function AudienceView() {
         eyebrow="Reels"
         titles={{
           reach: "Reels que más cuentas alcanzaron",
+          followsday: "Reels según los seguidores ganados el día que se publicaron",
           likes: "Reels con más me gusta",
-          likescomments: "Reels con más me gusta y comentarios",
+          comments: "Reels con más comentarios",
         }}
-        hint="Elige la métrica con los botones. Instagram no comparte cuántos seguidores dio cada reel (ese dato solo existe para posts y carruseles, arriba); el alcance — cuántas cuentas únicas lo vieron — es lo más cercano que su API ofrece. Clic para abrir en Instagram."
-        metricKeys={["reach", "likes", "likescomments"]}
+        hint="Elige la métrica con los botones. Clic para abrir en Instagram."
+        hints={{
+          reach:
+            "Elige la métrica con los botones. El alcance es cuántas cuentas únicas vieron cada reel. Clic para abrir en Instagram.",
+          followsday:
+            "Seguidores que ganó TODA tu cuenta el día que se publicó cada reel (tu serie diaria real). Instagram no comparte cuántos vinieron de cada reel: si ese día publicaste más contenido, el número es compartido. Los reels con fecha fuera de tu histórico diario muestran —.",
+        }}
+        metricKeys={["reach", "followsday", "likes", "comments"]}
         items={reelItems}
         emptyText="Sin reels sincronizados todavía para esta cuenta."
       />
